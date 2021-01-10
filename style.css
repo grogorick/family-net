@@ -1,13 +1,27 @@
+@import url('https://fonts.googleapis.com/css?family=Josefin+Sans:300');
 html, body, #graph {
   height: 100%;
   margin: 0;
 }
-#new-node-form {
+body, input {
+  font-family: 'Josefin Sans', 'Trebuchet MS', sans-serif;
+  color: #000;
+}
+body {
+  background: white;
+}
+.input-box {
   position: fixed;
   display: none;
   top: 50vh;
   left: 50vw;
   transform: translate(-50%, -50%);
   padding: 20pt;
+  background: white;
   box-shadow: 2px 1px 5px #0006;
+}
+h2 {
+  font-size: 100%;
+  font-weight: bold;
+  color: #aaa;
 }

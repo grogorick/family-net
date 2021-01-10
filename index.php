@@ -21,10 +21,10 @@ function save()
 
 if (isset($_GET['action'])) {
   header('Content-Type: text/plain; charset=utf-8');
+  $t = time();
   switch ($_GET['action']) {
-    case 'add':
+    case 'addPerson':
     {
-      $t = time();
       $data[PERSONS][] = [
         't' => $t,
         'x' => urldecode($_GET['x']),
@@ -32,11 +32,21 @@ if (isset($_GET['action'])) {
         'n' => urldecode($_GET['n']),
         'b' => urldecode($_GET['b'])
       ];
-      save();
-      echo $t;
+    }
+    break;
+    case 'addConnection':
+    {
+      $data[CONNECTIONS][] = [
+        't' => $t,
+        'p1' => urldecode($_GET['p1']),
+        'p2' => urldecode($_GET['p2']),
+        'd' => urldecode($_GET['d'])
+      ];
     }
     break;
   }
+  save();
+  echo $t;
   exit;
 }
 
@@ -52,15 +62,22 @@ header('Content-Type:text/html');
   <meta name="description" content="private website" />
   <link rel="icon" type="image/png" href="favicon.png" />
   <link rel="stylesheet" type="text/css" href="style.css" />
-  <script src="sigma.min.js"></script>
+  <script src="sigma.js"></script>
 </head>
 <body>
   <div id="graph"></div>
-  <div id="new-node-form">
-    <label for="name">Name: </label><input id="new-node-name" type="text" /><br />
-    <label for="name">Geburtstag: </label><input id="new-node-birthday" type="date" /><br />
+  <div id="new-node-form" class="input-box">
+    <h2>Neue Person</h2>
+    <label for="new-node-name">Name: </label><input id="new-node-name" type="text" /><br />
+    <label for="new-node-birthday">Geburtstag: </label><input id="new-node-birthday" type="date" /><br />
     <button id="new-node-add">Hinzufügen</button>
-    <button id="new-node-cancel">Verwerfen</button>
+    <button id="new-node-cancel">Abbrechen</button>
+  </div>
+  <div id="new-connection-form" class="input-box">
+    <h2>Neue Verbindung</h2>
+    <label for="new-connection-desc">Art: </label><input id="new-connection-desc" type="text" /><br />
+    <button id="new-connection-add">Verbinden</button>
+    <button id="new-connection-cancel">Abbrechen</button>
   </div>
   <script src="script.js"></script>
 </body>
