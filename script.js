@@ -1,4 +1,11 @@
-let s = new sigma('graph');
+// let s = new sigma('graph');
+let s = new sigma({
+  renderers: [{
+    container: document.getElementById('graph'),
+    type: 'canvas'
+  }]
+});
+let dragListener = new sigma.plugins.dragNodes(s, s.renderers[0]);
 
 s.settings('doubleClickEnabled', false);
 s.settings('rescaleIgnoreSize', true);
@@ -12,6 +19,19 @@ let bounds = {
 s.settings('bounds', bounds);
 
 let data = { persons: [], connections: []};
+
+function getDataPerson(t)
+{
+  let person = null;
+  data.persons.forEach(d => { if (d.t == t) person = d; });
+  return person;
+}
+function getDataConnection(t)
+{
+  let connection = null;
+  data.connections.forEach(d => { if (d.t == t) connection = d; });
+  return connection;
+}
 
 function getGraphPositionFromEvent(e)
 {
@@ -61,6 +81,46 @@ function addPerson(d, toData = false, toServer = false, toGraph = true, refreshG
       + '&y=' + d.y
       + '&n=' + encodeURIComponent(d.n)
       + '&b=' + encodeURIComponent(d.b)
+      , true);
+    xhttp.send();
+  }
+  else {
+    continueWhenServerIsDone();
+  }
+}
+
+function movePerson(d, toData = true, toServer = true, toGraph = false, refreshGraph = false)
+{
+  console.log(['movePerson', d, toData, toServer, toGraph, refreshGraph]);
+  let continueWhenServerIsDone = function()
+  {
+    if (toData) {
+			let p = getDataPerson(d.t);
+			p.x = d.x;
+			p.y = d.y;
+    }
+    if (toGraph) {
+			let n = s.graph.nodes(d.t);
+			n.x = d.x;
+			n.y = d.y;
+      if (refreshGraph) {
+        s.refresh();
+      }
+    }
+  };
+  if (toServer) {
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function()
+    {
+      if (this.readyState === 4 && this.status === 200) {
+        console.log([d.t, this.responseText]);
+        continueWhenServerIsDone();
+      }
+    };
+    xhttp.open('GET', '?action=movePerson'
+      + '&t=' + d.t
+      + '&x=' + d.x
+      + '&y=' + d.y
       , true);
     xhttp.send();
   }
@@ -228,17 +288,20 @@ function selectSecondPerson(e)
 let dcnCheck = 0;
 function clickNode(e)
 {
+  console.log('clickNode');
   if (!dcnCheck)
     setTimeout(() => {
-      if (!dcnCheck)
-        selectFirstPerson(e);
-      else
-        dcnCheck--; }, s.settings.doubleClickTimeout + 100);
+        if (!dcnCheck)
+          selectFirstPerson(e);
+        else
+          dcnCheck--;
+      }, s.settings('doubleClickTimeout') + 100);
   else
     dcnCheck--;
 }
 function doubleClickNode(e)
 {
+  console.log('doubleClickNode');
   dcnCheck = 2;
   selectSecondPerson(e);
 }
@@ -267,3 +330,6 @@ s.bind('clickStage', deselectPerson);
 s.bind('doubleClickStage', startNewPerson);
 s.bind('clickNode', clickNode);
 s.bind('doubleClickNode', doubleClickNode);
+
+dragListener.bind('drop', e => { console.log(['drop', e]); d=e.data.node; movePerson({ t: d.id, x: d.x, y: d.y }); });
+

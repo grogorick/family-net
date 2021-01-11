@@ -19,6 +19,27 @@ function save()
   file_put_contents(STORAGE_FILE, $file_content);
 }
 
+function & getPerson($t)
+{
+  global $data;
+  foreach ($data[PERSONS] as &$d) {
+    if ($d['t'] == $t) {
+      return $d;
+    }
+  }
+  return null;
+}
+function & getConnection($t)
+{
+  global $data;
+  foreach ($data[CONNECTIONS] as &$d) {
+    if ($d['t'] == $t) {
+      return $d;
+    }
+  }
+  return null;
+}
+
 if (isset($_GET['action'])) {
   header('Content-Type: text/plain; charset=utf-8');
   $t = time();
@@ -32,6 +53,14 @@ if (isset($_GET['action'])) {
         'n' => urldecode($_GET['n']),
         'b' => urldecode($_GET['b'])
       ];
+    }
+    break;
+    case 'movePerson':
+    {
+      $t = urldecode($_GET['t']);
+      $p = &getPerson($t);
+      $p['x'] = urldecode($_GET['x']);
+      $p['y'] = urldecode($_GET['y']);
     }
     break;
     case 'addConnection':
@@ -63,6 +92,7 @@ header('Content-Type:text/html');
   <link rel="icon" type="image/png" href="favicon.png" />
   <link rel="stylesheet" type="text/css" href="style.css" />
   <script src="sigma.js"></script>
+  <script src="sigma.plugins.dragNodes.js"></script>
 </head>
 <body>
   <div id="graph"></div>
