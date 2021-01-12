@@ -1,15 +1,39 @@
-// let s = new sigma('graph');
+const settings = {
+  nodeColor: '#78D384',
+  nodeColorHighlight1: '#3BAA49',
+  nodeColorHighlight2: '#2F8339',
+  edgeColor: '#DDD'
+};
+// #2F8339
+// #3BAA49
+// #53C561
+// #78D384
+// #9EE0A6
+
 let s = new sigma({
   renderers: [{
     container: document.getElementById('graph'),
     type: 'canvas'
-  }]
+  }],
+  settings: {
+    doubleClickEnabled: false,
+    rescaleIgnoreSize: true,
+    font: '"Josefin Sans", "Trebuchet MS", sans-serif',
+    fontStyle: 'bold',
+    minArrowSize: 5,
+    enableEdgeHovering: true,
+    defaultNodeColor: settings.nodeColor,
+    borderSize: .5,
+    nodeBorderColor: 'default',
+    defaultNodeBorderColor: settings.nodeColorHighlight1,
+    edgeColor: 'default',
+    defaultEdgeColor: settings.edgeColor,
+    labelHoverShadow: false
+  }
 });
 let dragListener = new sigma.plugins.dragNodes(s, s.renderers[0]);
 
-s.settings('doubleClickEnabled', false);
-s.settings('rescaleIgnoreSize', true);
-let bounds = {
+const bounds = {
   minX: -500,
   minY: -500,
   maxX: 500,
@@ -33,6 +57,39 @@ function getDataConnection(t)
   return connection;
 }
 
+function deleteDataPerson(t)
+{
+  return data.persons.splice(data.persons.findIndex(d => d.t == t), 1);
+}
+function deleteDataConnection(t)
+{
+  data.connections.splice(data.connections.findIndex(d => d.t == t), 1);
+}
+
+function getDataConnectionsToPerson(t)
+{
+  let connections = [];
+  data.connections.forEach(d =>
+  {
+    if (d.p1 == t || d.p2 == t) {
+      connections.push(d);
+    }
+  });
+  return connections;
+}
+
+function checkPersonsConnected(t1, t2)
+{
+  let connected = false;
+  data.connections.forEach(d =>
+  {
+    connected |= (
+      (d.p1 == t1 && d.p2 == t2) ||
+      (d.p1 == t2 && d.p2 == t1));
+  });
+  return connected;
+}
+
 function getGraphPositionFromEvent(e)
 {
   let r = e.data.renderer;
@@ -44,6 +101,79 @@ function getGraphPositionFromEvent(e)
   };
 }
 
+function showForm(f)
+{
+  f.style.display = 'inline-block';
+  let firstInput = f.querySelector('input');
+  if (firstInput) {
+    firstInput.focus();
+  }
+}
+function hideForm(f)
+{
+  f.style.display = 'none';
+}
+
+
+// load from file
+// ------------------------------------
+console.log('load data from file')
+var xhttp = new XMLHttpRequest();
+xhttp.onreadystatechange = function()
+{
+  if (this.readyState === 4 && this.status === 200) {
+    data = JSON.parse(this.responseText);
+    console.log(data);
+    data.persons.forEach(d => addPerson(d));
+    data.connections.forEach(d => addConnection(d));
+    s.refresh();
+  }
+};
+xhttp.open('GET', 'storage.yml', true);
+xhttp.send();
+
+
+// select persons
+// ------------------------------------
+let person1 = null;
+let person2 = null;
+
+function selectPerson(e)
+{
+  deselectPerson(e);
+  console.log(['selectPerson', e]);
+  person1 = e.data.node;
+  person1.color = settings.nodeColorHighlight1;
+  s.refresh();
+}
+
+function selectSecondPerson(e)
+{
+  console.log(['selectSecondPerson', e]);
+  person2 = e.data.node;
+  person2.color = settings.nodeColorHighlight2;
+  s.refresh();
+}
+
+function deselectPerson(e)
+{
+  if (person1 !== null) {
+    console.log('deselectPerson');
+    person1.color = null;
+    person1 = null;
+    s.refresh();
+  }
+  if (person2 !== null) {
+    console.log('deselectSecondPerson');
+    person2.color = null;
+    person2 = null;
+    s.refresh();
+  }
+}
+
+
+// new person
+// ------------------------------------
 function addPerson(d, toData = false, toServer = false, toGraph = true, refreshGraph = false)
 {
   console.log(['addPerson', d, toData, toServer, toGraph, refreshGraph]);
@@ -58,8 +188,7 @@ function addPerson(d, toData = false, toServer = false, toGraph = true, refreshG
         x: d.x,
         y: d.y,
         label: d.n,
-        size: 5,
-        color: '#f00'
+        size: 5
       });
       if (refreshGraph) {
         s.refresh();
@@ -89,6 +218,49 @@ function addPerson(d, toData = false, toServer = false, toGraph = true, refreshG
   }
 }
 
+let newPersonForm = document.getElementById('new-person-form');
+let newPersonName = document.getElementById('new-person-name');
+let newPersonBirthday = document.getElementById('new-person-birthday');
+
+function clearNewPersonForm()
+{
+  newPersonName.value = '';
+  newPersonBirthday.value = '';
+}
+
+let newPersonPosition = null;
+function startNewPerson(e)
+{
+  console.log('startNewPerson');
+  newPersonPosition = getGraphPositionFromEvent(e);
+  showForm(newPersonForm);
+}
+
+document.getElementById('new-person-add').addEventListener('click', e =>
+{
+  console.log('click new-person-add');
+  hideForm(newPersonForm);
+
+  addPerson({
+      x: newPersonPosition.x,
+      y: newPersonPosition.y,
+      n: newPersonName.value.trim(),
+      b: newPersonBirthday.value.trim()
+    },
+    true, true, true, true);
+  clearNewPersonForm();
+});
+
+document.getElementById('new-person-cancel').addEventListener('click', e =>
+{
+  console.log('click new-person-cancel');
+  hideForm(newPersonForm);
+  clearNewPersonForm();
+});
+
+
+// move person
+// ------------------------------------
 function movePerson(d, toData = true, toServer = true, toGraph = false, refreshGraph = false)
 {
   console.log(['movePerson', d, toData, toServer, toGraph, refreshGraph]);
@@ -129,6 +301,51 @@ function movePerson(d, toData = true, toServer = true, toGraph = false, refreshG
   }
 }
 
+
+// delete person
+// ------------------------------------
+function deletePerson(t, toData = true, toServer = true, toGraph = true, refreshGraph = true)
+{
+  console.log(['deletePerson', t, toData, toServer, toGraph, refreshGraph]);
+  let connections = getDataConnectionsToPerson(t);
+  if (connections.length) {
+    console.log(['cancelled - person to delete must not be connected', connections]);
+    return;
+  }
+  let continueWhenServerIsDone = function()
+  {
+    if (toData) {
+      deleteDataPerson(t);
+    }
+    if (toGraph) {
+      s.graph.dropNode(t);
+      if (refreshGraph) {
+        s.refresh();
+      }
+    }
+  };
+  if (toServer) {
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function()
+    {
+      if (this.readyState === 4 && this.status === 200) {
+        console.log([t, this.responseText]);
+        continueWhenServerIsDone();
+      }
+    };
+    xhttp.open('GET', '?action=deletePerson'
+      + '&t=' + t
+      , true);
+    xhttp.send();
+  }
+  else {
+    continueWhenServerIsDone();
+  }
+}
+
+
+// new connection
+// ------------------------------------
 function addConnection(d, toData = false, toServer = false, toGraph = true, refreshGraph = false)
 {
   console.log(['addConnection', d, toData, toServer, toGraph, refreshGraph]);
@@ -141,7 +358,9 @@ function addConnection(d, toData = false, toServer = false, toGraph = true, refr
       s.graph.addEdge({
         id: d.t,
         source: d.p1,
-        target: d.p2
+        target: d.p2,
+        label: d.d,
+        type: (d.d.includes('geschieden') ? 'dotted' : (d.d.includes('verheiratet') ? 'dashed' : 'arrow'))
       });
       if (refreshGraph) {
         s.refresh();
@@ -170,166 +389,120 @@ function addConnection(d, toData = false, toServer = false, toGraph = true, refr
   }
 }
 
-// load from file
-// ------------------------------------
-console.log('load from file')
-var xhttp = new XMLHttpRequest();
-xhttp.onreadystatechange = function()
-{
-  if (this.readyState === 4 && this.status === 200) {
-    data = JSON.parse(this.responseText);
-    console.log(data);
-    data.persons.forEach(d => addPerson(d));
-    data.connections.forEach(d => addConnection(d));
-    s.refresh();
-  }
-};
-xhttp.open('GET', 'storage.yml', true);
-xhttp.send();
-
-
-// new node
-// ------------------------------------
-let newNodeForm = document.getElementById('new-node-form');
-let newNodeName = document.getElementById('new-node-name');
-let newNodeBirthday = document.getElementById('new-node-birthday');
-
-function showNewNodeForm()
-{
-  newNodeForm.style.display = 'inline-block';
-}
-function hideNewNodeForm()
-{
-  newNodeForm.style.display = 'none';
-}
-function clearAndHideNewNodeForm()
-{
-  newNodeForm.style.display = 'none';
-  newNodeName.value = '';
-  newNodeBirthday.value = '';
-}
-
-
-let e_doubleClickStage = null;
-
-function startNewPerson(e)
-{
-  console.log('startNewPerson');
-  e_doubleClickStage = e;
-  showNewNodeForm();
-}
-
-document.getElementById('new-node-add').addEventListener('click', e =>
-{
-  console.log('click new-node-add');
-  hideNewNodeForm();
-
-  let pos = getGraphPositionFromEvent(e_doubleClickStage);
-  addPerson({
-      x: pos.x,
-      y: pos.y,
-      n: newNodeName.value.trim(),
-      b: newNodeBirthday.value.trim()
-    },
-    true, true, true, true);
-  clearAndHideNewNodeForm();
-});
-
-document.getElementById('new-node-cancel').addEventListener('click', e =>
-{
-  console.log('click new-node-cancel');
-  clearAndHideNewNodeForm();
-});
-
-
-// new connection
-// ------------------------------------
 let newConnectionForm = document.getElementById('new-connection-form');
 let newConnectionDesc = document.getElementById('new-connection-desc');
 
-function showNewConnectionForm()
+function clearNewConnectionForm()
 {
-  newConnectionForm.style.display = 'inline-block';
-}
-function hideNewConnectionForm()
-{
-  newConnectionForm.style.display = 'none';
-}
-function clearAndHideNewConnectionForm()
-{
-  newConnectionForm.style.display = 'none';
   newConnectionDesc.value = '';
-}
-
-let node1 = null;
-let node2 = null;
-
-function deselectPerson(e)
-{
-  console.log('deselectPerson');
-  node1 = null;
-}
-
-function selectFirstPerson(e)
-{
-  console.log(['selectFirstPerson', e]);
-  node1 = e.data.node;
-}
-
-function selectSecondPerson(e)
-{
-  console.log(['selectSecondPerson', e, node1, node2]);
-  if (node1 !== null && node1.id !== e.data.node.id) {
-    node2 = e.data.node;
-    showNewConnectionForm();
-  }
-}
-
-let dcnCheck = 0;
-function clickNode(e)
-{
-  console.log('clickNode');
-  if (!dcnCheck)
-    setTimeout(() => {
-        if (!dcnCheck)
-          selectFirstPerson(e);
-        else
-          dcnCheck--;
-      }, s.settings('doubleClickTimeout') + 100);
-  else
-    dcnCheck--;
-}
-function doubleClickNode(e)
-{
-  console.log('doubleClickNode');
-  dcnCheck = 2;
-  selectSecondPerson(e);
 }
 
 document.getElementById('new-connection-add').addEventListener('click', e =>
 {
   console.log('click new-connection-add');
-  hideNewConnectionForm();
+  hideForm(newConnectionForm);
 
   addConnection({
     t: new Date().getTime(),
-    p1: node1.id,
-    p2: node2.id,
+    p1: person1.id,
+    p2: person2.id,
     d: newConnectionDesc.value.trim()
   }, true, true, true, true);
-  clearAndHideNewConnectionForm();
+  clearNewConnectionForm();
 });
 
 document.getElementById('new-connection-cancel').addEventListener('click', e =>
 {
   console.log('click new-connection-cancel');
-  clearAndHideNewConnectionForm();
+  hideForm(newConnectionForm);
+  clearNewConnectionForm();
 });
 
-s.bind('clickStage', deselectPerson);
-s.bind('doubleClickStage', startNewPerson);
-s.bind('clickNode', clickNode);
-s.bind('doubleClickNode', doubleClickNode);
+
+// delete connection
+// ------------------------------------
+function deleteConnection(t, toData = false, toServer = false, toGraph = true, refreshGraph = false)
+{
+  console.log(['deleteConnection', t, toData, toServer, toGraph, refreshGraph]);
+  let continueWhenServerIsDone = function()
+  {
+    if (toData) {
+      deleteDataConnection(t);
+    }
+    if (toGraph) {
+      s.graph.dropEdge(t);
+      if (refreshGraph) {
+        s.refresh();
+      }
+    }
+  };
+  if (toServer) {
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function()
+    {
+      if (this.readyState === 4 && this.status === 200) {
+        console.log([t, this.responseText]);
+        continueWhenServerIsDone();
+      }
+    };
+    xhttp.open('GET', '?action=deleteConnection'
+      + '&t=' + t
+      , true);
+    xhttp.send();
+  }
+  else {
+    continueWhenServerIsDone();
+  }
+}
+
+
+// person action menu
+// ------------------------------------
+let personActionMenu = document.getElementById('person-action-menu');
+
+document.getElementById('person-action-connect').addEventListener('click', e =>
+{
+  console.log('click person-action-connect');
+  hideForm(personActionMenu);
+  if (person1 == null || person2 == null || person1.id == person2.id) {
+    console.log('cancelled - 2 persons must be selected');
+    return;
+  }
+  if (checkPersonsConnected(person1.id, person2.id)) {
+    console.log('cancelled - persons already connected');
+    return;
+  }
+  showForm(newConnectionForm);
+});
+
+document.getElementById('person-action-delete').addEventListener('click', e =>
+{
+  console.log('click person-action-delete');
+  hideForm(personActionMenu);
+  deletePerson(person2.id);
+  person2 = null;
+});
+
+document.getElementById('person-action-cancel').addEventListener('click', e =>
+{
+  console.log('click person-action-cancel');
+  hideForm(personActionMenu);
+});
+
+
+// events
+// ------------------------------------
+let cdcNode = clickDoubleClick(selectPerson, e => { selectSecondPerson(e); showForm(personActionMenu); });
+s.bind('clickNode', cdcNode.click.bind(cdcNode));
+s.bind('doubleClickNode', cdcNode.doubleClick.bind(cdcNode));
+
+let cdcStage = clickDoubleClick(deselectPerson, startNewPerson);
+s.bind('clickStage', cdcStage.click.bind(cdcStage));
+s.bind('doubleClickStage', cdcStage.doubleClick.bind(cdcStage));
 
 dragListener.bind('drop', e => { console.log(['drop', e]); d=e.data.node; movePerson({ t: d.id, x: d.x, y: d.y }); });
+
+// document.addEventListener('keydown', e => {});
+
+setTimeout(s.refresh.bind(s), 1000);
 

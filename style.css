@@ -20,8 +20,11 @@ body {
   background: white;
   box-shadow: 2px 1px 5px #0006;
 }
-h2 {
+.input-box h2 {
   font-size: 100%;
   font-weight: bold;
   color: #aaa;
+}
+.input-box input {
+  margin-bottom: 10pt;
 }
