@@ -24,13 +24,27 @@ let s = new sigma({
 
     font: '"Josefin Sans", "Trebuchet MS", sans-serif',
     fontStyle: 'bold',
+    // labelAlignment: 'constrained',
+    labelHoverShadow: false,
 
-    defaultNodeColor: settings.nodeColor,
     minNodeSize: 1,
     maxNodeSize: 10,
-    borderSize: 1,
     nodeBorderColor: 'default',
-    defaultNodeBorderColor: settings.nodeColorHighlight1,
+    nodeOuterBorderColor: 'default',
+    defaultNodeColor: settings.nodeColor,
+    defaultNodeBorderColor: 'transparent',
+    nodeBorderSize: 2,
+    nodeOuterBorderSize: 0,
+
+    nodeHoverBorderColor: 'default',
+    defaultNodeHoverBorderColor: settings.nodeColor,
+    nodeHoverBorderSize: 2,
+
+    nodeActiveColor: 'default',
+    nodeActiveBorderColor: 'default',
+    defaultNodeActiveColor: settings.nodeColorHighlight1,
+    defaultNodeActiveBorderColor: 'transparent',
+    nodeActiveBorderSize: 2,
 
     edgeColor: 'default',
     defaultEdgeColor: settings.edgeColor,
@@ -43,13 +57,13 @@ let s = new sigma({
     // edgeHoverExtremities: true,
     edgeHoverColor: 'default',
     defaultEdgeHoverColor: settings.edgeColorHighlight,
-    // edgeHoverSizeRatio: 2,
-
-    singleHover: true,
-    labelHoverShadow: false
+    edgeHoverSizeRatio: 5
   }
 });
-let dragListener = new sigma.plugins.dragNodes(s, s.renderers[0]);
+
+let activeState = sigma.plugins.activeState(s);
+// var select = sigma.plugins.select(s, activeState, s.renderers[0]);
+let dragListener = sigma.plugins.dragNodes(s, s.renderers[0], activeState);
 
 const bounds = {
   minX: -500,
@@ -181,6 +195,7 @@ function selectPerson(e, refreshGraph = true)
   deselectAll(e, false);
   console.log(['selectPerson', e]);
   person1 = e.data.node;
+  // activeState.addNodes(person1.id);
   person1.color = settings.nodeColorHighlight1;
   let d = getDataPerson(person1.id);
   person1.label = d.n + ' (' + d.b + ')';
@@ -193,6 +208,7 @@ function selectSecondPerson(e, refreshGraph = true)
   deselectSecondPerson(e, false);
   console.log(['selectSecondPerson', e]);
   person2 = e.data.node;
+  activeState
   person2.color = settings.nodeColorHighlight2;
   if (refreshGraph) {
     s.refresh();
@@ -203,6 +219,7 @@ function deselectPerson(e, refreshGraph = true)
 {
   if (person1 !== null) {
     console.log('deselectPerson');
+    // activeState.dropNodes(person1.id);
     person1.color = null;
     let d = getDataPerson(person1.id);
     person1.label = d.n;
@@ -598,9 +615,6 @@ s.bind('clickNode', cdcNode.click.bind(cdcNode));
 s.bind('doubleClickNode', cdcNode.doubleClick.bind(cdcNode));
 
 s.bind('clickEdge', e => { selectConnection(e); showForm(connectionActionMenu); });
-// let cdcEdge = clickDoubleClick(null, e => { selectConnection(e); showForm(connectionActionMenu); });
-// s.bind('clickEdge', cdcEdge.click.bind(cdcEdge));
-// s.bind('doubleClickEdge', cdcEdge.doubleClick.bind(cdcEdge));
 
 let cdcStage = clickDoubleClick(deselectAll, e => { deselectAll(e); startNewPerson(e); });
 s.bind('clickStage', cdcStage.click.bind(cdcStage));

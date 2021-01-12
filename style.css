@@ -26,9 +26,11 @@ body {
 .input-box {
   display: none;
   position: fixed;
-  top: 50vh;
-  left: 50vw;
-  transform: translate(-50%, -50%);
+  right: 10pt;
+  bottom: 10pt;
+  /*top: 50vh;*/
+  /*left: 50vw;*/
+  /*transform: translate(-50%, -50%);*/
   padding: 20pt;
   background: white;
   box-shadow: 2px 1px 5px #0006;

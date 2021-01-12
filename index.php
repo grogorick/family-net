@@ -104,14 +104,25 @@ header('Content-Type:text/html');
   <meta name="description" content="private website" />
   <link rel="icon" type="image/png" href="favicon.png" />
   <link rel="stylesheet" type="text/css" href="style.css" />
-  <script src="sigma/sigma.js"></script>
-  <script src="sigma/customEdgeShapes/sigma.canvas.edges.dashed.js"></script>
-  <script src="sigma/customEdgeShapes/sigma.canvas.edgehovers.dashed.js"></script>
-  <script src="sigma/customEdgeShapes/sigma.canvas.edges.dotted.js"></script>
-  <script src="sigma/customEdgeShapes/sigma.canvas.edgehovers.dotted.js"></script>
-  <script src="sigma/dragNodes/sigma.plugins.dragNodes.js"></script>
-  <script src="sigma/edgeLabels/sigma.canvas.edges.labels.def.js"></script>
-  <script src="sigma/edgeLabels/settings.js"></script>
+  <script src="linkurious/sigma.min.js"></script>
+  <script src="linkurious/renderer/sigma.canvas.nodes.def.js"></script>
+  <script src="linkurious/renderer/sigma.canvas.labels.def.js"></script>
+  <script src="linkurious/renderer/sigma.canvas.hovers.def.js"></script>
+  <script src="linkurious/renderer/sigma.canvas.edges.def.js"></script>
+  <script src="linkurious/renderer/sigma.canvas.edges.arrow.js"></script>
+  <script src="linkurious/renderer/sigma.canvas.edges.dashed.js"></script>
+  <script src="linkurious/renderer/sigma.canvas.edges.dotted.js"></script>
+  <script src="linkurious/renderer/sigma.canvas.edgehovers.def.js"></script>
+  <script src="linkurious/renderer/sigma.canvas.edgehovers.arrow.js"></script>
+  <script src="linkurious/renderer/sigma.canvas.edgehovers.dashed.js"></script>
+  <script src="linkurious/renderer/sigma.canvas.edgehovers.dotted.js"></script>
+  <script src="linkurious/activeState/sigma.plugins.activeState.js"></script>
+  <script src="linkurious/select/sigma.plugins.select.js"></script>
+  <script src="linkurious/dragNodes/sigma.plugins.dragNodes.js"></script>
+  <script src="linkurious/edgeLabels/sigma.canvas.edges.labels.def.js"></script>
+  <script src="linkurious/edgeLabels/sigma.canvas.edges.labels.curve.js"></script>
+  <script src="linkurious/edgeLabels/sigma.canvas.edges.labels.curvedArrow.js"></script>
+  <script src="linkurious/edgeLabels/settings.js"></script>
 </head>
 <body>
   <div id="graph"></div>
