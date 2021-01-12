@@ -149,12 +149,22 @@ function selectPerson(e)
 
 function selectSecondPerson(e)
 {
+  deselectSecondPerson(e);
   console.log(['selectSecondPerson', e]);
   person2 = e.data.node;
   person2.color = settings.nodeColorHighlight2;
   s.refresh();
 }
 
+function deselectSecondPerson(e)
+{
+  if (person2 !== null) {
+    console.log('deselectSecondPerson');
+    person2.color = null;
+    person2 = null;
+    s.refresh();
+  }
+}
 function deselectPerson(e)
 {
   if (person1 !== null) {
@@ -163,12 +173,7 @@ function deselectPerson(e)
     person1 = null;
     s.refresh();
   }
-  if (person2 !== null) {
-    console.log('deselectSecondPerson');
-    person2.color = null;
-    person2 = null;
-    s.refresh();
-  }
+  deselectSecondPerson(e);
 }
 
 
@@ -496,7 +501,7 @@ let cdcNode = clickDoubleClick(selectPerson, e => { selectSecondPerson(e); showF
 s.bind('clickNode', cdcNode.click.bind(cdcNode));
 s.bind('doubleClickNode', cdcNode.doubleClick.bind(cdcNode));
 
-let cdcStage = clickDoubleClick(deselectPerson, startNewPerson);
+let cdcStage = clickDoubleClick(deselectPerson, e => { deselectPerson(e); startNewPerson(e); });
 s.bind('clickStage', cdcStage.click.bind(cdcStage));
 s.bind('doubleClickStage', cdcStage.doubleClick.bind(cdcStage));
 
