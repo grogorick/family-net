@@ -2,7 +2,10 @@ const settings = {
   nodeColor: '#78D384',
   nodeColorHighlight1: '#3BAA49',
   nodeColorHighlight2: '#2F8339',
-  edgeColor: '#DDD'
+  edgeColor: '#DDD',
+  edgeColorHighlight: '#AAA',
+  nodeSize: 5,
+  edgeSize: .25
 };
 // #2F8339
 // #3BAA49
@@ -18,16 +21,31 @@ let s = new sigma({
   settings: {
     doubleClickEnabled: false,
     rescaleIgnoreSize: true,
+
     font: '"Josefin Sans", "Trebuchet MS", sans-serif',
     fontStyle: 'bold',
-    minArrowSize: 5,
-    enableEdgeHovering: true,
+
     defaultNodeColor: settings.nodeColor,
-    borderSize: .5,
+    minNodeSize: 1,
+    maxNodeSize: 10,
+    borderSize: 1,
     nodeBorderColor: 'default',
     defaultNodeBorderColor: settings.nodeColorHighlight1,
+
     edgeColor: 'default',
     defaultEdgeColor: settings.edgeColor,
+    minEdgeSize: 0.1,
+    maxEdgeSize: 5,
+    minArrowSize: 5,
+
+    enableEdgeHovering: true,
+    edgeHoverPrecision: 5,
+    // edgeHoverExtremities: true,
+    edgeHoverColor: 'default',
+    defaultEdgeHoverColor: settings.edgeColorHighlight,
+    // edgeHoverSizeRatio: 2,
+
+    singleHover: true,
     labelHoverShadow: false
   }
 });
@@ -101,9 +119,11 @@ function getGraphPositionFromEvent(e)
   };
 }
 
+let modalBlocker = document.getElementById('modal-blocker');
 function showForm(f)
 {
-  f.style.display = 'inline-block';
+  modalBlocker.style.display = 'block';
+  f.classList.add('input-box-visible');
   let firstInput = f.querySelector('input');
   if (firstInput) {
     firstInput.focus();
@@ -111,8 +131,14 @@ function showForm(f)
 }
 function hideForm(f)
 {
-  f.style.display = 'none';
+  f.classList.remove('input-box-visible');
+  modalBlocker.style.display = 'none';
 }
+
+modalBlocker.addEventListener('click', e =>
+{
+  document.querySelector('.input-box-visible button[id$="cancel"]').click();
+});
 
 
 // load from file
@@ -133,47 +159,97 @@ xhttp.open('GET', 'storage.yml', true);
 xhttp.send();
 
 
+// select
+// ------------------------------------
+function deselectAll(e, refreshGraph = true)
+{
+  deselectPerson(e, false);
+  deselectConnection(e, false);
+  if (refreshGraph) {
+    s.refresh();
+  }
+}
+
+
 // select persons
 // ------------------------------------
 let person1 = null;
 let person2 = null;
 
-function selectPerson(e)
+function selectPerson(e, refreshGraph = true)
 {
-  deselectPerson(e);
+  deselectAll(e, false);
   console.log(['selectPerson', e]);
   person1 = e.data.node;
   person1.color = settings.nodeColorHighlight1;
-  s.refresh();
+  let d = getDataPerson(person1.id);
+  person1.label = d.n + ' (' + d.b + ')';
+  if (refreshGraph) {
+    s.refresh();
+  }
 }
-
-function selectSecondPerson(e)
+function selectSecondPerson(e, refreshGraph = true)
 {
-  deselectSecondPerson(e);
+  deselectSecondPerson(e, false);
   console.log(['selectSecondPerson', e]);
   person2 = e.data.node;
   person2.color = settings.nodeColorHighlight2;
-  s.refresh();
+  if (refreshGraph) {
+    s.refresh();
+  }
 }
 
-function deselectSecondPerson(e)
+function deselectPerson(e, refreshGraph = true)
+{
+  if (person1 !== null) {
+    console.log('deselectPerson');
+    person1.color = null;
+    let d = getDataPerson(person1.id);
+    person1.label = d.n;
+    person1 = null;
+  }
+  deselectSecondPerson(e, false);
+  if (refreshGraph) {
+    s.refresh();
+  }
+}
+function deselectSecondPerson(e, refreshGraph = true)
 {
   if (person2 !== null) {
     console.log('deselectSecondPerson');
     person2.color = null;
     person2 = null;
+  }
+  if (refreshGraph) {
     s.refresh();
   }
 }
-function deselectPerson(e)
+
+
+// select connections
+// ------------------------------------
+let connection1 = null;
+
+function selectConnection(e, refreshGraph = true)
 {
-  if (person1 !== null) {
-    console.log('deselectPerson');
-    person1.color = null;
-    person1 = null;
+  deselectAll(e, false);
+  console.log(['selectConnection', e]);
+  connection1 = e.data.edge;
+  connection1.color = settings.nodeColorHighlight1;
+  if (refreshGraph) {
     s.refresh();
   }
-  deselectSecondPerson(e);
+}
+function deselectConnection(e, refreshGraph = true)
+{
+  if (connection1 !== null) {
+    console.log('deselectConnection');
+    connection1.color = null;
+    connection1 = null;
+  }
+  if (refreshGraph) {
+    s.refresh();
+  }
 }
 
 
@@ -193,7 +269,7 @@ function addPerson(d, toData = false, toServer = false, toGraph = true, refreshG
         x: d.x,
         y: d.y,
         label: d.n,
-        size: 5
+        size: settings.nodeSize
       });
       if (refreshGraph) {
         s.refresh();
@@ -250,7 +326,7 @@ document.getElementById('new-person-add').addEventListener('click', e =>
       x: newPersonPosition.x,
       y: newPersonPosition.y,
       n: newPersonName.value.trim(),
-      b: newPersonBirthday.value.trim()
+      b: newPersonBirthday.getAttribute('data-value')
     },
     true, true, true, true);
   clearNewPersonForm();
@@ -365,6 +441,7 @@ function addConnection(d, toData = false, toServer = false, toGraph = true, refr
         source: d.p1,
         target: d.p2,
         label: d.d,
+        size: settings.edgeSize,
         type: (d.d.includes('geschieden') ? 'dotted' : (d.d.includes('verheiratet') ? 'dashed' : 'arrow'))
       });
       if (refreshGraph) {
@@ -426,7 +503,7 @@ document.getElementById('new-connection-cancel').addEventListener('click', e =>
 
 // delete connection
 // ------------------------------------
-function deleteConnection(t, toData = false, toServer = false, toGraph = true, refreshGraph = false)
+function deleteConnection(t, toData = true, toServer = true, toGraph = true, refreshGraph = true)
 {
   console.log(['deleteConnection', t, toData, toServer, toGraph, refreshGraph]);
   let continueWhenServerIsDone = function()
@@ -495,13 +572,37 @@ document.getElementById('person-action-cancel').addEventListener('click', e =>
 });
 
 
+// connection action menu
+// ------------------------------------
+let connectionActionMenu = document.getElementById('connection-action-menu');
+
+document.getElementById('connection-action-delete').addEventListener('click', e =>
+{
+  console.log('click connection-action-delete');
+  hideForm(connectionActionMenu);
+  deleteConnection(connection1.id);
+  connection1 = null;
+});
+
+document.getElementById('connection-action-cancel').addEventListener('click', e =>
+{
+  console.log('click connection-action-cancel');
+  hideForm(connectionActionMenu);
+});
+
+
 // events
 // ------------------------------------
 let cdcNode = clickDoubleClick(selectPerson, e => { selectSecondPerson(e); showForm(personActionMenu); });
 s.bind('clickNode', cdcNode.click.bind(cdcNode));
 s.bind('doubleClickNode', cdcNode.doubleClick.bind(cdcNode));
 
-let cdcStage = clickDoubleClick(deselectPerson, e => { deselectPerson(e); startNewPerson(e); });
+s.bind('clickEdge', e => { selectConnection(e); showForm(connectionActionMenu); });
+// let cdcEdge = clickDoubleClick(null, e => { selectConnection(e); showForm(connectionActionMenu); });
+// s.bind('clickEdge', cdcEdge.click.bind(cdcEdge));
+// s.bind('doubleClickEdge', cdcEdge.doubleClick.bind(cdcEdge));
+
+let cdcStage = clickDoubleClick(deselectAll, e => { deselectAll(e); startNewPerson(e); });
 s.bind('clickStage', cdcStage.click.bind(cdcStage));
 s.bind('doubleClickStage', cdcStage.doubleClick.bind(cdcStage));
 

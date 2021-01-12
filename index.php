@@ -104,7 +104,6 @@ header('Content-Type:text/html');
   <meta name="description" content="private website" />
   <link rel="icon" type="image/png" href="favicon.png" />
   <link rel="stylesheet" type="text/css" href="style.css" />
-  <script src="clickDoubleClick.js"></script>
   <script src="sigma/sigma.js"></script>
   <script src="sigma/customEdgeShapes/sigma.canvas.edges.dashed.js"></script>
   <script src="sigma/customEdgeShapes/sigma.canvas.edgehovers.dashed.js"></script>
@@ -116,25 +115,39 @@ header('Content-Type:text/html');
 </head>
 <body>
   <div id="graph"></div>
+  <div id="modal-blocker"></div>
   <div id="person-action-menu" class="input-box">
+    <h2>Person(en)...</h2>
     <button id="person-action-connect">Verbinden</button><br />
     <button id="person-action-edit">Bearbeiten</button><br />
     <button id="person-action-delete">Löschen</button><br />
     <button id="person-action-cancel">Abbrechen</button>
   </div>
+  <div id="connection-action-menu" class="input-box">
+    <h2>Verbindung...</h2>
+    <button id="connection-action-edit">Bearbeiten</button><br />
+    <button id="connection-action-delete">Löschen</button><br />
+    <button id="connection-action-cancel">Abbrechen</button>
+  </div>
   <div id="new-person-form" class="input-box">
     <h2>Neue Person</h2>
-    <label for="new-person-name">Name: </label><input id="new-person-name" type="text" /><br />
-    <label for="new-person-birthday">Geburtstag: </label><input id="new-person-birthday" type="date" /><br />
+    <label for="new-person-name">Name: </label>
+    <input id="new-person-name" type="text" /><br />
+    <label for="new-person-birthday">Geburtstag: </label>
+    <input id="new-person-birthday" type="text" placeholder="tt" />
+    <input id="new-person-birthday-month" type="text" placeholder="mm" />
+    <input id="new-person-birthday-year" type="text" placeholder="yyyy" /><br />
     <button id="new-person-add">Hinzufügen</button>
     <button id="new-person-cancel">Abbrechen</button>
   </div>
   <div id="new-connection-form" class="input-box">
     <h2>Neue Verbindung</h2>
-    <label for="new-connection-desc">Art: </label><input id="new-connection-desc" type="text" /><br />
+    <label for="new-connection-desc">Art: </label>
+    <input id="new-connection-desc" type="text" /><br />
     <button id="new-connection-add">Verbinden</button>
     <button id="new-connection-cancel">Abbrechen</button>
   </div>
+  <script src="utils.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
