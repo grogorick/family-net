@@ -41,6 +41,11 @@ function approveOrCancelKeys(inputField, approveButtonToClick, cancelButtonToCli
   });
 }
 
+function multipleKeyPressed(e)
+{
+  return e.data.captor.ctrlKey || e.data.captor.shiftKey;
+}
+
 function twoDigits(v)
 {
   if (v === '0')

@@ -192,7 +192,8 @@ function deselectAll(e, refreshGraph = true, except = [])
 // ------------------------------------
 function selectPerson(e, refreshGraph = true)
 {
-  if (!e.data.captor.ctrlKey && !e.data.captor.shiftKey) {
+  let multipleKey = multipleKeyPressed(e);
+  if (!multipleKey) {
     deselectAll(e, false);
     console.log(['selectPerson', e]);
   }
@@ -212,7 +213,12 @@ function selectPerson(e, refreshGraph = true)
   }
 
   let nodes = activeState.nodes();
-  if (nodes.length === 2) {
+  if (nodes.length === 1) {
+    if (!multipleKey) {
+      showPersonInfo(nodes[0].id);
+    }
+  }
+  else if (nodes.length === 2) {
     if (nodes[0].id == nodes[1].id) {
       console.log('no connection possible - 2 different persons must be selected');
       return;
@@ -271,12 +277,14 @@ function selectConnection(e, refreshGraph = true)
     s.refresh();
   }
 
-  let d = getDataConnection(c.id);
-  let p1 = getDataPerson(c.source);
-  let p2 = getDataPerson(c.target);
-  connectionActionTitle.innerHTML = p1.n + ' - ' + p2.n;
-  connectionActionInfo.innerHTML = d.d;
-  showForm(connectionActionMenu);
+  if (!multipleKeyPressed(e)) {
+    let d = getDataConnection(c.id);
+    let p1 = getDataPerson(c.source);
+    let p2 = getDataPerson(c.target);
+    connectionActionTitle.innerHTML = p1.n + ' - ' + p2.n;
+    connectionActionInfo.innerHTML = d.d;
+    showForm(connectionActionMenu);
+  }
 }
 function deselectConnections(e, refreshGraph = true, except = [])
 {
@@ -653,11 +661,7 @@ document.getElementById('connection-action-cancel').addEventListener('click', e 
 // events
 // ------------------------------------
 let skipClickAfterDrop = false;
-let cdcNode = clickDoubleClick(
-  e => { if (skipClickAfterDrop) { skipClickAfterDrop = false; return; } selectPerson(e); },
-  e => { selectOnePerson(e); showPersonInfo(e.data.node.id); });
-s.bind('clickNode', cdcNode.click.bind(cdcNode));
-s.bind('doubleClickNode', cdcNode.doubleClick.bind(cdcNode));
+s.bind('clickNode', e => { if (skipClickAfterDrop) { skipClickAfterDrop = false; return; } selectPerson(e); });
 
 s.bind('clickEdge', selectConnection);
 
@@ -672,4 +676,3 @@ dragListener.bind('drop', e => { console.log('drop'); movePersons(e); skipClickA
 // document.addEventListener('keydown', e => {});
 
 setTimeout(s.refresh.bind(s), 1000);
-
