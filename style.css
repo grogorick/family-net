@@ -43,7 +43,7 @@ body {
 .input-box .box-info {
   margin-bottom: 20pt;
 }
-.input-box input, .input-box button {
+.input-box input {
   margin-bottom: 10pt;
 }
 .input-box input[placeholder="tt"], .input-box input[placeholder="mm"] {
@@ -51,4 +51,29 @@ body {
 }
 .input-box input[placeholder="yyyy"] {
   width: 4em;
+}
+.input-box button {
+  margin: 0;
+  width: 100%;
+  padding: 5pt 20pt;
+  background: transparent;
+  border: none;
+  border-top: 1px solid #eee;
+}
+.input-box button:first-of-type {
+  margin-top: 20pt;
+  border-top: 1px solid transparent;
+}
+.input-box button:last-of-type {
+  border-bottom: 1px solid transparent;
+}
+.input-box button:hover {
+  background: radial-gradient(circle, #fcfcfc 50%, #f9f9f9 100%);
+  border-top: 1px solid #ddd;
+}
+.input-box button:hover+button {
+  border-top: 1px solid #ddd;
+}
+.input-box button:last-of-type:hover {
+  border-bottom: 1px solid #ddd;
 }

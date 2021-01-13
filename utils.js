@@ -30,6 +30,17 @@ function clickDoubleClick(cbClick, cbDoubleClick)
   return cdc;
 }
 
+function approveOrCancelKeys(inputField, approveButtonToClick, cancelButtonToClick)
+{
+  inputField.addEventListener('keydown', e =>
+  {
+    switch (e.key) {
+      case 'Enter': approveButtonToClick.click(); break;
+      case 'Escape': cancelButtonToClick.click(); break;
+    }
+  });
+}
+
 function twoDigits(v)
 {
   if (v === '0')

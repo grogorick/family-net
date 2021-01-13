@@ -64,6 +64,19 @@ if (isset($_GET['action'])) {
       $p['y'] = urldecode($_GET['y']);
     }
     break;
+    case 'movePersons':
+    {
+      $t = [];
+      $ds = json_decode(urldecode($_GET['d']), true);
+      foreach ($ds as &$d) {
+        $t[] = $d['t'];
+        $p = &getData(PERSONS, $d['t']);
+        $p['x'] = $d['x'];
+        $p['y'] = $d['y'];
+      }
+      $t = '[' . implode(', ', $t) . ']';
+    }
+    break;
     case 'deletePerson':
     {
       $t = urldecode($_GET['t']);
@@ -100,7 +113,7 @@ header('Content-Type:text/html');
   <meta charset="utf-8">
   <meta name="robots" content="noindex,nofollow" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>sb</title>
+  <title>Familiennetz</title>
   <meta name="description" content="private website" />
   <link rel="icon" type="image/png" href="favicon.png" />
   <link rel="stylesheet" type="text/css" href="style.css" />
@@ -129,15 +142,15 @@ header('Content-Type:text/html');
   <div id="person-action-menu" class="input-box">
     <h2>Person...</h2>
     <div class="box-info"></div>
-    <button id="person-action-edit">Bearbeiten</button><br />
-    <button id="person-action-delete">Löschen</button><br />
+    <button id="person-action-edit">Bearbeiten</button>
+    <button id="person-action-delete">Löschen</button>
     <button id="person-action-cancel">Abbrechen</button>
   </div>
   <div id="connection-action-menu" class="input-box">
     <h2>Verbindung...</h2>
     <div class="box-info"></div>
-    <button id="connection-action-edit">Bearbeiten</button><br />
-    <button id="connection-action-delete">Löschen</button><br />
+    <button id="connection-action-edit">Bearbeiten</button>
+    <button id="connection-action-delete">Löschen</button>
     <button id="connection-action-cancel">Abbrechen</button>
   </div>
   <div id="new-person-form" class="input-box">
