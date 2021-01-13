@@ -117,7 +117,6 @@ header('Content-Type:text/html');
   <script src="linkurious/renderer/sigma.canvas.edgehovers.dashed.js"></script>
   <script src="linkurious/renderer/sigma.canvas.edgehovers.dotted.js"></script>
   <script src="linkurious/activeState/sigma.plugins.activeState.js"></script>
-  <script src="linkurious/select/sigma.plugins.select.js"></script>
   <script src="linkurious/dragNodes/sigma.plugins.dragNodes.js"></script>
   <script src="linkurious/edgeLabels/sigma.canvas.edges.labels.def.js"></script>
   <script src="linkurious/edgeLabels/sigma.canvas.edges.labels.curve.js"></script>
@@ -128,14 +127,15 @@ header('Content-Type:text/html');
   <div id="graph"></div>
   <div id="modal-blocker"></div>
   <div id="person-action-menu" class="input-box">
-    <h2>Person(en)...</h2>
-    <button id="person-action-connect">Verbinden</button><br />
+    <h2>Person...</h2>
+    <div class="box-info"></div>
     <button id="person-action-edit">Bearbeiten</button><br />
     <button id="person-action-delete">Löschen</button><br />
     <button id="person-action-cancel">Abbrechen</button>
   </div>
   <div id="connection-action-menu" class="input-box">
     <h2>Verbindung...</h2>
+    <div class="box-info"></div>
     <button id="connection-action-edit">Bearbeiten</button><br />
     <button id="connection-action-delete">Löschen</button><br />
     <button id="connection-action-cancel">Abbrechen</button>

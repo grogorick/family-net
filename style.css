@@ -17,7 +17,7 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  backdrop-filter: blur(2pt);
+  backdrop-filter: blur(1pt);
   background: #0001;
 }
 .input-box.input-box-visible {
@@ -39,6 +39,9 @@ body {
   font-size: 100%;
   font-weight: bold;
   color: #aaa;
+}
+.input-box .box-info {
+  margin-bottom: 20pt;
 }
 .input-box input, .input-box button {
   margin-bottom: 10pt;

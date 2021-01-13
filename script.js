@@ -23,8 +23,9 @@ let s = new sigma({
     rescaleIgnoreSize: true,
 
     font: '"Josefin Sans", "Trebuchet MS", sans-serif',
-    fontStyle: 'bold',
-    // labelAlignment: 'constrained',
+    fontStyle: '',
+    activeFontStyle: 'bold',
+    labelAlignment: 'bottom',
     labelHoverShadow: false,
 
     minNodeSize: 1,
@@ -62,7 +63,6 @@ let s = new sigma({
 });
 
 let activeState = sigma.plugins.activeState(s);
-// var select = sigma.plugins.select(s, activeState, s.renderers[0]);
 let dragListener = sigma.plugins.dragNodes(s, s.renderers[0], activeState);
 
 const bounds = {
@@ -187,56 +187,56 @@ function deselectAll(e, refreshGraph = true)
 
 // select persons
 // ------------------------------------
-let person1 = null;
-let person2 = null;
-
 function selectPerson(e, refreshGraph = true)
 {
-  deselectAll(e, false);
-  console.log(['selectPerson', e]);
-  person1 = e.data.node;
-  // activeState.addNodes(person1.id);
-  person1.color = settings.nodeColorHighlight1;
-  let d = getDataPerson(person1.id);
-  person1.label = d.n + ' (' + d.b + ')';
-  if (refreshGraph) {
-    s.refresh();
+  if (!e.data.captor.ctrlKey && !e.data.captor.shiftKey) {
+    deselectAll(e, false);
+    console.log(['selectPerson', e]);
   }
-}
-function selectSecondPerson(e, refreshGraph = true)
-{
-  deselectSecondPerson(e, false);
-  console.log(['selectSecondPerson', e]);
-  person2 = e.data.node;
-  activeState
-  person2.color = settings.nodeColorHighlight2;
-  if (refreshGraph) {
-    s.refresh();
+  else {
+    console.log(['selectPersonMultiple', e]);
   }
-}
+  let n = e.data.node;
 
+  let alreadySelected = activeState.nodes().some(sn => sn.id === n.id);
+  if (alreadySelected) {
+    activeState.dropNodes(n.id);
+  }
+  else {
+    activeState.addNodes(n.id);
+  }
+  if (refreshGraph) {
+    s.refresh();
+  }
+
+  let nodes = activeState.nodes();
+  switch (nodes.length) {
+    case 1:
+    {
+      let d = getDataPerson(n.id);
+      personActionTitle.innerHTML = d.n;
+      personActionInfo.innerHTML = 'geboren: ' + d.b;
+      showForm(personActionMenu);
+    }
+    break;
+    case 2:
+    {
+      if (nodes[0].id == nodes[1].id) {
+        console.log('no connection possible - 2 different persons must be selected');
+        return;
+      }
+      if (checkPersonsConnected(nodes[0].id, nodes[1].id)) {
+        console.log('no connection possible - persons already connected');
+        return;
+      }
+      showForm(newConnectionForm);
+    }
+    break;
+  }
+}
 function deselectPerson(e, refreshGraph = true)
 {
-  if (person1 !== null) {
-    console.log('deselectPerson');
-    // activeState.dropNodes(person1.id);
-    person1.color = null;
-    let d = getDataPerson(person1.id);
-    person1.label = d.n;
-    person1 = null;
-  }
-  deselectSecondPerson(e, false);
-  if (refreshGraph) {
-    s.refresh();
-  }
-}
-function deselectSecondPerson(e, refreshGraph = true)
-{
-  if (person2 !== null) {
-    console.log('deselectSecondPerson');
-    person2.color = null;
-    person2 = null;
-  }
+  activeState.dropNodes();
   if (refreshGraph) {
     s.refresh();
   }
@@ -245,25 +245,26 @@ function deselectSecondPerson(e, refreshGraph = true)
 
 // select connections
 // ------------------------------------
-let connection1 = null;
-
 function selectConnection(e, refreshGraph = true)
 {
   deselectAll(e, false);
   console.log(['selectConnection', e]);
-  connection1 = e.data.edge;
-  connection1.color = settings.nodeColorHighlight1;
+  let c = e.data.edge;
+  activeState.addEdges(c.id);
   if (refreshGraph) {
     s.refresh();
   }
+
+  let d = getDataConnection(c.id);
+  let p1 = getDataPerson(c.source);
+  let p2 = getDataPerson(c.target);
+  connectionActionTitle.innerHTML = p1.n + ' - ' + p2.n;
+  connectionActionInfo.innerHTML = d.d;
+  showForm(connectionActionMenu);
 }
 function deselectConnection(e, refreshGraph = true)
 {
-  if (connection1 !== null) {
-    console.log('deselectConnection');
-    connection1.color = null;
-    connection1 = null;
-  }
+  activeState.dropEdges();
   if (refreshGraph) {
     s.refresh();
   }
@@ -500,11 +501,11 @@ document.getElementById('new-connection-add').addEventListener('click', e =>
 {
   console.log('click new-connection-add');
   hideForm(newConnectionForm);
-
+  let n = activeState.nodes();
   addConnection({
     t: new Date().getTime(),
-    p1: person1.id,
-    p2: person2.id,
+    p1: n[0].id,
+    p2: n[1].id,
     d: newConnectionDesc.value.trim()
   }, true, true, true, true);
   clearNewConnectionForm();
@@ -558,33 +559,23 @@ function deleteConnection(t, toData = true, toServer = true, toGraph = true, ref
 // person action menu
 // ------------------------------------
 let personActionMenu = document.getElementById('person-action-menu');
-
-document.getElementById('person-action-connect').addEventListener('click', e =>
-{
-  console.log('click person-action-connect');
-  hideForm(personActionMenu);
-  if (person1 == null || person2 == null || person1.id == person2.id) {
-    console.log('cancelled - 2 persons must be selected');
-    return;
-  }
-  if (checkPersonsConnected(person1.id, person2.id)) {
-    console.log('cancelled - persons already connected');
-    return;
-  }
-  showForm(newConnectionForm);
-});
+let personActionTitle = personActionMenu.querySelector('h2');
+let personActionInfo = personActionMenu.querySelector('.box-info');
 
 document.getElementById('person-action-delete').addEventListener('click', e =>
 {
   console.log('click person-action-delete');
   hideForm(personActionMenu);
-  deletePerson(person2.id);
-  person2 = null;
+  n = activeState.nodes()[0];
+  activeState.dropNodes();
+  deletePerson(n.id);
 });
 
 document.getElementById('person-action-cancel').addEventListener('click', e =>
 {
   console.log('click person-action-cancel');
+  personActionTitle.innerHTML = 'Person...';
+  personActionInfo.innerHTML = '';
   hideForm(personActionMenu);
 });
 
@@ -592,35 +583,38 @@ document.getElementById('person-action-cancel').addEventListener('click', e =>
 // connection action menu
 // ------------------------------------
 let connectionActionMenu = document.getElementById('connection-action-menu');
+let connectionActionTitle = connectionActionMenu.querySelector('h2');
+let connectionActionInfo = connectionActionMenu.querySelector('.box-info');
 
 document.getElementById('connection-action-delete').addEventListener('click', e =>
 {
   console.log('click connection-action-delete');
   hideForm(connectionActionMenu);
-  deleteConnection(connection1.id);
-  connection1 = null;
+  c = activeState.edges()[0];
+  activeState.dropEdges();
+  deleteConnection(c.id);
 });
 
 document.getElementById('connection-action-cancel').addEventListener('click', e =>
 {
   console.log('click connection-action-cancel');
+  connectionActionTitle.innerHTML = 'Verbindung...';
+  connectionActionInfo.innerHTML = '';
   hideForm(connectionActionMenu);
 });
 
 
 // events
 // ------------------------------------
-let cdcNode = clickDoubleClick(selectPerson, e => { selectSecondPerson(e); showForm(personActionMenu); });
-s.bind('clickNode', cdcNode.click.bind(cdcNode));
-s.bind('doubleClickNode', cdcNode.doubleClick.bind(cdcNode));
-
-s.bind('clickEdge', e => { selectConnection(e); showForm(connectionActionMenu); });
+let skipClickAfterDrop = false;
+s.bind('clickNode', e => { if (skipClickAfterDrop) { skipClickAfterDrop = false; return; } selectPerson(e); });
+s.bind('clickEdge', selectConnection);
 
 let cdcStage = clickDoubleClick(deselectAll, e => { deselectAll(e); startNewPerson(e); });
 s.bind('clickStage', cdcStage.click.bind(cdcStage));
 s.bind('doubleClickStage', cdcStage.doubleClick.bind(cdcStage));
 
-dragListener.bind('drop', e => { console.log(['drop', e]); d=e.data.node; movePerson({ t: d.id, x: d.x, y: d.y }); });
+dragListener.bind('drop', e => { console.log(['drop', e]); d=e.data.node; movePerson({ t: d.id, x: d.x, y: d.y }); skipClickAfterDrop = true; });
 
 // document.addEventListener('keydown', e => {});
 
