@@ -181,36 +181,29 @@ header('Content-Type:text/html');
       </li>
     </ul>
   </div>
-  <div id="person-action-menu" class="box">
-    <h2>Person...</h2>
-    <div class="box-info"></div>
-    <button id="person-action-edit">Bearbeiten</button>
-    <button id="person-action-delete">Entfernen</button>
-    <button id="person-action-cancel">Abbrechen</button>
-  </div>
-  <div id="connection-action-menu" class="box">
-    <h2>Verbindung...</h2>
-    <div class="box-info"></div>
-    <button id="connection-action-edit">Bearbeiten</button>
-    <button id="connection-action-delete">Entfernen</button>
-    <button id="connection-action-cancel">Abbrechen</button>
-  </div>
   <div id="person-form" class="box">
-    <h2 id="person-form-title-new">Neue Person</h2>
+    <h2 class="opt opt-new">Neue Person</h2>
+    <h2 class="opt opt-edit">Person bearbeiten</h2>
     <label for="person-form-name">Name: </label>
     <input id="person-form-name" type="text" /><br />
     <label for="person-form-birthday">Geburtstag: </label>
     <input id="person-form-birthday" type="text" placeholder="tt" />
     <input id="person-form-birthday-month" type="text" placeholder="mm" />
     <input id="person-form-birthday-year" type="text" placeholder="yyyy" /><br />
-    <button id="person-form-add">Hinzufügen</button>
+    <button id="person-form-add" class="opt opt-new">Hinzufügen</button>
+    <button id="person-form-edit" class="opt opt-edit">Speichern</button>
+    <button id="person-form-delete" class="opt opt-edit">Entfernen</button>
     <button id="person-form-cancel">Abbrechen</button>
   </div>
   <div id="connection-form" class="box">
-    <h2 id="conenction-form-title-new">Neue Verbindung</h2>
+    <h2 class="opt opt-new">Neue Verbindung</h2>
+    <h2 class="opt opt-edit">Verbindung bearbeiten</h2>
+    <i id="connection-form-persons" class="opt opt-edit"></i>
     <label for="connection-form-desc">Info: </label>
     <input id="connection-form-desc" type="text" /><br />
-    <button id="connection-form-add">Verbinden</button>
+    <button id="connection-form-add" class="opt opt-new">Verbinden</button>
+    <button id="connection-action-edit" class="opt opt-edit">Bearbeiten</button>
+    <button id="connection-action-delete" class="opt opt-edit">Entfernen</button>
     <button id="connection-form-cancel">Abbrechen</button>
   </div>
   <script src="utils.js"></script>
