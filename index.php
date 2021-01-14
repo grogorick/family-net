@@ -2,10 +2,11 @@
 //phpinfo();
 
 define('STORAGE_FILE', 'storage.yml');
+define('CAMERA', 'camera');
 define('PERSONS', 'persons');
 define('CONNECTIONS', 'connections');
 
-$data = [PERSONS => [], CONNECTIONS => []];
+$data = [CAMERA => [ 'x' => 0, 'y' => 0, 'z' => 1], PERSONS => [], CONNECTIONS => []];
 
 $file_content = file_get_contents(STORAGE_FILE);
 if ($file_content) {
@@ -45,6 +46,15 @@ if (isset($_GET['action'])) {
   header('Content-Type: text/plain; charset=utf-8');
   $t = time();
   switch ($_GET['action']) {
+    case 'moveCamera':
+    {
+      $data[CAMERA] = [
+        'x' => urldecode($_GET['x']),
+        'y' => urldecode($_GET['y']),
+        'z' => urldecode($_GET['z'])
+      ];
+    }
+    break;
     case 'addPerson':
     {
       $data[PERSONS][] = [

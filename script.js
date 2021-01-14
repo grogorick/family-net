@@ -77,7 +77,7 @@ const bounds = {
   weightMax: 1};
 s.settings('bounds', bounds);
 
-let data = { persons: [], connections: []};
+let data = { camera: { x: 0, y: 0, z: 0 }, persons: [], connections: [] };
 
 function getDataPerson(t)
 {
@@ -167,20 +167,80 @@ modalBlocker.addEventListener('click', e =>
 
 // load from file
 // ------------------------------------
-console.log('load data from file')
+console.log('load data from file');
 var xhttp = new XMLHttpRequest();
 xhttp.onreadystatechange = function()
 {
   if (this.readyState === 4 && this.status === 200) {
     data = JSON.parse(this.responseText);
     console.log(data);
-    data.persons.forEach(d => addPerson(d));
-    data.connections.forEach(d => addConnection(d));
+    moveCamera({
+        x: parseFloat(data.camera.x),
+        y: parseFloat(data.camera.y),
+        z: parseFloat(data.camera.z)
+      },
+      false, false, true, false);
+    logAddPerson = 10;
+    logAddConnection = 10;
+    data.persons.forEach(d => { addPerson(d, false, false, true, false); if (logAddPerson) --logAddPerson; });
+    data.connections.forEach(d => { addConnection(d, false, false, true, false); if (logAddConnection) --logAddConnection; });
+    logAddPerson = true;
+    logAddConnection = true;
     s.refresh();
   }
 };
 xhttp.open('GET', 'storage.yml', true);
 xhttp.send();
+
+
+// move camera
+// ------------------------------------
+function cameraMoved()
+{
+  moveCamera({
+    x: s.renderers[0].camera.x,
+    y: s.renderers[0].camera.y,
+    z: s.renderers[0].camera.ratio},
+    true, true, false, false);
+}
+
+function moveCamera(xyz, toData, toServer, toGraph, refreshGraph)
+{
+  console.log(['moveCamera', xyz, toData, toServer, toGraph, refreshGraph]);
+  let continueWhenServerIsDone = function()
+  {
+    if (toData) {
+      data.camera = xyz;
+    }
+    if (toGraph) {
+      s.renderers[0].camera.x = xyz.x;
+      s.renderers[0].camera.y = xyz.y;
+      s.renderers[0].camera.ratio = xyz.z;
+      if (refreshGraph) {
+        s.refresh();
+      }
+    }
+  };
+  if (toServer) {
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function()
+    {
+      if (this.readyState === 4 && this.status === 200) {
+        console.log(this.responseText);
+        continueWhenServerIsDone();
+      }
+    };
+    xhttp.open('GET', '?action=moveCamera'
+      + '&x=' + encodeURIComponent(xyz.x)
+      + '&y=' + encodeURIComponent(xyz.y)
+      + '&z=' + encodeURIComponent(xyz.z)
+      , true);
+    xhttp.send();
+  }
+  else {
+    continueWhenServerIsDone();
+  }
+}
 
 
 // select
@@ -367,9 +427,10 @@ approveOrCancelKeys(personMenuBirthday, personMenuAdd, personMenuCancel);
 approveOrCancelKeys(personMenuBirthdayMonth, personMenuAdd, personMenuCancel);
 approveOrCancelKeys(personMenuBirthdayYear, personMenuAdd, personMenuCancel);
 
-function addPerson(d, toData = false, toServer = false, toGraph = true, refreshGraph = false)
+let logAddPerson = true;
+function addPerson(d, toData, toServer, toGraph, refreshGraph)
 {
-  console.log(['addPerson', d, toData, toServer, toGraph, refreshGraph]);
+  console.log(logAddPerson ? ['addPerson', d, toData, toServer, toGraph, refreshGraph] : '...');
   let continueWhenServerIsDone = function()
   {
     if (toData) {
@@ -559,9 +620,10 @@ connectionMenuCancel.addEventListener('click', e =>
 
 approveOrCancelKeys(connectionMenuDesc, connectionMenuAdd, connectionMenuCancel);
 
-function addConnection(d, toData = false, toServer = false, toGraph = true, refreshGraph = false)
+let logAddConnection = true;
+function addConnection(d, toData, toServer, toGraph, refreshGraph)
 {
-  console.log(['addConnection', d, toData, toServer, toGraph, refreshGraph]);
+  console.log(logAddConnection ? ['addConnection', d, toData, toServer, toGraph, refreshGraph] : '...');
   let continueWhenServerIsDone = function()
   {
     if (toData) {
@@ -646,12 +708,12 @@ s.bind('clickNode', e => { if (skipClickAfterDrop) { skipClickAfterDrop = false;
 s.bind('clickEdge', selectConnection);
 
 let cdcStage = clickDoubleClick(
-  e => { if (!e.data.captor.isDragging) { deselectAll(e); } else { console.log('dragged graph'); } },
+  e => { if (!e.data.captor.isDragging) { deselectAll(e); } else { cameraMoved(); } },
   e => { deselectAll(e); startNewPerson(e); });
 s.bind('clickStage', cdcStage.click.bind(cdcStage));
 s.bind('doubleClickStage', cdcStage.doubleClick.bind(cdcStage));
 
-dragListener.bind('drop', e => { console.log('drop'); movePersons(e); skipClickAfterDrop = true; });
+dragListener.bind('drop', e => { console.log('(drop)'); movePersons(e); skipClickAfterDrop = true; });
 
 // document.addEventListener('keydown', e => {});
 

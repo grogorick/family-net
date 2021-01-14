@@ -4,7 +4,7 @@ function clickDoubleClick(cbClick, cbDoubleClick)
     check: 0,
     click: function(e)
     {
-      console.log('click');
+      console.log('(click)');
       if (!cdc.check)
         setTimeout(() =>
         {
@@ -20,7 +20,7 @@ function clickDoubleClick(cbClick, cbDoubleClick)
     },
     doubleClick: function(e)
     {
-      console.log('doubleClick');
+      console.log('(doubleClick)');
       cdc.check = 2;
       if (cbDoubleClick) {
         cbDoubleClick(e);
