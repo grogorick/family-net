@@ -140,7 +140,7 @@ let modalBlocker = document.getElementById('modal-blocker');
 function showForm(f)
 {
   modalBlocker.style.display = 'block';
-  f.classList.add('input-box-visible');
+  f.classList.add('box-visible');
   let firstInput = f.querySelector('input');
   if (firstInput) {
     firstInput.focus();
@@ -148,13 +148,13 @@ function showForm(f)
 }
 function hideForm(f)
 {
-  f.classList.remove('input-box-visible');
+  f.classList.remove('box-visible');
   modalBlocker.style.display = 'none';
 }
 
 modalBlocker.addEventListener('click', e =>
 {
-  document.querySelector('.input-box-visible button[id$="cancel"]').click();
+  document.querySelector('.box-visible button[id$="cancel"]').click();
 });
 
 
@@ -230,6 +230,7 @@ function selectPerson(e, refreshGraph = true)
     showForm(newConnectionForm);
   }
 }
+
 function deselectPersons(e, refreshGraph = true, except = [])
 {
   if (except.length) {
@@ -278,14 +279,10 @@ function selectConnection(e, refreshGraph = true)
   }
 
   if (!multipleKeyPressed(e)) {
-    let d = getDataConnection(c.id);
-    let p1 = getDataPerson(c.source);
-    let p2 = getDataPerson(c.target);
-    connectionActionTitle.innerHTML = p1.n + ' - ' + p2.n;
-    connectionActionInfo.innerHTML = d.d;
-    showForm(connectionActionMenu);
+    showConnectionInfo(c.id);
   }
 }
+
 function deselectConnections(e, refreshGraph = true, except = [])
 {
   if (except.length) {
@@ -300,6 +297,16 @@ function deselectConnections(e, refreshGraph = true, except = [])
   if (refreshGraph) {
     s.refresh();
   }
+}
+
+function showConnectionInfo(t)
+{
+  let d = getDataConnection(t);
+  let p1 = getDataPerson(d.p1);
+  let p2 = getDataPerson(d.p2);
+  connectionActionTitle.innerHTML = p1.n + ' - ' + p2.n;
+  connectionActionInfo.innerHTML = d.d;
+  showForm(connectionActionMenu);
 }
 
 
@@ -349,11 +356,11 @@ function addPerson(d, toData = false, toServer = false, toGraph = true, refreshG
   }
 }
 
-let newPersonForm = document.getElementById('new-person-form');
-let newPersonName = document.getElementById('new-person-name');
-let newPersonBirthday = document.getElementById('new-person-birthday');
-let newPersonAdd = document.getElementById('new-person-add');
-let newPersonCancel = document.getElementById('new-person-cancel');
+let newPersonForm = document.getElementById('person-form');
+let newPersonName = document.getElementById('person-form-name');
+let newPersonBirthday = document.getElementById('person-form-birthday');
+let newPersonAdd = document.getElementById('person-form-add');
+let newPersonCancel = document.getElementById('person-form-cancel');
 
 function clearNewPersonForm()
 {
@@ -371,7 +378,7 @@ function startNewPerson(e)
 
 newPersonAdd.addEventListener('click', e =>
 {
-  console.log('click new-person-add');
+  console.log('click person-form-add');
   hideForm(newPersonForm);
 
   addPerson({
@@ -386,15 +393,15 @@ newPersonAdd.addEventListener('click', e =>
 
 newPersonCancel.addEventListener('click', e =>
 {
-  console.log('click new-person-cancel');
+  console.log('click person-form-cancel');
   hideForm(newPersonForm);
   clearNewPersonForm();
 });
 
 approveOrCancelKeys(newPersonName, newPersonAdd, newPersonCancel);
 approveOrCancelKeys(newPersonBirthday, newPersonAdd, newPersonCancel);
-approveOrCancelKeys(document.getElementById('new-person-birthday-month'), newPersonAdd, newPersonCancel);
-approveOrCancelKeys(document.getElementById('new-person-birthday-year'), newPersonAdd, newPersonCancel);
+approveOrCancelKeys(document.getElementById('person-form-birthday-month'), newPersonAdd, newPersonCancel);
+approveOrCancelKeys(document.getElementById('person-form-birthday-year'), newPersonAdd, newPersonCancel);
 
 
 // move person
@@ -539,10 +546,10 @@ function addConnection(d, toData = false, toServer = false, toGraph = true, refr
   }
 }
 
-let newConnectionForm = document.getElementById('new-connection-form');
-let newConnectionDesc = document.getElementById('new-connection-desc');
-let newConnectionAdd = document.getElementById('new-connection-add');
-let newConnectionCancel = document.getElementById('new-connection-cancel');
+let newConnectionForm = document.getElementById('connection-form');
+let newConnectionDesc = document.getElementById('connection-form-desc');
+let newConnectionAdd = document.getElementById('connection-form-add');
+let newConnectionCancel = document.getElementById('connection-form-cancel');
 
 function clearNewConnectionForm()
 {
@@ -551,7 +558,7 @@ function clearNewConnectionForm()
 
 newConnectionAdd.addEventListener('click', e =>
 {
-  console.log('click new-connection-add');
+  console.log('click connection-form-add');
   hideForm(newConnectionForm);
   let n = activeState.nodes();
   addConnection({
@@ -565,7 +572,7 @@ newConnectionAdd.addEventListener('click', e =>
 
 newConnectionCancel.addEventListener('click', e =>
 {
-  console.log('click new-connection-cancel');
+  console.log('click connection-form-cancel');
   hideForm(newConnectionForm);
   clearNewConnectionForm();
 });
@@ -610,7 +617,7 @@ function deleteConnection(t, toData = true, toServer = true, toGraph = true, ref
 }
 
 
-// person action menu
+// person menu
 // ------------------------------------
 let personActionMenu = document.getElementById('person-action-menu');
 let personActionTitle = personActionMenu.querySelector('h2');
@@ -634,7 +641,7 @@ document.getElementById('person-action-cancel').addEventListener('click', e =>
 });
 
 
-// connection action menu
+// connection menu
 // ------------------------------------
 let connectionActionMenu = document.getElementById('connection-action-menu');
 let connectionActionTitle = connectionActionMenu.querySelector('h2');

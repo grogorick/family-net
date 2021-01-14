@@ -139,37 +139,79 @@ header('Content-Type:text/html');
 <body>
   <div id="graph"></div>
   <div id="modal-blocker"></div>
-  <div id="person-action-menu" class="input-box">
+  <div id="help" class="box box-visible box-minimized">
+    <div class="box-minimize-buttons">
+      <button class="box-restore">?</button>
+      <button class="box-minimize">X</button>
+    </div>
+<?php $boxPos = '(unten rechts)'; ?>
+    <ul>
+      <li>
+        Eine Person hinzufügen
+        <ul>
+          <li><i>Doppelklick</i> dort, wo die Person hinzugefügt werden soll</li>
+          <li>Daten der Person im Eingabefenster <?=$boxPos?> eintragen</li>
+          <li><i>Hinzufügen</i> klicken</li>
+        </ul>
+      </li>
+      <li>
+        Zwei Personen verbinden
+        <ul>
+          <li><i>Shift oder Strg</i> gedrückt halten</li>
+          <li>Die erste Person anklicken</li>
+          <li>Die zweite Person anklicken</li>
+          <li>Daten der Verbindung im Eingabefenster <?=$boxPos?> eintragen</li>
+          <li><i>Verbinden</i> klicken</li>
+        </ul>
+      </li>
+      <li>
+        Eine Person entfernen
+        <ul>
+          <li>(Die Person darf nicht mit anderen verbunden sein)</li>
+          <li>Die Person anklicken</li>
+          <li>Im Detailfenster <?=$boxPos?> <i>Entfernen</i> klicken</li>
+        </ul>
+      </li>
+      <li>
+        Eine Verbindung entfernen
+        <ul>
+          <li>Die Verbindung anklicken</li>
+          <li>Im Detailfenster <?=$boxPos?> <i>Entfernen</i> klicken</li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+  <div id="person-action-menu" class="box">
     <h2>Person...</h2>
     <div class="box-info"></div>
     <button id="person-action-edit">Bearbeiten</button>
-    <button id="person-action-delete">Löschen</button>
+    <button id="person-action-delete">Entfernen</button>
     <button id="person-action-cancel">Abbrechen</button>
   </div>
-  <div id="connection-action-menu" class="input-box">
+  <div id="connection-action-menu" class="box">
     <h2>Verbindung...</h2>
     <div class="box-info"></div>
     <button id="connection-action-edit">Bearbeiten</button>
-    <button id="connection-action-delete">Löschen</button>
+    <button id="connection-action-delete">Entfernen</button>
     <button id="connection-action-cancel">Abbrechen</button>
   </div>
-  <div id="new-person-form" class="input-box">
-    <h2>Neue Person</h2>
-    <label for="new-person-name">Name: </label>
-    <input id="new-person-name" type="text" /><br />
-    <label for="new-person-birthday">Geburtstag: </label>
-    <input id="new-person-birthday" type="text" placeholder="tt" />
-    <input id="new-person-birthday-month" type="text" placeholder="mm" />
-    <input id="new-person-birthday-year" type="text" placeholder="yyyy" /><br />
-    <button id="new-person-add">Hinzufügen</button>
-    <button id="new-person-cancel">Abbrechen</button>
+  <div id="person-form" class="box">
+    <h2 id="person-form-title-new">Neue Person</h2>
+    <label for="person-form-name">Name: </label>
+    <input id="person-form-name" type="text" /><br />
+    <label for="person-form-birthday">Geburtstag: </label>
+    <input id="person-form-birthday" type="text" placeholder="tt" />
+    <input id="person-form-birthday-month" type="text" placeholder="mm" />
+    <input id="person-form-birthday-year" type="text" placeholder="yyyy" /><br />
+    <button id="person-form-add">Hinzufügen</button>
+    <button id="person-form-cancel">Abbrechen</button>
   </div>
-  <div id="new-connection-form" class="input-box">
-    <h2>Neue Verbindung</h2>
-    <label for="new-connection-desc">Art: </label>
-    <input id="new-connection-desc" type="text" /><br />
-    <button id="new-connection-add">Verbinden</button>
-    <button id="new-connection-cancel">Abbrechen</button>
+  <div id="connection-form" class="box">
+    <h2 id="conenction-form-title-new">Neue Verbindung</h2>
+    <label for="connection-form-desc">Info: </label>
+    <input id="connection-form-desc" type="text" /><br />
+    <button id="connection-form-add">Verbinden</button>
+    <button id="connection-form-cancel">Abbrechen</button>
   </div>
   <script src="utils.js"></script>
   <script src="script.js"></script>

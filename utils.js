@@ -55,7 +55,14 @@ function twoDigits(v)
   return v;
 }
 
-document.querySelectorAll('.input-box input[placeholder="tt"]').forEach(tt =>
+document.querySelectorAll('.box-minimize, .box-restore').forEach(el =>
+{ el.addEventListener('click', e =>
+  {
+    el.parentNode.parentNode.classList.toggle('box-minimized');
+  });
+});
+
+document.querySelectorAll('.box input[placeholder="tt"]').forEach(tt =>
 {
   tt.pattern = '0|0?[1-9]|[12]\\d|3[01]';
   tt.addEventListener('input', e =>
@@ -68,7 +75,7 @@ document.querySelectorAll('.input-box input[placeholder="tt"]').forEach(tt =>
   tt.setAttribute('data-value', '--');
 });
 
-document.querySelectorAll('.input-box input[placeholder="mm"]').forEach(mm =>
+document.querySelectorAll('.box input[placeholder="mm"]').forEach(mm =>
 {
   mm.pattern = '0|0?[1-9]|1[012]';
   mm.addEventListener('input', e =>
@@ -81,7 +88,7 @@ document.querySelectorAll('.input-box input[placeholder="mm"]').forEach(mm =>
   });
 });
 
-document.querySelectorAll('.input-box input[placeholder="yyyy"]').forEach(yyyy =>
+document.querySelectorAll('.box input[placeholder="yyyy"]').forEach(yyyy =>
 {
   yyyy.pattern = '\\d{1,4}';
   yyyy.addEventListener('input', e =>
