@@ -296,6 +296,7 @@ function selectPerson(e, refreshGraph = true)
     }
     startNewConnection();
   }
+  checkCombinedSelection();
 }
 
 function deselectPersons(e, refreshGraph = true, except = [])
@@ -340,6 +341,7 @@ function selectConnection(e, refreshGraph = true)
   if (!multipleKeyPressed(e)) {
     showConnectionInfo(c.id);
   }
+  checkCombinedSelection();
 }
 
 function deselectConnections(e, refreshGraph = true, except = [])
@@ -354,6 +356,53 @@ function deselectConnections(e, refreshGraph = true, except = [])
     activeState.dropEdges();
   }
   if (refreshGraph) {
+    s.refresh();
+  }
+}
+
+// select person and connection
+function checkCombinedSelection()
+{
+  let es = activeState.edges();
+  let ns = activeState.nodes();
+  if (es.length === 1 && ns.length === 1) {
+    console.log(['create child connection', es, ns]);
+    let e = es[0];
+    let n1 = s.graph.nodes(e.source);
+    let n2 = s.graph.nodes(e.target);
+    let n12 = {
+      x: (n1.x + n2.x) / 2,
+      y: (n1.y + n2.y) / 2
+    };
+    let n = ns[0];
+    let t = new Date().getTime();
+    s.graph.addNode({
+      id: t + '-1',
+      x: n12.x,
+      y: n12.y,
+      size: 0
+    });
+    s.graph.addNode({
+      id: t + '-3',
+      x: (n12.x + n.x) / 2,
+      y: (n12.y + n.y) / 2,
+      size: 0
+    });
+    s.graph.addEdge({
+      id: t + '-2',
+      source: t + '-1',
+      target: t + '-3',
+      label: 'Kind',
+      size: settings.edgeSize,
+      type: 'line'
+    });
+    s.graph.addEdge({
+      id: t + '-4',
+      source: t + '-3',
+      target: n.id,
+      size: settings.edgeSize,
+      type: 'arrow'
+    });
     s.refresh();
   }
 }
