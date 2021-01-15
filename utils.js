@@ -30,13 +30,27 @@ function clickDoubleClick(cbClick, cbDoubleClick)
   return cdc;
 }
 
-function approveOrCancelKeys(inputField, approveButtonToClick, cancelButtonToClick)
+function approveOrCancelKeys(inputField, approveButtonsToClick, cancelButtonToClick)
 {
   inputField.addEventListener('keydown', e =>
   {
     switch (e.key) {
-      case 'Enter': approveButtonToClick.click(); break;
-      case 'Escape': cancelButtonToClick.click(); break;
+      case 'Enter':
+      {
+        approveButtonsToClick.forEach(b => {
+          let isNewForm = b.classList.contains('opt-new') && b.parentNode.classList.contains('opt-new');
+          let isEditForm = b.classList.contains('opt-edit') && b.parentNode.classList.contains('opt-edit');
+          if (isNewForm || isEditForm) {
+            b.click();
+          }
+        });
+      }
+      break;
+      case 'Escape':
+      {
+        cancelButtonToClick.click();
+      }
+      break;
     }
   });
 }

@@ -242,9 +242,7 @@ function moveCamera(xyz, toData, toServer, toGraph, refreshGraph)
       }
     };
     xhttp.open('GET', '?action=moveCamera'
-      + '&x=' + encodeURIComponent(xyz.x)
-      + '&y=' + encodeURIComponent(xyz.y)
-      + '&z=' + encodeURIComponent(xyz.z)
+      + '&d=' + encodeURIComponent(JSON.stringify(xyz))
       , true);
     xhttp.send();
   }
@@ -427,6 +425,7 @@ let personMenuBirthday = document.getElementById('person-form-birthday');
 let personMenuBirthdayMonth = document.getElementById('person-form-birthday-month');
 let personMenuBirthdayYear = document.getElementById('person-form-birthday-year');
 let personMenuAdd = document.getElementById('person-form-add');
+let personMenuEdit = document.getElementById('person-form-edit');
 let personMenuDelete = document.getElementById('person-form-delete');
 let personMenuCancel = document.getElementById('person-form-cancel');
 
@@ -464,16 +463,33 @@ personMenuAdd.addEventListener('click', e =>
       n: personMenuName.value.trim(),
       b: personMenuBirthday.getAttribute('data-value')
     },
-    true, true, true, true);
+    true, true, true, true,
+    (d) =>
+    {
+      deselectAll(e, false);
+      activeState.addNodes(d.t);
+      s.refresh();
+    });
+});
+
+personMenuEdit.addEventListener('click', e =>
+{
+  console.log('click person-form-edit');
+  hideForm(personMenuForm);
+  editPerson({
+    t: activeState.nodes()[0].id,
+    n: personMenuName.value.trim(),
+    b: personMenuBirthday.getAttribute('data-value')
+  });
 });
 
 personMenuDelete.addEventListener('click', e =>
 {
-  console.log('click person-action-delete');
+  console.log('click person-form-delete');
   hideForm(personMenuForm);
-  n = activeState.nodes()[0];
+  let t = activeState.nodes()[0].id;
   activeState.dropNodes();
-  deletePerson(n.id);
+  deletePerson(t);
 });
 
 personMenuCancel.addEventListener('click', e =>
@@ -482,13 +498,13 @@ personMenuCancel.addEventListener('click', e =>
   hideForm(personMenuForm);
 });
 
-approveOrCancelKeys(personMenuName, personMenuAdd, personMenuCancel);
-approveOrCancelKeys(personMenuBirthday, personMenuAdd, personMenuCancel);
-approveOrCancelKeys(personMenuBirthdayMonth, personMenuAdd, personMenuCancel);
-approveOrCancelKeys(personMenuBirthdayYear, personMenuAdd, personMenuCancel);
+approveOrCancelKeys(personMenuName, [ personMenuAdd, personMenuEdit ], personMenuCancel);
+approveOrCancelKeys(personMenuBirthday, [ personMenuAdd, personMenuEdit ], personMenuCancel);
+approveOrCancelKeys(personMenuBirthdayMonth, [ personMenuAdd, personMenuEdit ], personMenuCancel);
+approveOrCancelKeys(personMenuBirthdayYear, [ personMenuAdd, personMenuEdit ], personMenuCancel);
 
 let logAddPerson = true;
-function addPerson(d, toData, toServer, toGraph, refreshGraph)
+function addPerson(d, toData, toServer, toGraph, refreshGraph, doneCallback = null)
 {
   console.log(logAddPerson ? ['addPerson', d, toData, toServer, toGraph, refreshGraph] : '...');
   let continueWhenServerIsDone = function()
@@ -508,6 +524,9 @@ function addPerson(d, toData, toServer, toGraph, refreshGraph)
         s.refresh();
       }
     }
+    if (doneCallback) {
+      doneCallback(d);
+    }
   };
   if (toServer) {
     var xhttp = new XMLHttpRequest();
@@ -520,10 +539,83 @@ function addPerson(d, toData, toServer, toGraph, refreshGraph)
       }
     };
     xhttp.open('GET', '?action=addPerson'
-      + '&x=' + encodeURIComponent(d.x)
-      + '&y=' + encodeURIComponent(d.y)
-      + '&n=' + encodeURIComponent(d.n)
-      + '&b=' + encodeURIComponent(d.b)
+      + '&d=' + encodeURIComponent(JSON.stringify(d))
+      , true);
+    xhttp.send();
+  }
+  else {
+    continueWhenServerIsDone();
+  }
+}
+
+function editPerson(d, toData = true, toServer = true, toGraph = true, refreshGraph = true)
+{
+  console.log(['editPerson', d, toData, toServer, toGraph, refreshGraph]);
+  let continueWhenServerIsDone = function()
+  {
+    if (toData) {
+      let p = getDataPerson(d.t);
+      p.n = d.n;
+      p.b = d.b;
+    }
+    if (toGraph) {
+      let n = s.graph.nodes(d.t);
+      n.label = d.n;
+      if (refreshGraph) {
+        s.refresh();
+      }
+    }
+  };
+  if (toServer) {
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function()
+    {
+      if (this.readyState === 4 && this.status === 200) {
+        console.log([d.t, this.responseText]);
+        continueWhenServerIsDone();
+      }
+    };
+    xhttp.open('GET', '?action=editPerson'
+      + '&d=' + encodeURIComponent(JSON.stringify(d))
+      , true);
+    xhttp.send();
+  }
+  else {
+    continueWhenServerIsDone();
+  }
+}
+
+function deletePerson(t, toData = true, toServer = true, toGraph = true, refreshGraph = true)
+{
+  console.log(['deletePerson', t, toData, toServer, toGraph, refreshGraph]);
+  let connections = getDataConnectionsToPerson(t);
+  if (connections.length) {
+    console.log(['cancelled - person to delete must not be connected', connections]);
+    return;
+  }
+  let continueWhenServerIsDone = function()
+  {
+    if (toData) {
+      deleteDataPerson(t);
+    }
+    if (toGraph) {
+      s.graph.dropNode(t);
+      if (refreshGraph) {
+        s.refresh();
+      }
+    }
+  };
+  if (toServer) {
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function()
+    {
+      if (this.readyState === 4 && this.status === 200) {
+        console.log([t, this.responseText]);
+        continueWhenServerIsDone();
+      }
+    };
+    xhttp.open('GET', '?action=deletePerson'
+      + '&t=' + encodeURIComponent(t)
       , true);
     xhttp.send();
   }
@@ -583,45 +675,6 @@ function movePersons(e, toData = true, toServer = true, toGraph = false, refresh
   }
 }
 
-function deletePerson(t, toData = true, toServer = true, toGraph = true, refreshGraph = true)
-{
-  console.log(['deletePerson', t, toData, toServer, toGraph, refreshGraph]);
-  let connections = getDataConnectionsToPerson(t);
-  if (connections.length) {
-    console.log(['cancelled - person to delete must not be connected', connections]);
-    return;
-  }
-  let continueWhenServerIsDone = function()
-  {
-    if (toData) {
-      deleteDataPerson(t);
-    }
-    if (toGraph) {
-      s.graph.dropNode(t);
-      if (refreshGraph) {
-        s.refresh();
-      }
-    }
-  };
-  if (toServer) {
-    var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function()
-    {
-      if (this.readyState === 4 && this.status === 200) {
-        console.log([t, this.responseText]);
-        continueWhenServerIsDone();
-      }
-    };
-    xhttp.open('GET', '?action=deletePerson'
-      + '&t=' + encodeURIComponent(t)
-      , true);
-    xhttp.send();
-  }
-  else {
-    continueWhenServerIsDone();
-  }
-}
-
 
 // connections
 // ------------------------------------
@@ -629,7 +682,8 @@ let connectionMenuForm = document.getElementById('connection-form');
 let connectionMenuPersons = document.getElementById('connection-form-persons');
 let connectionMenuDesc = document.getElementById('connection-form-desc');
 let connectionMenuAdd = document.getElementById('connection-form-add');
-let connectionMenuDelete = document.getElementById('connection-action-delete');
+let connectionMenuEdit = document.getElementById('connection-form-edit');
+let connectionMenuDelete = document.getElementById('connection-form-delete');
 let connectionMenuCancel = document.getElementById('connection-form-cancel');
 
 function startNewConnection()
@@ -656,20 +710,35 @@ connectionMenuAdd.addEventListener('click', e =>
   hideForm(connectionMenuForm);
   let n = activeState.nodes();
   addConnection({
-      t: new Date().getTime(),
       p1: n[0].id,
       p2: n[1].id,
       d: connectionMenuDesc.value.trim()
-    }, true, true, true, true);
+    }, true, true, true, true,
+    (d) =>
+    {
+      deselectAll(e, false);
+      activeState.addEdges(d.t);
+      s.refresh();
+    });
+});
+
+connectionMenuEdit.addEventListener('click', e =>
+{
+  console.log('click connection-form-edit');
+  hideForm(connectionMenuForm);
+  editConnection({
+    t: activeState.edges()[0].id,
+    d: connectionMenuDesc.value.trim()
+  });
 });
 
 connectionMenuDelete.addEventListener('click', e =>
 {
-  console.log('click connection-action-delete');
+  console.log('click connection-form-delete');
   hideForm(connectionMenuForm);
-  c = activeState.edges()[0];
+  t = activeState.edges()[0].id;
   activeState.dropEdges();
-  deleteConnection(c.id);
+  deleteConnection(t);
 });
 
 connectionMenuCancel.addEventListener('click', e =>
@@ -678,10 +747,10 @@ connectionMenuCancel.addEventListener('click', e =>
   hideForm(connectionMenuForm);
 });
 
-approveOrCancelKeys(connectionMenuDesc, connectionMenuAdd, connectionMenuCancel);
+approveOrCancelKeys(connectionMenuDesc, [ connectionMenuAdd, connectionMenuEdit ], connectionMenuCancel);
 
 let logAddConnection = true;
-function addConnection(d, toData, toServer, toGraph, refreshGraph)
+function addConnection(d, toData, toServer, toGraph, refreshGraph, doneCallback = null)
 {
   console.log(logAddConnection ? ['addConnection', d, toData, toServer, toGraph, refreshGraph] : '...');
   let continueWhenServerIsDone = function()
@@ -702,6 +771,9 @@ function addConnection(d, toData, toServer, toGraph, refreshGraph)
         s.refresh();
       }
     }
+    if (doneCallback) {
+      doneCallback(d);
+    }
   };
   if (toServer) {
     var xhttp = new XMLHttpRequest();
@@ -714,9 +786,43 @@ function addConnection(d, toData, toServer, toGraph, refreshGraph)
       }
     };
     xhttp.open('GET', '?action=addConnection'
-      + '&p1=' + encodeURIComponent(d.p1)
-      + '&p2=' + encodeURIComponent(d.p2)
-      + '&d=' + encodeURIComponent(d.d)
+      + '&d=' + encodeURIComponent(JSON.stringify(d))
+      , true);
+    xhttp.send();
+  }
+  else {
+    continueWhenServerIsDone();
+  }
+}
+
+function editConnection(d, toData = true, toServer = true, toGraph = true, refreshGraph = true)
+{
+  console.log(['editConnection', d, toData, toServer, toGraph, refreshGraph]);
+  let continueWhenServerIsDone = function()
+  {
+    if (toData) {
+      let c = getDataConnection(d.t);
+      c.n = d.d;
+    }
+    if (toGraph) {
+      let c = s.graph.edges(d.t);
+      c.label = d.d;
+      if (refreshGraph) {
+        s.refresh();
+      }
+    }
+  };
+  if (toServer) {
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function()
+    {
+      if (this.readyState === 4 && this.status === 200) {
+        console.log([d.t, this.responseText]);
+        continueWhenServerIsDone();
+      }
+    };
+    xhttp.open('GET', '?action=editConnection'
+      + '&d=' + encodeURIComponent(JSON.stringify(d))
       , true);
     xhttp.send();
   }
@@ -768,7 +874,7 @@ s.bind('clickNode', e => { if (skipClickAfterDrop) { skipClickAfterDrop = false;
 s.bind('clickEdge', selectConnection);
 
 let cdcStage = clickDoubleClick(
-  e => { if (!e.data.captor.isDragging) { deselectAll(e); } else { cameraMoved(); } },
+  e => { if (e.data.captor.isDragging) { cameraMoved(); } else { if (!multipleKeyPressed(e)) { deselectAll(e); } } },
   e => { deselectAll(e); startNewPerson(e); });
 s.bind('clickStage', cdcStage.click.bind(cdcStage));
 s.bind('doubleClickStage', cdcStage.doubleClick.bind(cdcStage));

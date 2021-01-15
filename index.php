@@ -48,30 +48,39 @@ if (isset($_GET['action'])) {
   switch ($_GET['action']) {
     case 'moveCamera':
     {
+      $d = json_decode(urldecode($_GET['d']), true);
       $data[CAMERA] = [
-        'x' => urldecode($_GET['x']),
-        'y' => urldecode($_GET['y']),
-        'z' => urldecode($_GET['z'])
+        'x' => $d['x'],
+        'y' => $d['y'],
+        'z' => $d['z']
       ];
     }
     break;
     case 'addPerson':
     {
+      $d = json_decode(urldecode($_GET['d']), true);
       $data[PERSONS][] = [
         't' => $t,
-        'x' => urldecode($_GET['x']),
-        'y' => urldecode($_GET['y']),
-        'n' => urldecode($_GET['n']),
-        'b' => urldecode($_GET['b'])
+        'x' => $d['x'],
+        'y' => $d['y'],
+        'n' => $d['n'],
+        'b' => $d['b']
       ];
     }
     break;
-    case 'movePerson':
+    case 'editPerson':
+    {
+      $d = json_decode(urldecode($_GET['d']), true);
+      $t = $d['t'];
+      $p = &getData(PERSONS, $t);
+      $p['n'] = $d['n'];
+      $p['b'] = $d['b'];
+    }
+    break;
+    case 'deletePerson':
     {
       $t = urldecode($_GET['t']);
-      $p = &getData(PERSONS, $t);
-      $p['x'] = urldecode($_GET['x']);
-      $p['y'] = urldecode($_GET['y']);
+      deleteData(PERSONS, $t);
     }
     break;
     case 'movePersons':
@@ -87,20 +96,24 @@ if (isset($_GET['action'])) {
       $t = '[' . implode(', ', $t) . ']';
     }
     break;
-    case 'deletePerson':
-    {
-      $t = urldecode($_GET['t']);
-      deleteData(PERSONS, $t);
-    }
-    break;
+
     case 'addConnection':
     {
+      $d = json_decode(urldecode($_GET['d']), true);
       $data[CONNECTIONS][] = [
         't' => $t,
-        'p1' => urldecode($_GET['p1']),
-        'p2' => urldecode($_GET['p2']),
-        'd' => urldecode($_GET['d'])
+        'p1' => $d['p1'],
+        'p2' => $d['p2'],
+        'd' => $d['d']
       ];
+    }
+    break;
+    case 'editConnection':
+    {
+      $d = json_decode(urldecode($_GET['d']), true);
+      $t = $d['t'];
+      $p = &getData(CONNECTIONS, $t);
+      $p['d'] = $d['d'];
     }
     break;
     case 'deleteConnection':
@@ -212,8 +225,8 @@ header('Content-Type:text/html');
     <label for="connection-form-desc">Info: </label>
     <input id="connection-form-desc" type="text" /><br />
     <button id="connection-form-add" class="opt opt-new">Verbinden</button>
-    <button id="connection-action-edit" class="opt opt-edit">Bearbeiten</button>
-    <button id="connection-action-delete" class="opt opt-edit">Entfernen</button>
+    <button id="connection-form-edit" class="opt opt-edit">Speichern</button>
+    <button id="connection-form-delete" class="opt opt-edit">Entfernen</button>
     <button id="connection-form-cancel">Abbrechen</button>
   </div>
   <script src="utils.js"></script>
