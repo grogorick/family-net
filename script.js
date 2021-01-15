@@ -5,7 +5,8 @@ const settings = {
   edgeColor: '#DDD',
   edgeColorHighlight: '#AAA',
   nodeSize: 5,
-  edgeSize: .25
+  edgeSize: .25,
+  saveCameraTimeout: 5000
 };
 // #2F8339
 // #3BAA49
@@ -195,13 +196,23 @@ xhttp.send();
 
 // move camera
 // ------------------------------------
+let saveCameraTimeout = null;
 function cameraMoved()
 {
-  moveCamera({
-    x: s.renderers[0].camera.x,
-    y: s.renderers[0].camera.y,
-    z: s.renderers[0].camera.ratio},
-    true, true, false, false);
+  if (saveCameraTimeout) {
+    clearTimeout(saveCameraTimeout);
+  }
+  saveCameraTimeout = setTimeout(() =>
+  {
+    saveCameraTimeout = null;
+    moveCamera({
+        x: s.renderers[0].camera.x,
+        y: s.renderers[0].camera.y,
+        z: s.renderers[0].camera.ratio
+      },
+      true, true, false, false);
+  },
+  settings.saveCameraTimeout);
 }
 
 function moveCamera(xyz, toData, toServer, toGraph, refreshGraph)
@@ -763,7 +774,5 @@ s.bind('clickStage', cdcStage.click.bind(cdcStage));
 s.bind('doubleClickStage', cdcStage.doubleClick.bind(cdcStage));
 
 dragListener.bind('drop', e => { console.log('(drop)'); movePersons(e); skipClickAfterDrop = true; });
-
-// document.addEventListener('keydown', e => {});
 
 setTimeout(s.refresh.bind(s), 1000);
