@@ -36,18 +36,20 @@ body {
   display: block;
 }
 
-.box-minimized > *, .box-minimized .box-minimize, .box-restore {
+.box-minimized > *:not(.box-minimize-buttons),
+.box-minimized .box-minimize,
+.box:not(.box-minimized) .box-restore {
   display: none;
 }
-.box-minimize-buttons, .box-minimized .box-restore {
-  display: initial;
-}
-.box-minimize, .box-restore {
-  width: initial;
+.box-minimize-buttons {
   text-align: right;
 }
 .box.box-minimized {
   padding: 0;
+}
+.box:not(.box-minimized) .box-minimize-buttons {
+  margin-top: -20pt;
+  margin-right: -20pt;
 }
 
 .box.opt-new .opt:not(.opt-new), .box.opt-edit .opt:not(.opt-edit) {
@@ -76,36 +78,23 @@ body {
 }
 
 .box button {
-  margin: 0;
-  width: 100%;
+  margin: 10pt 0 0 0;
   padding: 5pt 20pt;
   background: transparent;
   border: none;
   border-top: 1px solid #eee;
 }
-.box button:first-of-type:not(:first-child) {
-  margin-top: 20pt;
-}
-.box button:first-of-type {
-  border-top: 1px solid transparent;
-}
-.box button:last-of-type {
-  border-bottom: 1px solid transparent;
-}
 .box button:hover {
   background: radial-gradient(circle, #fcfcfc 50%, #f9f9f9 100%);
   border-top: 1px solid #ddd;
-}
-.box button:hover+button {
-  border-top: 1px solid #ddd;
-}
-.box button:last-of-type:hover {
-  border-bottom: 1px solid #ddd;
 }
 
 #help.box {
   bottom: initial;
   top: 10pt;
+}
+#help.box button {
+  margin: 0;
 }
 #help.box > ul {
   padding: 0;

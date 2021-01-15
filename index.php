@@ -152,7 +152,7 @@ header('Content-Type:text/html');
   <div id="help" class="box box-visible box-minimized">
     <div class="box-minimize-buttons">
       <button class="box-restore">?</button>
-      <button class="box-minimize">X</button>
+      <button class="box-minimize">&mdash;</button>
     </div>
 <?php $boxPos = '(unten rechts)'; ?>
     <ul>
