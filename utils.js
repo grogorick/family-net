@@ -69,6 +69,46 @@ function twoDigits(v)
   return v;
 }
 
+function toServerDataGraph(action, d, cb = { toServer: null, toData: null, toGraph: null, refreshGraph: false, doneCallback: null }, log = true)
+{
+  console.log(log ? [action, d, 'toServer:', cb.toServer, 'toData:', cb.toData, 'toGraph:', cb.toGraph, 'refreshGraph:', cb.refreshGraph] : '...');
+  let continueWhenServerIsDone = function()
+  {
+    if (cb.toData) {
+      cb.toData(d);
+    }
+    if (cb.toGraph) {
+      cb.toGraph(d);
+      if (cb.refreshGraph) {
+        s.refresh();
+      }
+    }
+    if (cb.doneCallback) {
+      cb.doneCallback(d);
+    }
+  };
+  if (cb.toServer) {
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function()
+    {
+      if (this.readyState === 4 && this.status === 200) {
+        console.log(this.responseText);
+        if (cb.toServer !== true) {
+          cb.toServer(this.responseText, d);
+        }
+        continueWhenServerIsDone();
+      }
+    };
+    xhttp.open('GET', '?action=' + action
+      + '&d=' + encodeURIComponent(JSON.stringify(d))
+      , true);
+    xhttp.send();
+  }
+  else {
+    continueWhenServerIsDone();
+  }
+}
+
 document.querySelectorAll('.box-minimize, .box-restore').forEach(el =>
 { el.addEventListener('click', e =>
   {

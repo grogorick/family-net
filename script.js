@@ -217,38 +217,15 @@ function cameraMoved()
 
 function moveCamera(xyz, toData, toServer, toGraph, refreshGraph)
 {
-  console.log(['moveCamera', xyz, toData, toServer, toGraph, refreshGraph]);
-  let continueWhenServerIsDone = function()
-  {
-    if (toData) {
-      data.camera = xyz;
-    }
-    if (toGraph) {
-      s.renderers[0].camera.x = xyz.x;
-      s.renderers[0].camera.y = xyz.y;
-      s.renderers[0].camera.ratio = xyz.z;
-      if (refreshGraph) {
-        s.refresh();
-      }
-    }
-  };
-  if (toServer) {
-    var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function()
-    {
-      if (this.readyState === 4 && this.status === 200) {
-        console.log(this.responseText);
-        continueWhenServerIsDone();
-      }
-    };
-    xhttp.open('GET', '?action=moveCamera'
-      + '&d=' + encodeURIComponent(JSON.stringify(xyz))
-      , true);
-    xhttp.send();
-  }
-  else {
-    continueWhenServerIsDone();
-  }
+  toServerDataGraph('moveCamera', xyz, {
+      toServer: toServer,
+      toData: !toData ? null : () => { data.camera = xyz; },
+      toGraph: !toGraph ? null : () => {
+        s.renderers[0].camera.x = xyz.x;
+        s.renderers[0].camera.y = xyz.y;
+        s.renderers[0].camera.ratio = xyz.z; },
+      refreshGraph: refreshGraph
+    });
 }
 
 
@@ -506,173 +483,77 @@ approveOrCancelKeys(personMenuBirthdayYear, [ personMenuAdd, personMenuEdit ], p
 let logAddPerson = true;
 function addPerson(d, toData, toServer, toGraph, refreshGraph, doneCallback = null)
 {
-  console.log(logAddPerson ? ['addPerson', d, toData, toServer, toGraph, refreshGraph] : '...');
-  let continueWhenServerIsDone = function()
-  {
-    if (toData) {
-      data.persons.push(d);
-    }
-    if (toGraph) {
-      s.graph.addNode({
-        id: d.t,
-        x: d.x,
-        y: d.y,
-        label: d.n,
-        size: settings.nodeSize
-      });
-      if (refreshGraph) {
-        s.refresh();
-      }
-    }
-    if (doneCallback) {
-      doneCallback(d);
-    }
-  };
-  if (toServer) {
-    var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function()
-    {
-      if (this.readyState === 4 && this.status === 200) {
-        console.log(this.responseText);
-        d.t = this.responseText;
-        continueWhenServerIsDone();
-      }
-    };
-    xhttp.open('GET', '?action=addPerson'
-      + '&d=' + encodeURIComponent(JSON.stringify(d))
-      , true);
-    xhttp.send();
-  }
-  else {
-    continueWhenServerIsDone();
-  }
+  toServerDataGraph('addPerson', d, {
+      toServer: !toServer ? null : (t) => { d.t = t; },
+      toData: !toData ? null : () => { data.persons.push(d); },
+      toGraph: !toGraph ? null : () => {
+        s.graph.addNode({
+            id: d.t,
+            x: d.x,
+            y: d.y,
+            label: d.n,
+            size: settings.nodeSize
+          }); },
+      refreshGraph: refreshGraph,
+      doneCallback: doneCallback
+    }, logAddPerson);
 }
 
 function editPerson(d, toData = true, toServer = true, toGraph = true, refreshGraph = true)
 {
-  console.log(['editPerson', d, toData, toServer, toGraph, refreshGraph]);
-  let continueWhenServerIsDone = function()
-  {
-    if (toData) {
-      let p = getDataPerson(d.t);
-      p.n = d.n;
-      p.b = d.b;
-    }
-    if (toGraph) {
-      let n = s.graph.nodes(d.t);
-      n.label = d.n;
-      if (refreshGraph) {
-        s.refresh();
-      }
-    }
-  };
-  if (toServer) {
-    var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function()
-    {
-      if (this.readyState === 4 && this.status === 200) {
-        console.log([d.t, this.responseText]);
-        continueWhenServerIsDone();
-      }
-    };
-    xhttp.open('GET', '?action=editPerson'
-      + '&d=' + encodeURIComponent(JSON.stringify(d))
-      , true);
-    xhttp.send();
-  }
-  else {
-    continueWhenServerIsDone();
-  }
+  toServerDataGraph('editPerson', d, {
+      toServer: toServer,
+      toData: !toData ? null : () => {
+        let p = getDataPerson(d.t);
+        p.n = d.n;
+        p.b = d.b; },
+      toGraph: !toGraph ? null : () => {
+        let n = s.graph.nodes(d.t);
+        n.label = d.n; },
+      refreshGraph: refreshGraph
+    });
 }
 
 function deletePerson(t, toData = true, toServer = true, toGraph = true, refreshGraph = true)
 {
-  console.log(['deletePerson', t, toData, toServer, toGraph, refreshGraph]);
   let connections = getDataConnectionsToPerson(t);
   if (connections.length) {
     console.log(['cancelled - person to delete must not be connected', connections]);
+    alert('Nur Personen ohne Verbindungen können gelöscht werden.');
     return;
   }
-  let continueWhenServerIsDone = function()
-  {
-    if (toData) {
-      deleteDataPerson(t);
-    }
-    if (toGraph) {
-      s.graph.dropNode(t);
-      if (refreshGraph) {
-        s.refresh();
-      }
-    }
-  };
-  if (toServer) {
-    var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function()
-    {
-      if (this.readyState === 4 && this.status === 200) {
-        console.log([t, this.responseText]);
-        continueWhenServerIsDone();
-      }
-    };
-    xhttp.open('GET', '?action=deletePerson'
-      + '&t=' + encodeURIComponent(t)
-      , true);
-    xhttp.send();
-  }
-  else {
-    continueWhenServerIsDone();
-  }
+  toServerDataGraph('deletePerson', t, {
+      toServer: toServer,
+      toData: !toData ? null : () => { deleteDataPerson(t); },
+      toGraph: !toGraph ? null : () => { s.graph.dropNode(t); },
+      refreshGraph: refreshGraph
+    });
 }
 
 function movePersons(e, toData = true, toServer = true, toGraph = false, refreshGraph = false)
 {
-  console.log(['movePersons', e, toData, toServer, toGraph, refreshGraph]);
   let nodes = activeState.nodes();
   if (!nodes.some(n => n.id === e.data.node.id)) {
     nodes = [e.data.node];
   }
-  let continueWhenServerIsDone = function()
-  {
-    if (toData) {
-      nodes.forEach(d =>
-      {
-        let p = getDataPerson(d.id);
-        p.x = d.x;
-        p.y = d.y;
-      });
-    }
-    if (toGraph) {
-      nodes.forEach(d =>
-      {
-        let n = s.graph.nodes(d.id);
-        n.x = d.x;
-        n.y = d.y;
-      });
-      if (refreshGraph) {
-        s.refresh();
-      }
-    }
-  };
+  let ds = [];
   if (toServer) {
-    let ts = [];
-    var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function()
-    {
-      if (this.readyState === 4 && this.status === 200) {
-        console.log([ts, this.responseText]);
-        continueWhenServerIsDone();
-      }
-    };
-    let ds = [];
-    nodes.forEach(n => { ts.push(n.id); ds.push({ t: n.id, x: n.x, y: n.y }); });
-    xhttp.open('GET', '?action=movePersons'
-      + '&d=' + encodeURIComponent(JSON.stringify(ds))
-      , true);
-    xhttp.send();
+    nodes.forEach(n => { ds.push({ t: n.id, x: n.x, y: n.y }); });
   }
-  else {
-    continueWhenServerIsDone();
-  }
+  toServerDataGraph('movePersons', ds, {
+      toServer: toServer,
+      toData: !toData ? null : () => {
+        nodes.forEach(d => {
+          let p = getDataPerson(d.id);
+          p.x = d.x;
+          p.y = d.y; }); },
+      toGraph: !toGraph ? null : () => {
+        nodes.forEach(d => {
+          let n = s.graph.nodes(d.id);
+          n.x = d.x;
+          n.y = d.y; }); },
+      refreshGraph: refreshGraph
+    });
 }
 
 
@@ -752,117 +633,45 @@ approveOrCancelKeys(connectionMenuDesc, [ connectionMenuAdd, connectionMenuEdit 
 let logAddConnection = true;
 function addConnection(d, toData, toServer, toGraph, refreshGraph, doneCallback = null)
 {
-  console.log(logAddConnection ? ['addConnection', d, toData, toServer, toGraph, refreshGraph] : '...');
-  let continueWhenServerIsDone = function()
-  {
-    if (toData) {
-      data.connections.push(d);
-    }
-    if (toGraph) {
-      s.graph.addEdge({
-        id: d.t,
-        source: d.p1,
-        target: d.p2,
-        label: d.d,
-        size: settings.edgeSize,
-        type: (d.d.includes('geschieden') ? 'dotted' : (d.d.includes('verheiratet') ? 'dashed' : 'arrow'))
-      });
-      if (refreshGraph) {
-        s.refresh();
-      }
-    }
-    if (doneCallback) {
-      doneCallback(d);
-    }
-  };
-  if (toServer) {
-    var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function()
-    {
-      if (this.readyState === 4 && this.status === 200) {
-        console.log(this.responseText);
-        d.t = this.responseText;
-        continueWhenServerIsDone();
-      }
-    };
-    xhttp.open('GET', '?action=addConnection'
-      + '&d=' + encodeURIComponent(JSON.stringify(d))
-      , true);
-    xhttp.send();
-  }
-  else {
-    continueWhenServerIsDone();
-  }
+  toServerDataGraph('addConnection', d, {
+      toServer: !toServer ? null : (t) => { d.t = t; },
+      toData: !toData ? null : () => { data.connections.push(d); },
+      toGraph: !toGraph ? null : () => {
+        s.graph.addEdge({
+            id: d.t,
+            source: d.p1,
+            target: d.p2,
+            label: d.d,
+            size: settings.edgeSize,
+            type: (d.d.includes('geschieden') ? 'dotted' : (d.d.includes('verheiratet') ? 'dashed' : 'arrow'))
+          }); },
+      refreshGraph: refreshGraph,
+      doneCallback: doneCallback
+    }, logAddConnection);
 }
 
 function editConnection(d, toData = true, toServer = true, toGraph = true, refreshGraph = true)
 {
-  console.log(['editConnection', d, toData, toServer, toGraph, refreshGraph]);
-  let continueWhenServerIsDone = function()
-  {
-    if (toData) {
-      let c = getDataConnection(d.t);
-      c.n = d.d;
-    }
-    if (toGraph) {
-      let c = s.graph.edges(d.t);
-      c.label = d.d;
-      if (refreshGraph) {
-        s.refresh();
-      }
-    }
-  };
-  if (toServer) {
-    var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function()
-    {
-      if (this.readyState === 4 && this.status === 200) {
-        console.log([d.t, this.responseText]);
-        continueWhenServerIsDone();
-      }
-    };
-    xhttp.open('GET', '?action=editConnection'
-      + '&d=' + encodeURIComponent(JSON.stringify(d))
-      , true);
-    xhttp.send();
-  }
-  else {
-    continueWhenServerIsDone();
-  }
+  toServerDataGraph('editConnection', d, {
+      toServer: toServer,
+      toData: !toData ? null : () => {
+        let c = getDataConnection(d.t);
+        c.n = d.d; },
+      toGraph: !toGraph ? null : () => {
+        let c = s.graph.edges(d.t);
+        c.label = d.d; },
+      refreshGraph: refreshGraph
+    });
 }
 
 function deleteConnection(t, toData = true, toServer = true, toGraph = true, refreshGraph = true)
 {
-  console.log(['deleteConnection', t, toData, toServer, toGraph, refreshGraph]);
-  let continueWhenServerIsDone = function()
-  {
-    if (toData) {
-      deleteDataConnection(t);
-    }
-    if (toGraph) {
-      s.graph.dropEdge(t);
-      if (refreshGraph) {
-        s.refresh();
-      }
-    }
-  };
-  if (toServer) {
-    var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function()
-    {
-      if (this.readyState === 4 && this.status === 200) {
-        console.log([t, this.responseText]);
-        continueWhenServerIsDone();
-      }
-    };
-    xhttp.open('GET', '?action=deleteConnection'
-      + '&t=' + encodeURIComponent(t)
-      , true);
-    xhttp.send();
-  }
-  else {
-    continueWhenServerIsDone();
-  }
+  toServerDataGraph('deleteConnection', t, {
+      toServer: toServer,
+      toData: !toData ? null : () => { deleteDataConnection(t); },
+      toGraph: !toGraph ? null : () => { s.graph.dropEdge(t); },
+      refreshGraph: refreshGraph
+    });
 }
 
 

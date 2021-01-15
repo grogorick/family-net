@@ -45,10 +45,10 @@ function deleteData($what, $t)
 if (isset($_GET['action'])) {
   header('Content-Type: text/plain; charset=utf-8');
   $t = time();
+  $d = json_decode(urldecode($_GET['d']), true);
   switch ($_GET['action']) {
     case 'moveCamera':
     {
-      $d = json_decode(urldecode($_GET['d']), true);
       $data[CAMERA] = [
         'x' => $d['x'],
         'y' => $d['y'],
@@ -58,7 +58,6 @@ if (isset($_GET['action'])) {
     break;
     case 'addPerson':
     {
-      $d = json_decode(urldecode($_GET['d']), true);
       $data[PERSONS][] = [
         't' => $t,
         'x' => $d['x'],
@@ -70,7 +69,6 @@ if (isset($_GET['action'])) {
     break;
     case 'editPerson':
     {
-      $d = json_decode(urldecode($_GET['d']), true);
       $t = $d['t'];
       $p = &getData(PERSONS, $t);
       $p['n'] = $d['n'];
@@ -79,19 +77,18 @@ if (isset($_GET['action'])) {
     break;
     case 'deletePerson':
     {
-      $t = urldecode($_GET['t']);
-      deleteData(PERSONS, $t);
+      $t = $d;
+      deleteData(PERSONS, $d);
     }
     break;
     case 'movePersons':
     {
       $t = [];
-      $ds = json_decode(urldecode($_GET['d']), true);
-      foreach ($ds as &$d) {
-        $t[] = $d['t'];
-        $p = &getData(PERSONS, $d['t']);
-        $p['x'] = $d['x'];
-        $p['y'] = $d['y'];
+      foreach ($d as &$d_) {
+        $t[] = $d_['t'];
+        $p = &getData(PERSONS, $d_['t']);
+        $p['x'] = $d_['x'];
+        $p['y'] = $d_['y'];
       }
       $t = '[' . implode(', ', $t) . ']';
     }
@@ -99,7 +96,6 @@ if (isset($_GET['action'])) {
 
     case 'addConnection':
     {
-      $d = json_decode(urldecode($_GET['d']), true);
       $data[CONNECTIONS][] = [
         't' => $t,
         'p1' => $d['p1'],
@@ -110,7 +106,6 @@ if (isset($_GET['action'])) {
     break;
     case 'editConnection':
     {
-      $d = json_decode(urldecode($_GET['d']), true);
       $t = $d['t'];
       $p = &getData(CONNECTIONS, $t);
       $p['d'] = $d['d'];
@@ -118,7 +113,7 @@ if (isset($_GET['action'])) {
     break;
     case 'deleteConnection':
     {
-      $t = urldecode($_GET['t']);
+      $t = $d;
       deleteData(CONNECTIONS, $t);
     }
     break;
