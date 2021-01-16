@@ -152,6 +152,12 @@ function getGraphPositionFromEvent(e)
   };
 }
 
+function alignToGrid(n)
+{
+  n.x = Math.round(n.x / settings.gridStep) * settings.gridStep;
+  n.y = Math.round(n.y / settings.gridStep) * settings.gridStep;
+}
+
 let modalBlocker = document.getElementById('modal-blocker');
 function showForm(f, opt = null)
 {
@@ -383,24 +389,11 @@ function checkCombinedSelection()
       y: n12.y,
       size: 0
     });
-    s.graph.addNode({
-      id: t + '-3',
-      x: (n12.x + n.x) / 2,
-      y: (n12.y + n.y) / 2,
-      size: 0
-    });
     s.graph.addEdge({
       id: t + '-2',
       source: t + '-1',
-      target: t + '-3',
-      label: 'Kind',
-      size: settings.edgeSize,
-      type: 'line'
-    });
-    s.graph.addEdge({
-      id: t + '-4',
-      source: t + '-3',
       target: n.id,
+      label: 'Kind',
       size: settings.edgeSize,
       type: 'arrow'
     });
@@ -430,6 +423,7 @@ function startNewPerson(e)
 {
   console.log('startNewPerson');
   newPersonPosition = getGraphPositionFromEvent(e);
+  alignToGrid(newPersonPosition);
   personMenuName.value = '';
   personMenuBirthDay.value = '';
   personMenuBirthMonth.value = '';
@@ -567,11 +561,7 @@ function movePersons(e, toData = true, toServer = true, toGraph = false, refresh
   if (!nodes.some(n => n.id === e.data.node.id)) {
     nodes = [e.data.node];
   }
-  nodes.forEach(n =>
-  {
-    n.x = Math.round(n.x / settings.gridStep) * settings.gridStep;
-    n.y = Math.round(n.y / settings.gridStep) * settings.gridStep;
-  });
+  nodes.forEach(alignToGrid);
   s.refresh();
   let ds = [];
   if (toServer) {
