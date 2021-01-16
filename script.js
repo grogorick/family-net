@@ -1,7 +1,6 @@
 const settings = {
   nodeColor: '#78D384',
-  nodeColorHighlight1: '#3BAA49',
-  nodeColorHighlight2: '#2F8339',
+  nodeColorHighlight: '#3BAA49',
   edgeColor: '#DDD',
   edgeColorHighlight: '#AAA',
   nodeSize: 5,
@@ -27,10 +26,9 @@ let s = new sigma({
     font: '"Josefin Sans", "Trebuchet MS", sans-serif',
     fontStyle: '',
     activeFontStyle: 'bold',
-    labelAlignment: 'bottom',
-    labelHoverShadow: true,
-    labelHoverShadowColor: '#ddd',
 
+
+    // person
     minNodeSize: 1,
     maxNodeSize: 10,
     nodeBorderColor: 'default',
@@ -40,30 +38,46 @@ let s = new sigma({
     nodeBorderSize: 2,
     nodeOuterBorderSize: 0,
 
+    // person hover
     nodeHoverBorderColor: 'default',
     defaultNodeHoverBorderColor: settings.nodeColor,
     nodeHoverBorderSize: 2,
 
+    // person selected
     nodeActiveColor: 'default',
     nodeActiveBorderColor: 'default',
-    defaultNodeActiveColor: settings.nodeColorHighlight1,
+    defaultNodeActiveColor: settings.nodeColorHighlight,
     defaultNodeActiveBorderColor: 'transparent',
     nodeActiveBorderSize: 2,
 
+    // person label
+    labelAlignment: 'bottom',
+    labelHoverShadow: true,
+    labelHoverShadowColor: '#ddd',
+
+
+    // connection
     edgeColor: 'default',
     defaultEdgeColor: settings.edgeColor,
     minEdgeSize: 0.1,
     maxEdgeSize: 5,
     minArrowSize: 5,
 
+    // connection hover
     enableEdgeHovering: true,
     edgeHoverPrecision: 5,
     // edgeHoverSizeRatio: 5
     // edgeHoverExtremities: true,
     edgeHoverColor: 'default',
     defaultEdgeHoverColor: settings.edgeColorHighlight,
+
+    // connection label
     edgeLabelHoverShadow: true,
-    edgeLabelHoverShadowColor: '#ddd'
+    edgeLabelHoverShadowColor: '#ddd',
+
+    // connection selected
+    edgeActiveColor: 'default',
+    defaultEdgeActiveColor: settings.edgeColorHighlight
   }
 });
 
@@ -182,8 +196,8 @@ xhttp.onreadystatechange = function()
         z: parseFloat(data.camera.z)
       },
       false, false, true, false);
-    logAddPerson = 10;
-    logAddConnection = 10;
+    logAddPerson = 3;
+    logAddConnection = 3;
     data.persons.forEach(d => { addPerson(d, false, false, true, false); if (logAddPerson) --logAddPerson; });
     data.connections.forEach(d => { addConnection(d, false, false, true, false); if (logAddConnection) --logAddConnection; });
     logAddPerson = true;
@@ -198,7 +212,7 @@ xhttp.send();
 // move camera
 // ------------------------------------
 let saveCameraTimeout = null;
-function cameraMoved()
+function cameraMoved(e)
 {
   if (saveCameraTimeout) {
     clearTimeout(saveCameraTimeout);
@@ -705,13 +719,15 @@ s.bind('clickNode', e => { if (skipClickAfterDrop) { skipClickAfterDrop = false;
 s.bind('clickEdge', selectConnection);
 
 let cdcStage = clickDoubleClick(
-  e => { if (e.data.captor.isDragging) { cameraMoved(); } else { if (!multipleKeyPressed(e)) { deselectAll(e); } } },
+  e => { if (!e.data.captor.isDragging && !multipleKeyPressed(e)) { deselectAll(e); } },
 
   e => { deselectAll(e); startNewPerson(e); });
 
 s.bind('clickStage', cdcStage.click.bind(cdcStage));
 
 s.bind('doubleClickStage', cdcStage.doubleClick.bind(cdcStage));
+
+s.bind('coordinatesUpdated', cameraMoved);
 
 dragListener.bind('drop', e => { console.log('(drop)'); movePersons(e); skipClickAfterDrop = true; });
 
