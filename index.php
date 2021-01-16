@@ -13,6 +13,12 @@ if ($file_content) {
   $data = json_decode($file_content, true);
 }
 
+//// update old data
+//foreach ($data[PERSONS] as &$p) {
+//  $p['b'] = '--';
+//}
+//save();
+
 function save()
 {
   global $data;
@@ -26,6 +32,17 @@ function & getData($what, $t)
   foreach ($data[$what] as &$d) {
     if ($d['t'] == $t) {
       return $d;
+    }
+  }
+  return null;
+}
+
+function & getDataIndex($what, $t)
+{
+  global $data;
+  foreach ($data[$what] as $idx => &$d) {
+    if ($d['t'] == $t) {
+      return $idx;
     }
   }
   return null;
@@ -49,30 +66,22 @@ if (isset($_GET['action'])) {
   switch ($_GET['action']) {
     case 'moveCamera':
     {
-      $data[CAMERA] = [
-        'x' => $d['x'],
-        'y' => $d['y'],
-        'z' => $d['z']
-      ];
+      $data[CAMERA] = $d;
     }
     break;
     case 'addPerson':
     {
-      $data[PERSONS][] = [
-        't' => $t,
-        'x' => $d['x'],
-        'y' => $d['y'],
-        'n' => $d['n'],
-        'b' => $d['b']
-      ];
+      $d['t'] = $t;
+      $data[PERSONS][] = $d;
     }
     break;
     case 'editPerson':
     {
       $t = $d['t'];
       $p = &getData(PERSONS, $t);
-      $p['n'] = $d['n'];
-      $p['b'] = $d['b'];
+      $d['x'] = $p['x'];
+      $d['y'] = $p['y'];
+      $p = $d;
     }
     break;
     case 'deletePerson':
@@ -96,19 +105,17 @@ if (isset($_GET['action'])) {
 
     case 'addConnection':
     {
-      $data[CONNECTIONS][] = [
-        't' => $t,
-        'p1' => $d['p1'],
-        'p2' => $d['p2'],
-        'd' => $d['d']
-      ];
+      $d['t'] = $t;
+      $data[CONNECTIONS][] = $d;
     }
     break;
     case 'editConnection':
     {
       $t = $d['t'];
-      $p = &getData(CONNECTIONS, $t);
-      $p['d'] = $d['d'];
+      $c = &getData(CONNECTIONS, $t);
+      $d['p1'] = $c['p1'];
+      $d['p2'] = $c['p2'];
+      $c = $d;
     }
     break;
     case 'deleteConnection':
@@ -165,15 +172,23 @@ header('Content-Type:text/html');
 <?php $boxPos = '(unten rechts)'; ?>
     <ul>
       <li>
-        Eine Person hinzufügen
+        Eine Person hinzufügen:
         <ul>
           <li><i>Doppelklick</i> dort, wo die Person hinzugefügt werden soll</li>
-          <li>Daten der Person im Eingabefenster <?=$boxPos?> eintragen</li>
+          <li>Daten der Person im Eingabefenster <?=$boxPos?> eintragen
+            <dl>
+              <dt><i>Namen:</i></dt>
+              <dd>Vorname(n) und Nachname(n) mit einem Komma trennen.<br />
+                  Der erste Vorname wird als Rufname im Netz angezeigt.<br />
+                  Ein Sternchen (*) markiert andere Vornamen als Rufname.
+              </dd>
+            </dl>
+          </li>
           <li><i>Hinzufügen</i> klicken</li>
         </ul>
       </li>
       <li>
-        Zwei Personen verbinden
+        Zwei Personen verbinden:
         <ul>
           <li><i>Shift oder Strg</i> gedrückt halten</li>
           <li>Die erste Person anklicken</li>
@@ -183,7 +198,7 @@ header('Content-Type:text/html');
         </ul>
       </li>
       <li>
-        Eine Person entfernen
+        Eine Person entfernen:
         <ul>
           <li>(Die Person darf nicht mit anderen verbunden sein)</li>
           <li>Die Person anklicken</li>
@@ -191,7 +206,7 @@ header('Content-Type:text/html');
         </ul>
       </li>
       <li>
-        Eine Verbindung entfernen
+        Eine Verbindung entfernen:
         <ul>
           <li>Die Verbindung anklicken</li>
           <li>Im Detailfenster <?=$boxPos?> <i>Entfernen</i> klicken</li>
@@ -202,12 +217,23 @@ header('Content-Type:text/html');
   <div id="person-form" class="box">
     <h2 class="opt opt-new">Neue Person</h2>
     <h2 class="opt opt-edit">Person bearbeiten</h2>
-    <label for="person-form-name">Name: </label>
-    <input id="person-form-name" type="text" /><br />
-    <label for="person-form-birthday">Geburtstag: </label>
-    <input id="person-form-birthday" type="text" placeholder="tt" />
-    <input id="person-form-birthday-month" type="text" placeholder="mm" />
-    <input id="person-form-birthday-year" type="text" placeholder="yyyy" /><br />
+    <div class="box-row">
+      <label for="person-form-name">Namen: </label>
+      <input id="person-form-name" type="text" placeholder="Vorname(n), Nachname(n)" /><br />
+    </div><div class="box-row">
+      <label for="person-form-birth-day">Geburtstag: </label>
+      <input id="person-form-birth-day" type="text" placeholder="tt" />
+      <input id="person-form-birth-month" type="text" placeholder="mm" />
+      <input id="person-form-birth-year" type="text" placeholder="yyyy" /><br />
+    </div><div class="box-row">
+      <label for="person-form-death-day">Todestag: </label>
+      <input id="person-form-death-day" type="text" placeholder="tt" />
+      <input id="person-form-death-month" type="text" placeholder="mm" />
+      <input id="person-form-death-year" type="text" placeholder="yyyy" /><br />
+    </div><div class="box-row">
+      <label for="person-form-note">Notiz: </label>
+      <input id="person-form-note" type="text" /><br />
+    </div>
     <button id="person-form-add" class="opt opt-new">Hinzufügen</button>
     <button id="person-form-edit" class="opt opt-edit">Speichern</button>
     <button id="person-form-delete" class="opt opt-edit">Entfernen</button>
@@ -217,8 +243,10 @@ header('Content-Type:text/html');
     <h2 class="opt opt-new">Neue Verbindung</h2>
     <h2 class="opt opt-edit">Verbindung bearbeiten</h2>
     <i id="connection-form-persons" class="opt opt-edit"></i>
-    <label for="connection-form-desc">Info: </label>
-    <input id="connection-form-desc" type="text" /><br />
+    <div class="box-row">
+      <label for="connection-form-desc">Info: </label>
+      <input id="connection-form-desc" type="text" /><br />
+    </div>
     <button id="connection-form-add" class="opt opt-new">Verbinden</button>
     <button id="connection-form-edit" class="opt opt-edit">Speichern</button>
     <button id="connection-form-delete" class="opt opt-edit">Entfernen</button>

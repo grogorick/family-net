@@ -399,9 +399,13 @@ function checkCombinedSelection()
 // ------------------------------------
 let personMenuForm = document.getElementById('person-form');
 let personMenuName = document.getElementById('person-form-name');
-let personMenuBirthday = document.getElementById('person-form-birthday');
-let personMenuBirthdayMonth = document.getElementById('person-form-birthday-month');
-let personMenuBirthdayYear = document.getElementById('person-form-birthday-year');
+let personMenuBirthDay = document.getElementById('person-form-birth-day');
+let personMenuBirthMonth = document.getElementById('person-form-birth-month');
+let personMenuBirthYear = document.getElementById('person-form-birth-year');
+let personMenuDeathDay = document.getElementById('person-form-death-day');
+let personMenuDeathMonth = document.getElementById('person-form-death-month');
+let personMenuDeathYear = document.getElementById('person-form-death-year');
+let personMenuNote = document.getElementById('person-form-note');
 let personMenuAdd = document.getElementById('person-form-add');
 let personMenuEdit = document.getElementById('person-form-edit');
 let personMenuDelete = document.getElementById('person-form-delete');
@@ -413,9 +417,13 @@ function startNewPerson(e)
   console.log('startNewPerson');
   newPersonPosition = getGraphPositionFromEvent(e);
   personMenuName.value = '';
-  personMenuBirthday.value = '';
-  personMenuBirthdayMonth.value = '';
-  personMenuBirthdayYear.value = '';
+  personMenuBirthDay.value = '';
+  personMenuBirthMonth.value = '';
+  personMenuBirthYear.value = '';
+  personMenuDeathDay.value = '';
+  personMenuDeathMonth.value = '';
+  personMenuDeathYear.value = '';
+  personMenuNote.value = '';
   showForm(personMenuForm, 'opt-new');
 }
 
@@ -425,9 +433,14 @@ function showPersonInfo(t)
   let d = getDataPerson(t);
   let db = d.b.split('-');
   personMenuName.value = d.n;
-  personMenuBirthday.value = db[2];
-  personMenuBirthdayMonth.value = db[1];
-  personMenuBirthdayYear.value = db[0];
+  personMenuBirthDay.value = db[2];
+  personMenuBirthMonth.value = db[1];
+  personMenuBirthYear.value = db[0];
+  let dd = d.d.split('-');
+  personMenuDeathDay.value = dd[2];
+  personMenuDeathMonth.value = dd[1];
+  personMenuDeathYear.value = dd[0];
+  personMenuNote.value = d.o;
   showForm(personMenuForm, 'opt-edit');
 }
 
@@ -439,7 +452,9 @@ personMenuAdd.addEventListener('click', e =>
       x: newPersonPosition.x,
       y: newPersonPosition.y,
       n: personMenuName.value.trim(),
-      b: personMenuBirthday.getAttribute('data-value')
+      b: personMenuBirthDay.getAttribute('data-value'),
+      d: personMenuDeathDay.getAttribute('data-value'),
+      o: personMenuNote.value.trim()
     },
     true, true, true, true,
     (d) =>
@@ -457,7 +472,9 @@ personMenuEdit.addEventListener('click', e =>
   editPerson({
     t: activeState.nodes()[0].id,
     n: personMenuName.value.trim(),
-    b: personMenuBirthday.getAttribute('data-value')
+    b: personMenuBirthDay.getAttribute('data-value'),
+    d: personMenuDeathDay.getAttribute('data-value'),
+    o: personMenuNote.value.trim()
   });
 });
 
@@ -477,9 +494,9 @@ personMenuCancel.addEventListener('click', e =>
 });
 
 approveOrCancelKeys(personMenuName, [ personMenuAdd, personMenuEdit ], personMenuCancel);
-approveOrCancelKeys(personMenuBirthday, [ personMenuAdd, personMenuEdit ], personMenuCancel);
-approveOrCancelKeys(personMenuBirthdayMonth, [ personMenuAdd, personMenuEdit ], personMenuCancel);
-approveOrCancelKeys(personMenuBirthdayYear, [ personMenuAdd, personMenuEdit ], personMenuCancel);
+approveOrCancelKeys(personMenuBirthDay, [ personMenuAdd, personMenuEdit ], personMenuCancel);
+approveOrCancelKeys(personMenuBirthMonth, [ personMenuAdd, personMenuEdit ], personMenuCancel);
+approveOrCancelKeys(personMenuBirthYear, [ personMenuAdd, personMenuEdit ], personMenuCancel);
 
 let logAddPerson = true;
 function addPerson(d, toData, toServer, toGraph, refreshGraph, doneCallback = null)
@@ -493,8 +510,7 @@ function addPerson(d, toData, toServer, toGraph, refreshGraph, doneCallback = nu
             x: d.x,
             y: d.y,
             label: d.n,
-            size: settings.nodeSize
-          }); },
+            size: settings.nodeSize }); },
       refreshGraph: refreshGraph,
       doneCallback: doneCallback
     }, logAddPerson);
@@ -650,8 +666,7 @@ function addConnection(d, toData, toServer, toGraph, refreshGraph, doneCallback 
             target: d.p2,
             label: d.d,
             size: settings.edgeSize,
-            type: (d.d.includes('geschieden') ? 'dotted' : (d.d.includes('verheiratet') ? 'dashed' : 'arrow'))
-          }); },
+            type: (d.d.includes('geschieden') ? 'dotted' : (d.d.includes('verheiratet') ? 'dashed' : 'arrow')) }); },
       refreshGraph: refreshGraph,
       doneCallback: doneCallback
     }, logAddConnection);

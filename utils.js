@@ -122,8 +122,9 @@ document.querySelectorAll('.box input[placeholder="tt"]').forEach(tt =>
   tt.addEventListener('input', e =>
   {
     while (!tt.checkValidity()) { tt.value = tt.value.slice(0, -1); }
-    let mm = document.getElementById(tt.id + '-month');
-    let yyyy = document.getElementById(tt.id + '-year');
+    let id = tt.id.substr(0, tt.id.length - '-day'.length);
+    let mm = document.getElementById(id + '-month');
+    let yyyy = document.getElementById(id + '-year');
     tt.setAttribute('data-value', yyyy.value + '-' + twoDigits(mm.value) + '-' + twoDigits(tt.value));
   });
   tt.setAttribute('data-value', '--');
@@ -136,7 +137,7 @@ document.querySelectorAll('.box input[placeholder="mm"]').forEach(mm =>
   {
     while (!mm.checkValidity()) { mm.value = mm.value.slice(0, -1); }
     let id = mm.id.substr(0, mm.id.length - '-month'.length);
-    let tt = document.getElementById(id);
+    let tt = document.getElementById(id + '-day');
     let yyyy = document.getElementById(id + '-year');
     tt.setAttribute('data-value', yyyy.value + '-' + twoDigits(mm.value) + '-' + twoDigits(tt.value));
   });
@@ -149,7 +150,7 @@ document.querySelectorAll('.box input[placeholder="yyyy"]').forEach(yyyy =>
   {
     while (!yyyy.checkValidity()) { yyyy.value = yyyy.value.slice(0, -1); }
     let id = yyyy.id.substr(0, yyyy.id.length - '-year'.length);
-    let tt = document.getElementById(id);
+    let tt = document.getElementById(id + '-day');
     let mm = document.getElementById(id + '-month');
     tt.setAttribute('data-value', yyyy.value + '-' + twoDigits(mm.value) + '-' + twoDigits(tt.value));
   });

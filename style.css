@@ -56,20 +56,21 @@ body {
   display: none;
 }
 
+.box > div.box-row {
+  margin-bottom: 10pt;
+}
+
 .box h2 {
   font-size: 100%;
   font-weight: bold;
   color: #aaa;
 }
 
-.box #connection-form-persons {
-  display: block;
-  margin-bottom: 20pt;
+.box label {
+  width: 30%;
+  display: inline-block;
 }
 
-.box input {
-  margin-bottom: 10pt;
-}
 .box input[placeholder="tt"], .box input[placeholder="mm"] {
   width: 2em;
 }
@@ -93,6 +94,10 @@ body {
   bottom: initial;
   top: 10pt;
 }
+#help.box:not(.box-minimized) {
+  max-height: 30%;
+  overflow-y: auto;
+}
 #help.box button {
   margin: 0;
 }
@@ -103,5 +108,22 @@ body {
   list-style-type: none;
 }
 #help.box > ul > li:not(:last-of-type) {
+  margin-bottom: 20pt;
+}
+#help.box > ul ul li {
+  margin-top: 5pt;
+}
+#help.box dl {
+  margin: 5pt 0 0;
+}
+
+#person-form.box {
+  width: 280pt;
+}
+#connection-form.box {
+  width: 280pt;
+}
+#connection-form-persons {
+  display: block;
   margin-bottom: 10pt;
 }
