@@ -6,7 +6,8 @@ const settings = {
   edgeColorHighlight: '#AAA',
   nodeSize: 5,
   edgeSize: .25,
-  saveCameraTimeout: 5000
+  saveCameraTimeout: 5000,
+  gridStep: 20
 };
 // #2F8339
 // #3BAA49
@@ -536,6 +537,12 @@ function movePersons(e, toData = true, toServer = true, toGraph = false, refresh
   if (!nodes.some(n => n.id === e.data.node.id)) {
     nodes = [e.data.node];
   }
+  nodes.forEach(n =>
+  {
+    n.x = Math.round(n.x / settings.gridStep) * settings.gridStep;
+    n.y = Math.round(n.y / settings.gridStep) * settings.gridStep;
+  });
+  s.refresh();
   let ds = [];
   if (toServer) {
     nodes.forEach(n => { ds.push({ t: n.id, x: n.x, y: n.y }); });
@@ -684,8 +691,11 @@ s.bind('clickEdge', selectConnection);
 
 let cdcStage = clickDoubleClick(
   e => { if (e.data.captor.isDragging) { cameraMoved(); } else { if (!multipleKeyPressed(e)) { deselectAll(e); } } },
+
   e => { deselectAll(e); startNewPerson(e); });
+
 s.bind('clickStage', cdcStage.click.bind(cdcStage));
+
 s.bind('doubleClickStage', cdcStage.doubleClick.bind(cdcStage));
 
 dragListener.bind('drop', e => { console.log('(drop)'); movePersons(e); skipClickAfterDrop = true; });
