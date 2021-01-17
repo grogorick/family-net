@@ -73,6 +73,14 @@ body {
   display: inline-block;
 }
 
+.box input, .box textarea {
+  width: 150pt;
+}
+.box textarea {
+  vertical-align: top;
+  resize: none;
+}
+
 .box input[placeholder="tt"], .box input[placeholder="mm"] {
   width: 2em;
 }
@@ -119,10 +127,7 @@ body {
   margin: 5pt 0 0;
 }
 
-#person-form.box {
-  width: 280pt;
-}
-#connection-form.box {
+#person-form.box, #connection-form.box {
   width: 280pt;
 }
 #connection-form-persons {

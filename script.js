@@ -102,11 +102,19 @@ function getDataPerson(t)
   data.persons.forEach(d => { if (d.t == t) person = d; });
   return person;
 }
+function getDataPersonIndex(t)
+{
+  return data.persons.findIndex(d => d.t == t);
+}
 function getDataConnection(t)
 {
   let connection = null;
   data.connections.forEach(d => { if (d.t == t) connection = d; });
   return connection;
+}
+function getDataConnectionIndex(t)
+{
+  return data.connections.findIndex(d => d.t == t);
 }
 
 function deleteDataPerson(t)
@@ -210,7 +218,7 @@ function showForm(f, opt = null)
   }
 
   f.classList.add('box-visible');
-  let firstInput = f.querySelector('input');
+  let firstInput = f.querySelector('input, textarea');
   if (firstInput) {
     firstInput.focus();
   }
@@ -531,7 +539,7 @@ personMenuCancel.addEventListener('click', e =>
 });
 
 approveDeleteOrCancelKeys(
-  [ personMenuName, personMenuBirthDay, personMenuBirthMonth, personMenuBirthYear ],
+  [ personMenuName, personMenuBirthDay, personMenuBirthMonth, personMenuBirthYear, personMenuDeathDay, personMenuDeathMonth, personMenuDeathYear, personMenuNote ],
   [ personMenuAdd, personMenuEdit ],
   personMenuDelete,
   personMenuCancel);
@@ -559,9 +567,11 @@ function editPerson(d, toData = true, toServer = true, toGraph = true, refreshGr
   toServerDataGraph('editPerson', d, {
       toServer: toServer,
       toData: !toData ? null : () => {
-        let p = getDataPerson(d.t);
-        p.n = d.n;
-        p.b = d.b; },
+          let i = getDataPersonIndex(d.t);
+          let old = data.persons[i];
+          d.x = old.x;
+          d.y = old.y;
+          data.persons[i] = d; },
       toGraph: !toGraph ? null : () => {
         let n = s.graph.nodes(d.t);
         n.label = d.n; },
@@ -766,8 +776,11 @@ function editConnection(d, toData = true, toServer = true, toGraph = true, refre
   toServerDataGraph('editConnection', d, {
       toServer: toServer,
       toData: !toData ? null : () => {
-        let c = getDataConnection(d.t);
-        c.n = d.d; },
+        let i = getDataConnectionIndex(d.t);
+        let old = data.connections[i];
+        d.p1 = old.p1;
+        d.p2 = old.p2;
+        data.connections[i] = d; },
       toGraph: !toGraph ? null : () => {
         let c = s.graph.edges(d.t);
         c.label = d.d; },

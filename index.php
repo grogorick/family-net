@@ -220,20 +220,20 @@ header('Content-Type:text/html');
     <h2 class="opt opt-edit">Person bearbeiten</h2>
     <div class="box-row">
       <label for="person-form-name">Namen: </label>
-      <input id="person-form-name" type="text" placeholder="Vorname(n), Nachname(n)" /><br />
+      <input id="person-form-name" type="text" placeholder="Vorname(n), Nachname(n)" />
     </div><div class="box-row">
       <label for="person-form-birth-day">Geburtstag: </label>
       <input id="person-form-birth-day" type="text" placeholder="tt" />
       <input id="person-form-birth-month" type="text" placeholder="mm" />
-      <input id="person-form-birth-year" type="text" placeholder="yyyy" /><br />
+      <input id="person-form-birth-year" type="text" placeholder="yyyy" />
     </div><div class="box-row">
       <label for="person-form-death-day">Todestag: </label>
       <input id="person-form-death-day" type="text" placeholder="tt" />
       <input id="person-form-death-month" type="text" placeholder="mm" />
-      <input id="person-form-death-year" type="text" placeholder="yyyy" /><br />
+      <input id="person-form-death-year" type="text" placeholder="yyyy" />
     </div><div class="box-row">
       <label for="person-form-note">Notiz: </label>
-      <input id="person-form-note" type="text" /><br />
+      <textarea id="person-form-note" rows="3"></textarea>
     </div>
     <button id="person-form-add" class="opt opt-new">Hinzufügen</button>
     <button id="person-form-edit" class="opt opt-edit">Speichern</button>
@@ -246,7 +246,7 @@ header('Content-Type:text/html');
     <i id="connection-form-persons" class="opt opt-edit"></i>
     <div class="box-row">
       <label for="connection-form-desc">Info: </label>
-      <input id="connection-form-desc" type="text" /><br />
+      <textarea id="connection-form-desc" rows="3"></textarea>
     </div>
     <button id="connection-form-add" class="opt opt-new">Verbinden</button>
     <button id="connection-form-add-child" class="opt opt-new-child">Verbinden</button>
