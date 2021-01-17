@@ -30,34 +30,45 @@ function clickDoubleClick(cbClick, cbDoubleClick)
   return cdc;
 }
 
-function approveOrCancelKeys(inputField, approveButtonsToClick, cancelButtonToClick)
+function approveDeleteOrCancelKeys(inputFields, approveButtonsToClick, deleteButtonToClick, cancelButtonToClick)
 {
-  inputField.addEventListener('keydown', e =>
-  {
-    switch (e.key) {
-      case 'Enter':
-      {
-        approveButtonsToClick.forEach(b => {
-          let isNewForm = b.classList.contains('opt-new') && b.parentNode.classList.contains('opt-new');
-          let isEditForm = b.classList.contains('opt-edit') && b.parentNode.classList.contains('opt-edit');
-          if (isNewForm || isEditForm) {
-            b.click();
+  inputFields.forEach(i => {
+    i.addEventListener('keydown', e =>
+    {
+      // console.log(e);
+      switch (e.key) {
+        case 'Enter':
+        {
+          approveButtonsToClick.forEach(b => {
+            let isNewForm = b.classList.contains('opt-new') && b.parentNode.classList.contains('opt-new');
+            let isNewChildForm = b.classList.contains('opt-new-child') && b.parentNode.classList.contains('opt-new-child');
+            let isEditForm = b.classList.contains('opt-edit') && b.parentNode.classList.contains('opt-edit');
+            if (isNewForm || isNewChildForm || isEditForm) {
+              b.click();
+            }
+          });
+        }
+        break;
+        case 'Delete':
+        {
+          if (multipleKeyPressed(e) && deleteButtonToClick.parentNode.classList.contains('opt-edit')) {
+            deleteButtonToClick.click();
           }
-        });
+        }
+        break;
+        case 'Escape':
+        {
+          cancelButtonToClick.click();
+        }
+        break;
       }
-      break;
-      case 'Escape':
-      {
-        cancelButtonToClick.click();
-      }
-      break;
-    }
+    });
   });
 }
 
 function multipleKeyPressed(e)
 {
-  return e.data.captor.ctrlKey || e.data.captor.shiftKey;
+  return e.data ? (e.data.captor.ctrlKey || e.data.captor.shiftKey) : (e.ctrlKey || e.shiftKey);
 }
 
 function twoDigits(v)

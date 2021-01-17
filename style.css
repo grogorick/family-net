@@ -52,7 +52,9 @@ body {
   margin-right: -20pt;
 }
 
-.box.opt-new .opt:not(.opt-new), .box.opt-edit .opt:not(.opt-edit) {
+.box.opt-new .opt:not(.opt-new),
+.box.opt-new-child .opt:not(.opt-new-child),
+.box.opt-edit .opt:not(.opt-edit) {
   display: none;
 }
 

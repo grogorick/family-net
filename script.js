@@ -29,7 +29,7 @@ let s = new sigma({
 
 
     // person
-    minNodeSize: 1,
+    minNodeSize: .1,
     maxNodeSize: 10,
     nodeBorderColor: 'default',
     nodeOuterBorderColor: 'default',
@@ -71,13 +71,14 @@ let s = new sigma({
     edgeHoverColor: 'default',
     defaultEdgeHoverColor: settings.edgeColorHighlight,
 
-    // connection label
-    edgeLabelHoverShadow: true,
-    edgeLabelHoverShadowColor: '#ddd',
-
     // connection selected
     edgeActiveColor: 'default',
-    defaultEdgeActiveColor: settings.edgeColorHighlight
+    defaultEdgeActiveColor: settings.edgeColorHighlight,
+
+    // connection label
+    edgeLabelThreshold: 10,
+    edgeLabelHoverShadow: true,
+    edgeLabelHoverShadowColor: '#ddd'
   }
 });
 
@@ -117,7 +118,7 @@ function deleteDataConnection(t)
   data.connections.splice(data.connections.findIndex(d => d.t == t), 1);
 }
 
-function getDataConnectionsToPerson(t)
+function getDataPersonConnections(t)
 {
   let connections = [];
   data.connections.forEach(d =>
@@ -158,12 +159,51 @@ function alignToGrid(n)
   n.y = Math.round(n.y / settings.gridStep) * settings.gridStep;
 }
 
+function isChildConnection(t)
+{
+  return (typeof t == 'string') && t.includes('-');
+}
+function getParentsFromChildConnection(d)
+{
+  return d.split('-');
+}
+function getChildConnectionNodePosition(p1, p2)
+{
+  return {
+    x: (p1.x + p2.x) / 2,
+    y: (p1.y + p2.y) / 2 };
+}
+function moveChildConnectionNodes(nodes)
+{
+  let alreadyDone = [];
+  nodes.forEach(n1 =>
+  {
+    getDataPersonConnections(n1.id).forEach(c =>
+    {
+      let childConnectionNodeId = c.p1 + '-' + c.p2;
+      if (alreadyDone.includes(childConnectionNodeId)) {
+        // console.log('child ' + childConnectionNodeId + ' already moved');
+        return;
+      }
+      let childConnectionNode = s.graph.nodes(childConnectionNodeId);
+      if (childConnectionNode) {
+        let n2_id = (c.p1 == n1.id) ? c.p2 : c.p1;
+        let newPos = getChildConnectionNodePosition(n1, s.graph.nodes(n2_id));
+        childConnectionNode.x = newPos.x;
+        childConnectionNode.y = newPos.y;
+        alreadyDone.push(childConnectionNodeId);
+      }
+    });
+  });
+}
+
 let modalBlocker = document.getElementById('modal-blocker');
 function showForm(f, opt = null)
 {
   modalBlocker.style.display = 'block';
 
   f.classList.remove('opt-new');
+  f.classList.remove('opt-new-child');
   f.classList.remove('opt-edit');
   if (opt) {
     f.classList.add(opt);
@@ -266,6 +306,10 @@ function deselectAll(e, refreshGraph = true, except = [])
 // ------------------------------------
 function selectPerson(e, refreshGraph = true)
 {
+  if (isChildConnection(e.data.node.id)) {
+    return;
+  }
+
   let multipleKey = multipleKeyPressed(e);
   if (!multipleKey) {
     deselectAll(e, false);
@@ -291,19 +335,33 @@ function selectPerson(e, refreshGraph = true)
     if (!multipleKey) {
       showPersonInfo(nodes[0].id);
     }
+    else {
+      let edges = activeState.edges();
+      if (edges.length === 1) {
+        let c = edges[0];
+        let p = nodes[0];
+        if (checkPersonsConnected(c.source, p.id) || checkPersonsConnected(c.target, p.id)) {
+          console.log('already connected');
+          return;
+        }
+        startNewChildConnection();
+      }
+
+    }
   }
   else if (nodes.length === 2) {
-    if (nodes[0].id == nodes[1].id) {
-      console.log('no connection possible - 2 different persons must be selected');
-      return;
+    if (!activeState.edges().length) {
+      if (nodes[0].id == nodes[1].id) {
+        console.log('no connection possible - 2 different persons must be selected');
+        return;
+      }
+      if (checkPersonsConnected(nodes[0].id, nodes[1].id)) {
+        console.log('no connection possible - persons already connected');
+        return;
+      }
+      startNewConnection();
     }
-    if (checkPersonsConnected(nodes[0].id, nodes[1].id)) {
-      console.log('no connection possible - persons already connected');
-      return;
-    }
-    startNewConnection();
   }
-  checkCombinedSelection();
 }
 
 function deselectPersons(e, refreshGraph = true, except = [])
@@ -348,7 +406,6 @@ function selectConnection(e, refreshGraph = true)
   if (!multipleKeyPressed(e)) {
     showConnectionInfo(c.id);
   }
-  checkCombinedSelection();
 }
 
 function deselectConnections(e, refreshGraph = true, except = [])
@@ -363,40 +420,6 @@ function deselectConnections(e, refreshGraph = true, except = [])
     activeState.dropEdges();
   }
   if (refreshGraph) {
-    s.refresh();
-  }
-}
-
-// select person and connection
-function checkCombinedSelection()
-{
-  let es = activeState.edges();
-  let ns = activeState.nodes();
-  if (es.length === 1 && ns.length === 1) {
-    console.log(['create child connection', es, ns]);
-    let e = es[0];
-    let n1 = s.graph.nodes(e.source);
-    let n2 = s.graph.nodes(e.target);
-    let n12 = {
-      x: (n1.x + n2.x) / 2,
-      y: (n1.y + n2.y) / 2
-    };
-    let n = ns[0];
-    let t = new Date().getTime();
-    s.graph.addNode({
-      id: t + '-1',
-      x: n12.x,
-      y: n12.y,
-      size: 0
-    });
-    s.graph.addEdge({
-      id: t + '-2',
-      source: t + '-1',
-      target: n.id,
-      label: 'Kind',
-      size: settings.edgeSize,
-      type: 'arrow'
-    });
     s.refresh();
   }
 }
@@ -449,6 +472,7 @@ function showPersonInfo(t)
   personMenuDeathMonth.value = dd[1];
   personMenuDeathYear.value = dd[0];
   personMenuNote.value = d.o;
+  personMenuDelete.style.display = getDataPersonConnections(t).length ? 'none' : '';
   showForm(personMenuForm, 'opt-edit');
 }
 
@@ -489,8 +513,13 @@ personMenuEdit.addEventListener('click', e =>
 personMenuDelete.addEventListener('click', e =>
 {
   console.log('click person-form-delete');
-  hideForm(personMenuForm);
   let t = activeState.nodes()[0].id;
+  let connections = getDataPersonConnections(t);
+  if (connections.length) {
+    console.log(['cancelled - person to delete must not be connected', connections]);
+    return;
+  }
+  hideForm(personMenuForm);
   activeState.dropNodes();
   deletePerson(t);
 });
@@ -501,10 +530,11 @@ personMenuCancel.addEventListener('click', e =>
   hideForm(personMenuForm);
 });
 
-approveOrCancelKeys(personMenuName, [ personMenuAdd, personMenuEdit ], personMenuCancel);
-approveOrCancelKeys(personMenuBirthDay, [ personMenuAdd, personMenuEdit ], personMenuCancel);
-approveOrCancelKeys(personMenuBirthMonth, [ personMenuAdd, personMenuEdit ], personMenuCancel);
-approveOrCancelKeys(personMenuBirthYear, [ personMenuAdd, personMenuEdit ], personMenuCancel);
+approveDeleteOrCancelKeys(
+  [ personMenuName, personMenuBirthDay, personMenuBirthMonth, personMenuBirthYear ],
+  [ personMenuAdd, personMenuEdit ],
+  personMenuDelete,
+  personMenuCancel);
 
 let logAddPerson = true;
 function addPerson(d, toData, toServer, toGraph, refreshGraph, doneCallback = null)
@@ -541,12 +571,6 @@ function editPerson(d, toData = true, toServer = true, toGraph = true, refreshGr
 
 function deletePerson(t, toData = true, toServer = true, toGraph = true, refreshGraph = true)
 {
-  let connections = getDataConnectionsToPerson(t);
-  if (connections.length) {
-    console.log(['cancelled - person to delete must not be connected', connections]);
-    alert('Nur Personen ohne Verbindungen können gelöscht werden.');
-    return;
-  }
   toServerDataGraph('deletePerson', t, {
       toServer: toServer,
       toData: !toData ? null : () => { deleteDataPerson(t); },
@@ -555,14 +579,19 @@ function deletePerson(t, toData = true, toServer = true, toGraph = true, refresh
     });
 }
 
-function movePersons(e, toData = true, toServer = true, toGraph = false, refreshGraph = false)
+function movePersons(e, toData, toServer, toGraph, refreshGraph, alignNodesToGrid, log)
 {
   let nodes = activeState.nodes();
   if (!nodes.some(n => n.id === e.data.node.id)) {
     nodes = [e.data.node];
   }
-  nodes.forEach(alignToGrid);
-  s.refresh();
+  if (alignNodesToGrid) {
+    nodes.forEach(alignToGrid);
+  }
+  moveChildConnectionNodes(nodes);
+  // if (refreshGraph) {
+    // s.refresh();
+  // }
   let ds = [];
   if (toServer) {
     nodes.forEach(n => { ds.push({ t: n.id, x: n.x, y: n.y }); });
@@ -580,7 +609,7 @@ function movePersons(e, toData = true, toServer = true, toGraph = false, refresh
           n.x = d.x;
           n.y = d.y; }); },
       refreshGraph: refreshGraph
-    });
+    }, log);
 }
 
 
@@ -590,6 +619,7 @@ let connectionMenuForm = document.getElementById('connection-form');
 let connectionMenuPersons = document.getElementById('connection-form-persons');
 let connectionMenuDesc = document.getElementById('connection-form-desc');
 let connectionMenuAdd = document.getElementById('connection-form-add');
+let connectionMenuAddChild = document.getElementById('connection-form-add-child');
 let connectionMenuEdit = document.getElementById('connection-form-edit');
 let connectionMenuDelete = document.getElementById('connection-form-delete');
 let connectionMenuCancel = document.getElementById('connection-form-cancel');
@@ -601,13 +631,29 @@ function startNewConnection()
   showForm(connectionMenuForm, 'opt-new');
 }
 
+function startNewChildConnection()
+{
+  connectionMenuPersons.innerHTML = '';
+  connectionMenuDesc.value = '';
+  showForm(connectionMenuForm, 'opt-new-child');
+}
+
 function showConnectionInfo(t)
 {
   console.log(['showConnectionInfo', t]);
   let d = getDataConnection(t);
-  let p1 = getDataPerson(d.p1);
+  let p1_n = '';
+  if (isChildConnection(d.p1)) {
+    let p1 = getParentsFromChildConnection(d.p1);
+    let p1_1 = getDataPerson(p1[0]);
+    let p1_2 = getDataPerson(p1[1]);
+    p1_n = p1_1.n + ' & ' + p1_2.n;
+  }
+  else {
+    p1_n = getDataPerson(d.p1).n;
+  }
   let p2 = getDataPerson(d.p2);
-  connectionMenuPersons.innerHTML = p1.n + ' &mdash; ' + p2.n;
+  connectionMenuPersons.innerHTML = p1_n + ' &mdash; ' + p2.n;
   connectionMenuDesc.value = d.d;
   showForm(connectionMenuForm, 'opt-edit');
 }
@@ -625,6 +671,27 @@ connectionMenuAdd.addEventListener('click', e =>
     (d) =>
     {
       deselectAll(e, false);
+      activeState.addEdges(d.t);
+      s.refresh();
+    });
+});
+
+connectionMenuAddChild.addEventListener('click', e =>
+{
+  console.log('click connection-form-add-child');
+  hideForm(connectionMenuForm);
+  let c = activeState.edges()[0];
+  let p = activeState.nodes()[0];
+  let p1 = s.graph.nodes(c.source);
+  let p2 = s.graph.nodes(c.target);
+  addConnection({
+      p1: p1.id + '-' + p2.id,
+      p2: p.id,
+      d: connectionMenuDesc.value.trim()
+    }, true, true, true, true,
+    (d) =>
+    {
+      deselectAll(null, false);
       activeState.addEdges(d.t);
       s.refresh();
     });
@@ -655,11 +722,29 @@ connectionMenuCancel.addEventListener('click', e =>
   hideForm(connectionMenuForm);
 });
 
-approveOrCancelKeys(connectionMenuDesc, [ connectionMenuAdd, connectionMenuEdit ], connectionMenuCancel);
+approveDeleteOrCancelKeys(
+  [ connectionMenuDesc ],
+  [ connectionMenuAdd, connectionMenuAddChild, connectionMenuEdit ],
+  connectionMenuDelete,
+  connectionMenuCancel);
 
 let logAddConnection = true;
 function addConnection(d, toData, toServer, toGraph, refreshGraph, doneCallback = null)
 {
+  if (toGraph && isChildConnection(d.p1)) {
+    if (!s.graph.nodes(d.p1)) {
+      let p1 = getParentsFromChildConnection(d.p1);
+      let p1_1 = getDataPerson(p1[0]);
+      let p1_2 = getDataPerson(p1[1]);
+      let p12 = getChildConnectionNodePosition(p1_1, p1_2);
+      s.graph.addNode({
+        id: d.p1,
+        x: p12.x,
+        y: p12.y,
+        size: .1
+      });
+    }
+  }
   toServerDataGraph('addConnection', d, {
       toServer: !toServer ? null : (t) => { d.t = t; },
       toData: !toData ? null : () => { data.connections.push(d); },
@@ -703,8 +788,8 @@ function deleteConnection(t, toData = true, toServer = true, toGraph = true, ref
 
 // events
 // ------------------------------------
-let skipClickAfterDrop = false;
-s.bind('clickNode', e => { if (skipClickAfterDrop) { skipClickAfterDrop = false; return; } selectPerson(e); });
+let skipClickNodeAfterDrop = false;
+s.bind('clickNode', e => { if (skipClickNodeAfterDrop) { skipClickNodeAfterDrop = false; return; } selectPerson(e); });
 
 s.bind('clickEdge', selectConnection);
 
@@ -717,8 +802,15 @@ s.bind('clickStage', cdcStage.click.bind(cdcStage));
 
 s.bind('doubleClickStage', cdcStage.doubleClick.bind(cdcStage));
 
-s.bind('coordinatesUpdated', cameraMoved);
+let skipCoordinatesUpdatedAfterDrag = false
+s.bind('coordinatesUpdated', e => { if (skipCoordinatesUpdatedAfterDrag) { skipCoordinatesUpdatedAfterDrag = false; return; } cameraMoved(e); });
 
-dragListener.bind('drop', e => { console.log('(drop)'); movePersons(e); skipClickAfterDrop = true; });
+dragListener.bind('drag', e =>
+{
+  movePersons(e, false, false, false, false, false, false);
+  skipCoordinatesUpdatedAfterDrag = true;
+});
+
+dragListener.bind('drop', e => { console.log('(drop)'); movePersons(e, true, true, false, false, true, true); skipClickNodeAfterDrop = true; });
 
 setTimeout(s.refresh.bind(s), 1000);

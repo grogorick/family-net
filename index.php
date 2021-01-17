@@ -170,6 +170,7 @@ header('Content-Type:text/html');
       <button class="box-minimize">&mdash;</button>
     </div>
 <?php $boxPos = '(unten rechts)'; ?>
+<?php $modKeys = '<i>Shift/Strg</i>'; ?>
     <ul>
       <li>
         Eine Person hinzufügen:
@@ -190,7 +191,7 @@ header('Content-Type:text/html');
       <li>
         Zwei Personen verbinden:
         <ul>
-          <li><i>Shift oder Strg</i> gedrückt halten</li>
+          <li><?=$modKeys?> gedrückt halten</li>
           <li>Die erste Person anklicken</li>
           <li>Die zweite Person anklicken</li>
           <li>Daten der Verbindung im Eingabefenster <?=$boxPos?> eintragen</li>
@@ -202,14 +203,14 @@ header('Content-Type:text/html');
         <ul>
           <li>(Die Person darf nicht mit anderen verbunden sein)</li>
           <li>Die Person anklicken</li>
-          <li>Im Detailfenster <?=$boxPos?> <i>Entfernen</i> klicken</li>
+          <li>Im Detailfenster <?=$boxPos?> <i>Entfernen</i> klicken<br />oder<br /><?=$modKeys?> gedrückt halten und <i>Entf</i> tippen</li>
         </ul>
       </li>
       <li>
         Eine Verbindung entfernen:
         <ul>
           <li>Die Verbindung anklicken</li>
-          <li>Im Detailfenster <?=$boxPos?> <i>Entfernen</i> klicken</li>
+          <li>Im Detailfenster <?=$boxPos?> <i>Entfernen</i> klicken<br />oder<br /><?=$modKeys?> gedrückt halten und <i>Entf</i> tippen</li>
         </ul>
       </li>
     </ul>
@@ -240,7 +241,7 @@ header('Content-Type:text/html');
     <button id="person-form-cancel">Abbrechen</button>
   </div>
   <div id="connection-form" class="box">
-    <h2 class="opt opt-new">Neue Verbindung</h2>
+    <h2 class="opt opt-new opt-new-child">Neue Verbindung</h2>
     <h2 class="opt opt-edit">Verbindung bearbeiten</h2>
     <i id="connection-form-persons" class="opt opt-edit"></i>
     <div class="box-row">
@@ -248,6 +249,7 @@ header('Content-Type:text/html');
       <input id="connection-form-desc" type="text" /><br />
     </div>
     <button id="connection-form-add" class="opt opt-new">Verbinden</button>
+    <button id="connection-form-add-child" class="opt opt-new-child">Verbinden</button>
     <button id="connection-form-edit" class="opt opt-edit">Speichern</button>
     <button id="connection-form-delete" class="opt opt-edit">Entfernen</button>
     <button id="connection-form-cancel">Abbrechen</button>
