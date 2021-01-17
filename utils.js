@@ -130,6 +130,11 @@ document.querySelectorAll('.box-minimize, .box-restore').forEach(el =>
   });
 });
 
+function updateDateValue(dayInput, monthInput, yearInput)
+{
+  dayInput.setAttribute('data-value', yearInput.value + '-' + twoDigits(monthInput.value) + '-' + twoDigits(dayInput.value));
+}
+
 document.querySelectorAll('.box input[placeholder="tt"]').forEach(tt =>
 {
   tt.pattern = '0|0?[1-9]|[12]\\d|3[01]';
@@ -139,7 +144,11 @@ document.querySelectorAll('.box input[placeholder="tt"]').forEach(tt =>
     let id = tt.id.substr(0, tt.id.length - '-day'.length);
     let mm = document.getElementById(id + '-month');
     let yyyy = document.getElementById(id + '-year');
-    tt.setAttribute('data-value', yyyy.value + '-' + twoDigits(mm.value) + '-' + twoDigits(tt.value));
+    updateDateValue(tt, mm, yyyy);
+
+    if (tt.value.length === 2) {
+      tt.nextElementSibling.focus();
+    }
   });
   tt.setAttribute('data-value', '--');
 });
@@ -153,7 +162,11 @@ document.querySelectorAll('.box input[placeholder="mm"]').forEach(mm =>
     let id = mm.id.substr(0, mm.id.length - '-month'.length);
     let tt = document.getElementById(id + '-day');
     let yyyy = document.getElementById(id + '-year');
-    tt.setAttribute('data-value', yyyy.value + '-' + twoDigits(mm.value) + '-' + twoDigits(tt.value));
+    updateDateValue(tt, mm, yyyy);
+
+    if (mm.value.length === 2) {
+      mm.nextElementSibling.focus();
+    }
   });
 });
 
@@ -166,6 +179,6 @@ document.querySelectorAll('.box input[placeholder="yyyy"]').forEach(yyyy =>
     let id = yyyy.id.substr(0, yyyy.id.length - '-year'.length);
     let tt = document.getElementById(id + '-day');
     let mm = document.getElementById(id + '-month');
-    tt.setAttribute('data-value', yyyy.value + '-' + twoDigits(mm.value) + '-' + twoDigits(tt.value));
+    updateDateValue(tt, mm, yyyy);
   });
 });

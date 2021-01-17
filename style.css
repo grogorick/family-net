@@ -103,6 +103,7 @@ body {
 #help.box {
   bottom: initial;
   top: 10pt;
+  white-space: nowrap;
 }
 #help.box:not(.box-minimized) {
   max-height: 30%;

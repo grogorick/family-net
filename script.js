@@ -161,6 +161,15 @@ function getGraphPositionFromEvent(e)
   };
 }
 
+function getPersonRufname(d_n)
+{
+  let n = d_n.match(/[*]\s*(\w+)(,|\s|$)/);
+  if (!n) {
+    n = d_n.match(/^(\w+)(,|\s|$)/);
+  }
+  return n ? n[1] : '';
+}
+
 function alignToGrid(n)
 {
   n.x = Math.round(n.x / settings.gridStep) * settings.gridStep;
@@ -459,9 +468,11 @@ function startNewPerson(e)
   personMenuBirthDay.value = '';
   personMenuBirthMonth.value = '';
   personMenuBirthYear.value = '';
+  updateDateValue(personMenuBirthDay, personMenuBirthMonth, personMenuBirthYear);
   personMenuDeathDay.value = '';
   personMenuDeathMonth.value = '';
   personMenuDeathYear.value = '';
+  updateDateValue(personMenuDeathDay, personMenuDeathMonth, personMenuDeathYear);
   personMenuNote.value = '';
   showForm(personMenuForm, 'opt-new');
 }
@@ -475,10 +486,12 @@ function showPersonInfo(t)
   personMenuBirthDay.value = db[2];
   personMenuBirthMonth.value = db[1];
   personMenuBirthYear.value = db[0];
+  updateDateValue(personMenuBirthDay, personMenuBirthMonth, personMenuBirthYear);
   let dd = d.d.split('-');
   personMenuDeathDay.value = dd[2];
   personMenuDeathMonth.value = dd[1];
   personMenuDeathYear.value = dd[0];
+  updateDateValue(personMenuDeathDay, personMenuDeathMonth, personMenuDeathYear);
   personMenuNote.value = d.o;
   personMenuDelete.style.display = getDataPersonConnections(t).length ? 'none' : '';
   showForm(personMenuForm, 'opt-edit');
@@ -555,7 +568,7 @@ function addPerson(d, toData, toServer, toGraph, refreshGraph, doneCallback = nu
             id: d.t,
             x: d.x,
             y: d.y,
-            label: d.n,
+            label: getPersonRufname(d.n),
             size: settings.nodeSize }); },
       refreshGraph: refreshGraph,
       doneCallback: doneCallback
@@ -574,7 +587,7 @@ function editPerson(d, toData = true, toServer = true, toGraph = true, refreshGr
           data.persons[i] = d; },
       toGraph: !toGraph ? null : () => {
         let n = s.graph.nodes(d.t);
-        n.label = d.n; },
+        n.label = getPersonRufname(d.n); },
       refreshGraph: refreshGraph
     });
 }
@@ -657,13 +670,13 @@ function showConnectionInfo(t)
     let p1 = getParentsFromChildConnection(d.p1);
     let p1_1 = getDataPerson(p1[0]);
     let p1_2 = getDataPerson(p1[1]);
-    p1_n = p1_1.n + ' & ' + p1_2.n;
+    p1_n = getPersonRufname(p1_1.n) + ' & ' + getPersonRufname(p1_2.n);
   }
   else {
-    p1_n = getDataPerson(d.p1).n;
+    p1_n = getPersonRufname(getDataPerson(d.p1).n);
   }
   let p2 = getDataPerson(d.p2);
-  connectionMenuPersons.innerHTML = p1_n + ' &mdash; ' + p2.n;
+  connectionMenuPersons.innerHTML = p1_n + ' &mdash; ' + getPersonRufname(p2.n);
   connectionMenuDesc.value = d.d;
   showForm(connectionMenuForm, 'opt-edit');
 }
