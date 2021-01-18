@@ -1,7 +1,9 @@
 const settings = {
   nodeColor: '#78D384',
+  nodeColorWarning: '#D0D480',
   nodeColorHighlight: '#3BAA49',
   edgeColor: '#DDD',
+  edgeColorWarning: '#E6BDB2',
   edgeColorHighlight: '#AAA',
   nodeSize: 5,
   edgeSize: .25,
@@ -168,6 +170,23 @@ function getPersonRufname(d_n)
     n = d_n.match(/^([^ ,?]+)(,|\s|$)/);
   }
   return n ? n[1] : '';
+}
+
+function getNodeColorFromPersonNote(o)
+{
+  return o.includes('???') ? settings.nodeColorWarning : '';
+}
+
+function getEdgeColorFromConnectionDesc(d)
+{
+  return d.includes('???') ? settings.edgeColorWarning : '';
+}
+
+function getLineTypeFromConnectionRelation(r)
+{
+  return ['geschieden', 'verwitwet'].includes(r) ? 'dotted' : (
+          r === 'verheiratet' ? 'dashed' :
+          'arrow');
 }
 
 function alignToGrid(n)
@@ -569,7 +588,8 @@ function addPerson(d, toData, toServer, toGraph, refreshGraph, doneCallback = nu
             x: d.x,
             y: d.y,
             label: getPersonRufname(d.n),
-            size: settings.nodeSize }); },
+            size: settings.nodeSize,
+            color: getNodeColorFromPersonNote(d.o) }); },
       refreshGraph: refreshGraph,
       doneCallback: doneCallback
     }, logAddPerson);
@@ -587,7 +607,8 @@ function editPerson(d, toData = true, toServer = true, toGraph = true, refreshGr
           data.persons[i] = d; },
       toGraph: !toGraph ? null : () => {
         let n = s.graph.nodes(d.t);
-        n.label = getPersonRufname(d.n); },
+        n.label = getPersonRufname(d.n);
+        n.color = getNodeColorFromPersonNote(d.o); },
       refreshGraph: refreshGraph
     });
 }
@@ -640,6 +661,7 @@ function movePersons(e, toData, toServer, toGraph, refreshGraph, alignNodesToGri
 // ------------------------------------
 let connectionMenuForm = document.getElementById('connection-form');
 let connectionMenuPersons = document.getElementById('connection-form-persons');
+let connectionMenuRelation = document.getElementById('connection-form-relation');
 let connectionMenuDesc = document.getElementById('connection-form-desc');
 let connectionMenuAdd = document.getElementById('connection-form-add');
 let connectionMenuAddChild = document.getElementById('connection-form-add-child');
@@ -650,6 +672,7 @@ let connectionMenuCancel = document.getElementById('connection-form-cancel');
 function startNewConnection()
 {
   connectionMenuPersons.innerHTML = '';
+  connectionMenuRelation.value = '';
   connectionMenuDesc.value = '';
   showForm(connectionMenuForm, 'opt-new');
 }
@@ -657,6 +680,7 @@ function startNewConnection()
 function startNewChildConnection()
 {
   connectionMenuPersons.innerHTML = '';
+  connectionMenuRelation.value = '';
   connectionMenuDesc.value = '';
   showForm(connectionMenuForm, 'opt-new-child');
 }
@@ -677,6 +701,7 @@ function showConnectionInfo(t)
   }
   let p2 = getDataPerson(d.p2);
   connectionMenuPersons.innerHTML = p1_n + ' &mdash; ' + getPersonRufname(p2.n);
+  connectionMenuRelation.value = d.r;
   connectionMenuDesc.value = d.d;
   showForm(connectionMenuForm, 'opt-edit');
 }
@@ -689,6 +714,7 @@ connectionMenuAdd.addEventListener('click', e =>
   addConnection({
       p1: n[0].id,
       p2: n[1].id,
+      r: connectionMenuRelation.value.trim(),
       d: connectionMenuDesc.value.trim()
     }, true, true, true, true,
     (d) =>
@@ -710,6 +736,7 @@ connectionMenuAddChild.addEventListener('click', e =>
   addConnection({
       p1: p1.id + '-' + p2.id,
       p2: p.id,
+      r: connectionMenuRelation.value.trim(),
       d: connectionMenuDesc.value.trim()
     }, true, true, true, true,
     (d) =>
@@ -726,6 +753,7 @@ connectionMenuEdit.addEventListener('click', e =>
   hideForm(connectionMenuForm);
   editConnection({
     t: activeState.edges()[0].id,
+    r: connectionMenuRelation.value.trim(),
     d: connectionMenuDesc.value.trim()
   });
 });
@@ -746,7 +774,7 @@ connectionMenuCancel.addEventListener('click', e =>
 });
 
 approveDeleteOrCancelKeys(
-  [ connectionMenuDesc ],
+  [ connectionMenuRelation, connectionMenuDesc ],
   [ connectionMenuAdd, connectionMenuAddChild, connectionMenuEdit ],
   connectionMenuDelete,
   connectionMenuCancel);
@@ -764,7 +792,8 @@ function addConnection(d, toData, toServer, toGraph, refreshGraph, doneCallback 
         id: d.p1,
         x: p12.x,
         y: p12.y,
-        size: .1
+        size: .1,
+        color: settings.edgeColor
       });
     }
   }
@@ -776,9 +805,10 @@ function addConnection(d, toData, toServer, toGraph, refreshGraph, doneCallback 
             id: d.t,
             source: d.p1,
             target: d.p2,
-            label: d.d,
+            label: d.r,
             size: settings.edgeSize,
-            type: (d.d.includes('geschieden') ? 'dotted' : (d.d.includes('verheiratet') ? 'dashed' : 'arrow')) }); },
+            type: getLineTypeFromConnectionRelation(d.r),
+            color: getEdgeColorFromConnectionDesc(d.d) }); },
       refreshGraph: refreshGraph,
       doneCallback: doneCallback
     }, logAddConnection);
@@ -796,7 +826,9 @@ function editConnection(d, toData = true, toServer = true, toGraph = true, refre
         data.connections[i] = d; },
       toGraph: !toGraph ? null : () => {
         let c = s.graph.edges(d.t);
-        c.label = d.d; },
+        c.label = d.r;
+        c.type = getLineTypeFromConnectionRelation(d.r);
+        c.color = getEdgeColorFromConnectionDesc(d.d); },
       refreshGraph: refreshGraph
     });
 }

@@ -245,6 +245,17 @@ header('Content-Type:text/html');
     <h2 class="opt opt-edit">Verbindung bearbeiten</h2>
     <i id="connection-form-persons" class="opt opt-edit"></i>
     <div class="box-row">
+      <label for="connection-form-relation">Art: </label>
+      <input id="connection-form-relation" list="connection-form-relation-suggestions">
+      <datalist id="connection-form-relation-suggestions">
+        <option value="Kind">
+        <option value="adoptiert">
+        <option value="verheiratet">
+        <option value="geschieden">
+        <option value="verwitwet">
+      </datalist>
+    </div>
+    <div class="box-row">
       <label for="connection-form-desc">Info: </label>
       <textarea id="connection-form-desc" rows="3"></textarea>
     </div>
