@@ -163,9 +163,9 @@ function getGraphPositionFromEvent(e)
 
 function getPersonRufname(d_n)
 {
-  let n = d_n.match(/[*]\s*(\w+)(,|\s|$)/);
+  let n = d_n.match(/[*]\s*([^ ,?]+)(,|\s|$)/);
   if (!n) {
-    n = d_n.match(/^(\w+)(,|\s|$)/);
+    n = d_n.match(/^([^ ,?]+)(,|\s|$)/);
   }
   return n ? n[1] : '';
 }
