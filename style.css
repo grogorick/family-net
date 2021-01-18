@@ -10,6 +10,20 @@ body, input {
 body {
   background: white;
 }
+
+::-webkit-scrollbar {
+  width: 10pt;
+}
+::-webkit-scrollbar-track {
+  background: radial-gradient(circle, #f9f9f9 50%, #fff 100%);
+}
+::-webkit-scrollbar-thumb {
+  background: #eee;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #ddd;
+}
+
 #modal-blocker {
   position: fixed;
   display: none;
@@ -106,14 +120,16 @@ body {
   white-space: nowrap;
 }
 #help.box:not(.box-minimized) {
-  max-height: 30%;
-  overflow-y: auto;
+  height: 30%;
 }
 #help.box button {
   margin: 0;
 }
 #help.box > ul {
-  padding: 0;
+  margin: 0 -20pt 0 0;
+  padding: 0 20pt 0 0;
+  height: 100%;
+  overflow-y: auto;
 }
 #help.box > ul > li {
   list-style-type: none;
