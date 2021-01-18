@@ -124,9 +124,18 @@ function toServerDataGraph(action, d, cb = { toServer: null, toData: null, toGra
 }
 
 document.querySelectorAll('.box-minimize, .box-restore').forEach(el =>
-{ el.addEventListener('click', e =>
+{
+  el.addEventListener('click', e =>
   {
     el.parentNode.parentNode.classList.toggle('box-minimized');
+  });
+});
+
+document.querySelectorAll('.collapse-trigger').forEach(el =>
+{
+  el.addEventListener('click', e =>
+  {
+    el.classList.toggle('collapsed');
   });
 });
 

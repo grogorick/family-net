@@ -114,6 +114,22 @@ body {
   border-top: 1px solid #ddd;
 }
 
+.collapse-trigger {
+  cursor: pointer;
+}
+.collapse-trigger::after {
+  /*content: '\25B2';*/
+  content: '\25B4';
+  float: right;
+}
+.collapse-trigger.collapsed::after {
+  /*content: '\25BC';*/
+  content: '\25BE';
+}
+.collapse-trigger.collapsed + * {
+  display: none;
+}
+
 #help.box {
   bottom: initial;
   top: 10pt;
@@ -121,23 +137,33 @@ body {
 }
 #help.box:not(.box-minimized) {
   height: 30%;
+  min-width: 300pt;
 }
-#help.box button {
+#help.box .box-minimize-buttons button {
   margin: 0;
 }
-#help.box > ul {
+#help.box h2 {
+  border-bottom: 1px solid #eee;
+}
+#help.box h2:not(:first-of-type) {
+  margin-top: 20pt;
+}
+#help.box > div:nth-child(2) {
   margin: 0 -20pt 0 0;
   padding: 0 20pt 0 0;
   height: 100%;
   overflow-y: auto;
 }
-#help.box > ul > li {
+#help.box > div > ul {
+  padding: 0;
+}
+#help.box > div > ul > li {
   list-style-type: none;
 }
-#help.box > ul > li:not(:last-of-type) {
+#help.box > div > ul > li {
   margin-bottom: 20pt;
 }
-#help.box > ul ul li {
+#help.box li {
   margin-top: 5pt;
 }
 #help.box dl {

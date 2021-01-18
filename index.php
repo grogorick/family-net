@@ -169,51 +169,76 @@ header('Content-Type:text/html');
       <button class="box-restore">?</button>
       <button class="box-minimize">&mdash;</button>
     </div>
-<?php $boxPos = '(unten rechts)'; ?>
+<?php $boxPos = 'unten rechts'; ?>
 <?php $modKeys = '<i>Shift/Strg</i>'; ?>
-    <ul>
-      <li>
-        Eine Person hinzufügen:
-        <ul>
-          <li><i>Doppelklick</i> dort, wo die Person hinzugefügt werden soll</li>
-          <li>Daten der Person im Eingabefenster <?=$boxPos?> eintragen
-            <dl>
-              <dt><i>Namen:</i></dt>
-              <dd>Vorname(n) und Nachname(n) mit einem Komma trennen.<br />
-                  Der erste Vorname wird als Rufname im Netz angezeigt.<br />
-                  Ein Sternchen (*) markiert andere Vornamen als Rufname.
-              </dd>
-            </dl>
-          </li>
-          <li><i>Hinzufügen</i> klicken</li>
-        </ul>
-      </li>
-      <li>
-        Zwei Personen verbinden:
-        <ul>
-          <li><?=$modKeys?> gedrückt halten</li>
-          <li>Die erste Person anklicken</li>
-          <li>Die zweite Person anklicken</li>
-          <li>Daten der Verbindung im Eingabefenster <?=$boxPos?> eintragen</li>
-          <li><i>Verbinden</i> klicken</li>
-        </ul>
-      </li>
-      <li>
-        Eine Person entfernen:
-        <ul>
-          <li>(Die Person darf nicht mit anderen verbunden sein)</li>
-          <li>Die Person anklicken</li>
-          <li>Im Detailfenster <?=$boxPos?> <i>Entfernen</i> klicken<br />oder<br /><?=$modKeys?> gedrückt halten und <i>Entf</i> tippen</li>
-        </ul>
-      </li>
-      <li>
-        Eine Verbindung entfernen:
-        <ul>
-          <li>Die Verbindung anklicken</li>
-          <li>Im Detailfenster <?=$boxPos?> <i>Entfernen</i> klicken<br />oder<br /><?=$modKeys?> gedrückt halten und <i>Entf</i> tippen</li>
-        </ul>
-      </li>
-    </ul>
+    <div>
+      <h2 class="collapse-trigger collapsed">Ansehen</h2>
+      <ul>
+        <li>Sichtbaren Ausschnitt ändern:
+          <ul>
+            <li>Auf dem Hintergrund klicken und halten und ziehen</li>
+          </ul>
+        </li>
+        <li>Infos einer Personen anzeigen:
+          <ul>
+            <li>Person anklicken</li>
+            <li>Das Detailfenster wird <?=$boxPos?> angezeigt</li>
+          </ul>
+        </li>
+        <li>Infos einer Verbindung zwischen Personen anzeigen:
+          <ul>
+            <li>Verbindungslinie anklicken</li>
+            <li>Das Detailfenster wird <?=$boxPos?> angezeigt</li>
+          </ul>
+        </li>
+        <li>Direkte Verwandte einer Person hervorheben:
+          <ul>
+            <li><i>Doppelklick</i> auf die gewünschte Person</li>
+            <li>In direkter Linie verwandte Personen werden markiert</li>
+          </ul>
+        </li>
+      </ul>
+      <h2 class="collapse-trigger collapsed">Bearbeiten</h2>
+      <ul>
+        <li>Eine Person hinzufügen:
+          <ul>
+            <li><i>Doppelklick</i> dort, wo die Person hinzugefügt werden soll</li>
+            <li>Daten der Person im Eingabefenster (<?=$boxPos?>) eintragen
+              <dl>
+                <dt><i>Namen:</i></dt>
+                <dd>Vorname(n) und Nachname(n) mit einem Komma trennen.<br />
+                    Der erste Vorname wird als Rufname im Netz angezeigt.<br />
+                    Ein Sternchen (*) markiert andere Vornamen als Rufname.
+                </dd>
+              </dl>
+            </li>
+            <li><i>Hinzufügen</i> klicken</li>
+          </ul>
+        </li>
+        <li>Zwei Personen verbinden:
+          <ul>
+            <li><?=$modKeys?> gedrückt halten</li>
+            <li>Die erste Person anklicken</li>
+            <li>Die zweite Person anklicken</li>
+            <li>Daten der Verbindung im Eingabefenster (<?=$boxPos?>) eintragen</li>
+            <li><i>Verbinden</i> klicken</li>
+          </ul>
+        </li>
+        <li>Eine Person entfernen:
+          <ul>
+            <li>(Die Person darf nicht mit anderen verbunden sein)</li>
+            <li>Die Person anklicken</li>
+            <li>Im Detailfenster (<?=$boxPos?>) <i>Entfernen</i> klicken<br />oder<br /><?=$modKeys?> gedrückt halten und <i>Entf</i> tippen</li>
+          </ul>
+        </li>
+        <li>Eine Verbindung entfernen:
+          <ul>
+            <li>Die Verbindung anklicken</li>
+            <li>Im Detailfenster (<?=$boxPos?>) <i>Entfernen</i> klicken<br />oder<br /><?=$modKeys?> gedrückt halten und <i>Entf</i> tippen</li>
+          </ul>
+        </li>
+      </ul>
+    </div>
   </div>
   <div id="person-form" class="box">
     <h2 class="opt opt-new">Neue Person</h2>

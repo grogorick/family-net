@@ -12,13 +12,13 @@ const settings = {
   gridStep: 20,
   saveCameraTimeout: 5000,
 
-  lineType: {
-    _default: 'line',
-    Kind: 'arrow',
-    adoptiert: 'arrow',
-    verheiratet: 'dashed',
-    geschieden: 'dotted',
-    verwitwet: 'dotted' }
+  relations: {
+    _default: { lineType: 'line', level: null },
+    Kind: { lineType: 'arrow', level: 'v' },
+    adoptiert: { lineType: 'arrow', level: 'v' },
+    verheiratet: { lineType: 'dashed', level: 'h' },
+    geschieden: { lineType: 'dotted', level: 'h' },
+    verwitwet: { lineType: 'dotted', level: 'h' } }
 };
 
 let s = new sigma({
@@ -133,28 +133,28 @@ function deleteDataConnection(t)
   data.connections.splice(data.connections.findIndex(d => d.t == t), 1);
 }
 
+function compareTs(c_p_t, p_t)
+{
+  return isChildConnectionNode(c_p_t) ? c_p_t.includes(p_t) : (c_p_t == p_t);
+}
+
 function getDataPersonConnections(t)
 {
   let connections = [];
-  data.connections.forEach(d =>
+  data.connections.forEach(c =>
   {
-    if (d.p1 == t || d.p2 == t) {
-      connections.push(d);
+    if ([c.p1, c.p2].some(p_t => compareTs(p_t, t))) {
+      connections.push(c);
     }
   });
   return connections;
 }
 
-function checkPersonsConnected(t1, t2)
+function checkPersonsConnected(p1_t, p2_t)
 {
-  let connected = false;
-  data.connections.forEach(d =>
-  {
-    connected |= (
-      (d.p1 == t1 && d.p2 == t2) ||
-      (d.p1 == t2 && d.p2 == t1));
-  });
-  return connected;
+  return data.connections.some(c =>
+    (compareTs(c.p1, p1_t) && compareTs(c.p2, p2_t)) ||
+    (compareTs(c.p1, p2_t) && compareTs(c.p2, p1_t)));
 }
 
 function getGraphPositionFromEvent(e)
@@ -187,12 +187,12 @@ function getEdgeColorFromConnectionDesc(d)
   return d.includes('???') ? settings.edgeColorWarning : '';
 }
 
-function getLineTypeFromConnectionRelation(r)
+function getConnectionRelationSettings(r)
 {
-  if (r in settings.lineType) {
-    return settings.lineType[r];
+  if (r in settings.relations) {
+    return settings.relations[r];
   }
-  return settings.lineType._default;
+  return settings.relations._default;
 }
 
 function alignToGrid(n)
@@ -201,13 +201,13 @@ function alignToGrid(n)
   n.y = Math.round(n.y / settings.gridStep) * settings.gridStep;
 }
 
-function isChildConnection(t)
+function isChildConnectionNode(t)
 {
   return (typeof t == 'string') && t.includes('-');
 }
-function getParentsFromChildConnection(d)
+function getParentsFromChildConnectionNode(t)
 {
-  return d.split('-');
+  return t.split('-');
 }
 function getChildConnectionNodePosition(p1, p2)
 {
@@ -222,19 +222,22 @@ function moveChildConnectionNodes(nodes)
   {
     getDataPersonConnections(n1.id).forEach(c =>
     {
-      let childConnectionNodeId = c.p1 + '-' + c.p2;
-      if (alreadyDone.includes(childConnectionNodeId)) {
-        // console.log('child ' + childConnectionNodeId + ' already moved');
-        return;
-      }
-      let childConnectionNode = s.graph.nodes(childConnectionNodeId);
-      if (childConnectionNode) {
-        let n2_id = (c.p1 == n1.id) ? c.p2 : c.p1;
-        let newPos = getChildConnectionNodePosition(n1, s.graph.nodes(n2_id));
-        childConnectionNode.x = newPos.x;
-        childConnectionNode.y = newPos.y;
-        alreadyDone.push(childConnectionNodeId);
-      }
+      [c.p1, c.p2].forEach(p_t =>
+      {
+        if (isChildConnectionNode(p_t)) {
+          if (alreadyDone.includes(p_t)) {
+            // console.log('child ' + childConnectionNodeId + ' already moved');
+            return;
+          }
+          alreadyDone.push(p_t);
+          let childConnectionNode = s.graph.nodes(p_t);
+          let ps = getParentsFromChildConnectionNode(p_t);
+          let n2 = getDataPerson((ps[0] == n1.id) ? ps[1] : ps[0]);
+          let newPos = getChildConnectionNodePosition(n1, n2);
+          childConnectionNode.x = newPos.x;
+          childConnectionNode.y = newPos.y;
+        }
+      });
     });
   });
 }
@@ -348,7 +351,7 @@ function deselectAll(e, refreshGraph = true, except = [])
 // ------------------------------------
 function selectPerson(e, refreshGraph = true)
 {
-  if (isChildConnection(e.data.node.id)) {
+  if (isChildConnectionNode(e.data.node.id)) {
     return;
   }
 
@@ -388,16 +391,17 @@ function selectPerson(e, refreshGraph = true)
         }
         startNewChildConnection();
       }
-
     }
   }
   else if (nodes.length === 2) {
     if (!activeState.edges().length) {
-      if (nodes[0].id == nodes[1].id) {
+      let p1 = nodes[0];
+      let p2 = nodes[1];
+      if (p1.id == p2.id) {
         console.log('no connection possible - 2 different persons must be selected');
         return;
       }
-      if (checkPersonsConnected(nodes[0].id, nodes[1].id)) {
+      if (checkPersonsConnected(p1.id, p2.id)) {
         console.log('no connection possible - persons already connected');
         return;
       }
@@ -430,6 +434,50 @@ function selectOnePerson(e, refreshGraph = true)
   if (refreshGraph) {
     s.refresh();
   }
+}
+
+function selectDirectRelatives(e)
+{
+  let recurseUp = p_t =>
+  {
+    console.log('p ' + p_t);
+    activeState.addNodes(p_t);
+    getDataPersonConnections(p_t).forEach(c =>
+    {
+      console.log('c ' + c.r);
+      if (c.p2 == p_t && getConnectionRelationSettings(c.r).level === 'v') {
+        if (isChildConnectionNode(c.p1)) {
+          getParentsFromChildConnectionNode(c.p1).forEach(recurseUp);
+        }
+        else {
+          recurseUp(c.p1);
+        }
+      }
+      else {
+        console.log('-');
+      }
+    });
+  };
+  let recurseDown = p_t =>
+  {
+    console.log('p ' + p_t);
+    activeState.addNodes(p_t);
+    getDataPersonConnections(p_t).forEach(c =>
+    {
+      console.log('c ' + c.r);
+      if (compareTs(c.p1, p_t) && getConnectionRelationSettings(c.r).level === 'v') {
+        recurseDown(c.p2);
+      }
+      else {
+        console.log('-');
+      }
+    });
+  };
+  deselectAll();
+  recurseUp(e.data.node.id);
+  console.log('---');
+  recurseDown(e.data.node.id);
+  s.refresh();
 }
 
 
@@ -696,8 +744,8 @@ function showConnectionInfo(t)
   console.log(['showConnectionInfo', t]);
   let d = getDataConnection(t);
   let p1_n = '';
-  if (isChildConnection(d.p1)) {
-    let p1 = getParentsFromChildConnection(d.p1);
+  if (isChildConnectionNode(d.p1)) {
+    let p1 = getParentsFromChildConnectionNode(d.p1);
     let p1_1 = getDataPerson(p1[0]);
     let p1_2 = getDataPerson(p1[1]);
     p1_n = getPersonRufname(p1_1.n) + ' & ' + getPersonRufname(p1_2.n);
@@ -788,9 +836,9 @@ approveDeleteOrCancelKeys(
 let logAddConnection = true;
 function addConnection(d, toData, toServer, toGraph, refreshGraph, doneCallback = null)
 {
-  if (toGraph && isChildConnection(d.p1)) {
+  if (toGraph && isChildConnectionNode(d.p1)) {
     if (!s.graph.nodes(d.p1)) {
-      let p1 = getParentsFromChildConnection(d.p1);
+      let p1 = getParentsFromChildConnectionNode(d.p1);
       let p1_1 = getDataPerson(p1[0]);
       let p1_2 = getDataPerson(p1[1]);
       let p12 = getChildConnectionNodePosition(p1_1, p1_2);
@@ -813,7 +861,7 @@ function addConnection(d, toData, toServer, toGraph, refreshGraph, doneCallback 
             target: d.p2,
             label: d.r,
             size: settings.edgeSize,
-            type: getLineTypeFromConnectionRelation(d.r),
+            type: getConnectionRelationSettings(d.r).lineType,
             color: getEdgeColorFromConnectionDesc(d.d) }); },
       refreshGraph: refreshGraph,
       doneCallback: doneCallback
@@ -833,7 +881,7 @@ function editConnection(d, toData = true, toServer = true, toGraph = true, refre
       toGraph: !toGraph ? null : () => {
         let c = s.graph.edges(d.t);
         c.label = d.r;
-        c.type = getLineTypeFromConnectionRelation(d.r);
+        c.type = getConnectionRelationSettings(d.r).lineType;
         c.color = getEdgeColorFromConnectionDesc(d.d); },
       refreshGraph: refreshGraph
     });
@@ -853,21 +901,32 @@ function deleteConnection(t, toData = true, toServer = true, toGraph = true, ref
 // events
 // ------------------------------------
 let skipClickNodeAfterDrop = false;
-s.bind('clickNode', e => { if (skipClickNodeAfterDrop) { skipClickNodeAfterDrop = false; return; } selectPerson(e); });
+let cdcNode = clickDoubleClick(
+
+  e => { if (skipClickNodeAfterDrop) { skipClickNodeAfterDrop = false; return; } selectPerson(e); },
+
+  selectDirectRelatives);
+
+s.bind('clickNode', cdcNode.click.bind(cdcNode));
+s.bind('doubleClickNode', cdcNode.doubleClick.bind(cdcNode));
+
 
 s.bind('clickEdge', selectConnection);
 
+
 let cdcStage = clickDoubleClick(
+
   e => { if (!e.data.captor.isDragging && !multipleKeyPressed(e)) { deselectAll(e); } },
 
   e => { deselectAll(e); startNewPerson(e); });
 
 s.bind('clickStage', cdcStage.click.bind(cdcStage));
-
 s.bind('doubleClickStage', cdcStage.doubleClick.bind(cdcStage));
+
 
 let skipCoordinatesUpdatedAfterDrag = false
 s.bind('coordinatesUpdated', e => { if (skipCoordinatesUpdatedAfterDrag) { skipCoordinatesUpdatedAfterDrag = false; return; } cameraMoved(e); });
+
 
 dragListener.bind('drag', e =>
 {
@@ -875,6 +934,8 @@ dragListener.bind('drag', e =>
   skipCoordinatesUpdatedAfterDrag = true;
 });
 
+
 dragListener.bind('drop', e => { console.log('(drop)'); movePersons(e, true, true, false, false, true, true); skipClickNodeAfterDrop = true; });
+
 
 setTimeout(s.refresh.bind(s), 1000);
