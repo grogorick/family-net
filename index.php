@@ -37,7 +37,7 @@ function & getData($what, $t)
   return null;
 }
 
-function & getDataIndex($what, $t)
+function getDataIndex($what, $t)
 {
   global $data;
   foreach ($data[$what] as $idx => &$d) {
@@ -45,7 +45,7 @@ function & getDataIndex($what, $t)
       return $idx;
     }
   }
-  return null;
+  return -1;
 }
 
 function deleteData($what, $t)

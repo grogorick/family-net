@@ -1,20 +1,25 @@
 const settings = {
+  nodeSize: 5,
   nodeColor: '#78D384',
   nodeColorWarning: '#D0D480',
   nodeColorHighlight: '#3BAA49',
+
+  edgeSize: .25,
   edgeColor: '#DDD',
   edgeColorWarning: '#E6BDB2',
   edgeColorHighlight: '#AAA',
-  nodeSize: 5,
-  edgeSize: .25,
+
+  gridStep: 20,
   saveCameraTimeout: 5000,
-  gridStep: 20
+
+  lineType: {
+    _default: 'line',
+    Kind: 'arrow',
+    adoptiert: 'arrow',
+    verheiratet: 'dashed',
+    geschieden: 'dotted',
+    verwitwet: 'dotted' }
 };
-// #2F8339
-// #3BAA49
-// #53C561
-// #78D384
-// #9EE0A6
 
 let s = new sigma({
   renderers: [{
@@ -184,9 +189,10 @@ function getEdgeColorFromConnectionDesc(d)
 
 function getLineTypeFromConnectionRelation(r)
 {
-  return ['geschieden', 'verwitwet'].includes(r) ? 'dotted' : (
-          r === 'verheiratet' ? 'dashed' :
-          'arrow');
+  if (r in settings.lineType) {
+    return settings.lineType[r];
+  }
+  return settings.lineType._default;
 }
 
 function alignToGrid(n)
