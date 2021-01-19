@@ -226,13 +226,14 @@ header('Content-Type:text/html');
         </li>
         <li>Eine Person entfernen:
           <ul>
-            <li>(Die Person darf nicht mit anderen verbunden sein)</li>
+            <li>(Die Person darf keine Verbindungen haben)</li>
             <li>Die Person anklicken</li>
             <li>Im Detailfenster (<?=$boxPos?>) <i>Entfernen</i> klicken<br />oder<br /><?=$modKeys?> gedrückt halten und <i>Entf</i> tippen</li>
           </ul>
         </li>
         <li>Eine Verbindung entfernen:
           <ul>
+            <li>(Die Verbindung darf keine Kind-Verbindungen haben)</li>
             <li>Die Verbindung anklicken</li>
             <li>Im Detailfenster (<?=$boxPos?>) <i>Entfernen</i> klicken<br />oder<br /><?=$modKeys?> gedrückt halten und <i>Entf</i> tippen</li>
           </ul>

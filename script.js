@@ -201,9 +201,17 @@ function alignToGrid(n)
   n.y = Math.round(n.y / settings.gridStep) * settings.gridStep;
 }
 
-function isChildConnectionNode(t)
+function createChildConnectionNodeId(p1_t, p2_t)
 {
-  return (typeof t == 'string') && t.includes('-');
+  return p1_t + '-' + p2_t;
+}
+function isChildConnectionNode(p_t)
+{
+  return (typeof p_t == 'string') && p_t.includes('-');
+}
+function getChildConnections(c)
+{
+  return getDataPersonConnections(createChildConnectionNodeId(c.p1, c.p2));
 }
 function getParentsFromChildConnectionNode(t)
 {
@@ -553,19 +561,19 @@ function startNewPerson(e)
 function showPersonInfo(t)
 {
   console.log(['showPersonInfo', t]);
-  let d = getDataPerson(t);
-  let db = d.b.split('-');
-  personMenuName.value = d.n;
+  let p = getDataPerson(t);
+  let db = p.b.split('-');
+  personMenuName.value = p.n;
   personMenuBirthDay.value = db[2];
   personMenuBirthMonth.value = db[1];
   personMenuBirthYear.value = db[0];
   updateDateValue(personMenuBirthDay, personMenuBirthMonth, personMenuBirthYear);
-  let dd = d.d.split('-');
+  let dd = p.d.split('-');
   personMenuDeathDay.value = dd[2];
   personMenuDeathMonth.value = dd[1];
   personMenuDeathYear.value = dd[0];
   updateDateValue(personMenuDeathDay, personMenuDeathMonth, personMenuDeathYear);
-  personMenuNote.value = d.o;
+  personMenuNote.value = p.o;
   personMenuDelete.style.display = getDataPersonConnections(t).length ? 'none' : '';
   showForm(personMenuForm, 'opt-edit');
 }
@@ -610,7 +618,7 @@ personMenuDelete.addEventListener('click', e =>
   let t = activeState.nodes()[0].id;
   let connections = getDataPersonConnections(t);
   if (connections.length) {
-    console.log(['cancelled - person to delete must not be connected', connections]);
+    console.log(['cancelled - person to delete must not have connections', connections]);
     return;
   }
   hideForm(personMenuForm);
@@ -742,21 +750,22 @@ function startNewChildConnection()
 function showConnectionInfo(t)
 {
   console.log(['showConnectionInfo', t]);
-  let d = getDataConnection(t);
+  let c = getDataConnection(t);
   let p1_n = '';
-  if (isChildConnectionNode(d.p1)) {
-    let p1 = getParentsFromChildConnectionNode(d.p1);
+  if (isChildConnectionNode(c.p1)) {
+    let p1 = getParentsFromChildConnectionNode(c.p1);
     let p1_1 = getDataPerson(p1[0]);
     let p1_2 = getDataPerson(p1[1]);
     p1_n = getPersonRufname(p1_1.n) + ' & ' + getPersonRufname(p1_2.n);
   }
   else {
-    p1_n = getPersonRufname(getDataPerson(d.p1).n);
+    p1_n = getPersonRufname(getDataPerson(c.p1).n);
   }
-  let p2 = getDataPerson(d.p2);
+  let p2 = getDataPerson(c.p2);
   connectionMenuPersons.innerHTML = p1_n + ' &mdash; ' + getPersonRufname(p2.n);
-  connectionMenuRelation.value = d.r;
-  connectionMenuDesc.value = d.d;
+  connectionMenuRelation.value = c.r;
+  connectionMenuDesc.value = c.d;
+  connectionMenuDelete.style.display = getChildConnections(c).length ? 'none' : '';
   showForm(connectionMenuForm, 'opt-edit');
 }
 
@@ -788,7 +797,7 @@ connectionMenuAddChild.addEventListener('click', e =>
   let p1 = s.graph.nodes(c.source);
   let p2 = s.graph.nodes(c.target);
   addConnection({
-      p1: p1.id + '-' + p2.id,
+      p1: createChildConnectionNodeId(p1.id, p2.id),
       p2: p.id,
       r: connectionMenuRelation.value.trim(),
       d: connectionMenuDesc.value.trim()
@@ -815,8 +824,13 @@ connectionMenuEdit.addEventListener('click', e =>
 connectionMenuDelete.addEventListener('click', e =>
 {
   console.log('click connection-form-delete');
+  let t = activeState.edges()[0].id;
+  let childConnections = getChildConnections(getDataConnection(t));
+  if (childConnections.length) {
+    console.log(['cancelled - connection to delete must not have child connections', childConnections]);
+    return;
+  }
   hideForm(connectionMenuForm);
-  t = activeState.edges()[0].id;
   activeState.dropEdges();
   deleteConnection(t);
 });
