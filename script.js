@@ -177,14 +177,19 @@ function getPersonRufname(d_n)
   return n ? n[1] : '';
 }
 
-function getNodeColorFromPersonNote(o)
+function getPersonDisplayFullName(d_n)
 {
-  return o.includes('???') ? settings.nodeColorWarning : '';
+  return d_n.replaceAll(/[,*?]/g, '').replaceAll(/  +/g, ' ');
 }
 
-function getEdgeColorFromConnectionDesc(d)
+function getNodeColorFromPerson(p)
 {
-  return d.includes('???') ? settings.edgeColorWarning : '';
+  return [p.n, p.o].some(v => v.includes('???')) ? settings.nodeColorWarning : '';
+}
+
+function getEdgeColorFromConnection(c)
+{
+  return c.d.includes('???') ? settings.edgeColorWarning : '';
 }
 
 function getConnectionRelationSettings(r)
@@ -209,7 +214,7 @@ function isChildConnectionNode(p_t)
 {
   return (typeof p_t == 'string') && p_t.includes('-');
 }
-function getChildConnections(c)
+function getDataChildConnections(c)
 {
   return getDataPersonConnections(createChildConnectionNodeId(c.p1, c.p2));
 }
@@ -651,7 +656,7 @@ function addPerson(d, toData, toServer, toGraph, refreshGraph, doneCallback = nu
             y: d.y,
             label: getPersonRufname(d.n),
             size: settings.nodeSize,
-            color: getNodeColorFromPersonNote(d.o) }); },
+            color: getNodeColorFromPerson(d) }); },
       refreshGraph: refreshGraph,
       doneCallback: doneCallback
     }, logAddPerson);
@@ -670,7 +675,7 @@ function editPerson(d, toData = true, toServer = true, toGraph = true, refreshGr
       toGraph: !toGraph ? null : () => {
         let n = s.graph.nodes(d.t);
         n.label = getPersonRufname(d.n);
-        n.color = getNodeColorFromPersonNote(d.o); },
+        n.color = getNodeColorFromPerson(d); },
       refreshGraph: refreshGraph
     });
 }
@@ -716,6 +721,14 @@ function movePersons(e, toData, toServer, toGraph, refreshGraph, alignNodesToGri
           n.y = d.y; }); },
       refreshGraph: refreshGraph
     }, log);
+}
+
+function hoverPersons(e)
+{
+  // console.log(e);
+  e.data.enter.nodes.forEach(n => n.label = getPersonDisplayFullName(getDataPerson(n.id).n));
+  e.data.leave.nodes.forEach(n => n.label = getPersonRufname(getDataPerson(n.id).n));
+  s.refresh();
 }
 
 
@@ -765,7 +778,7 @@ function showConnectionInfo(t)
   connectionMenuPersons.innerHTML = p1_n + ' &mdash; ' + getPersonRufname(p2.n);
   connectionMenuRelation.value = c.r;
   connectionMenuDesc.value = c.d;
-  connectionMenuDelete.style.display = getChildConnections(c).length ? 'none' : '';
+  connectionMenuDelete.style.display = getDataChildConnections(c).length ? 'none' : '';
   showForm(connectionMenuForm, 'opt-edit');
 }
 
@@ -825,7 +838,7 @@ connectionMenuDelete.addEventListener('click', e =>
 {
   console.log('click connection-form-delete');
   let t = activeState.edges()[0].id;
-  let childConnections = getChildConnections(getDataConnection(t));
+  let childConnections = getDataChildConnections(getDataConnection(t));
   if (childConnections.length) {
     console.log(['cancelled - connection to delete must not have child connections', childConnections]);
     return;
@@ -876,7 +889,7 @@ function addConnection(d, toData, toServer, toGraph, refreshGraph, doneCallback 
             label: d.r,
             size: settings.edgeSize,
             type: getConnectionRelationSettings(d.r).lineType,
-            color: getEdgeColorFromConnectionDesc(d.d) }); },
+            color: getEdgeColorFromConnection(d) }); },
       refreshGraph: refreshGraph,
       doneCallback: doneCallback
     }, logAddConnection);
@@ -896,7 +909,7 @@ function editConnection(d, toData = true, toServer = true, toGraph = true, refre
         let c = s.graph.edges(d.t);
         c.label = d.r;
         c.type = getConnectionRelationSettings(d.r).lineType;
-        c.color = getEdgeColorFromConnectionDesc(d.d); },
+        c.color = getEdgeColorFromConnection(d); },
       refreshGraph: refreshGraph
     });
 }
@@ -923,6 +936,8 @@ let cdcNode = clickDoubleClick(
 
 s.bind('clickNode', cdcNode.click.bind(cdcNode));
 s.bind('doubleClickNode', cdcNode.doubleClick.bind(cdcNode));
+
+s.bind('hovers', hoverPersons);
 
 
 s.bind('clickEdge', selectConnection);
