@@ -1,6 +1,73 @@
 <?php
 //phpinfo();
 
+function html_start()
+{
+header('Content-Type:text/html');
+?>
+<!DOCTYPE html>
+<html lang="de" xml:lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="robots" content="noindex,nofollow" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Familiennetz</title>
+  <meta name="description" content="private website" />
+  <link rel="icon" type="image/png" href="favicon.png" />
+<?php
+}
+
+define('ACCOUNTS_FILE', 'accounts.yml');
+define('USER', 'login-user');
+define('PASSWORD', 'login-password');
+
+session_start();
+if (isset($_POST[USER]) && isset($_POST[PASSWORD])) {
+  $accounts = file_get_contents(ACCOUNTS_FILE);
+  if ($accounts) {
+    $accounts = json_decode($accounts, true);
+  }
+  foreach ($accounts as $a) {
+    if ($a['u'] === $_POST[USER] && $a['p'] === $_POST[PASSWORD]) {
+      $_SESSION[USER] = $_POST[USER];
+      break;
+    }
+  }
+}
+if (isset($_GET['logout'])) {
+  session_unset();
+  header('Location: /');
+}
+if (!isset($_SESSION[USER])) {
+  html_start();
+?>
+  <style type="text/css">
+    html, body {
+      height: 100%;
+    }
+    body {
+      margin: 0;
+      display: flex;
+    }
+    form {
+      margin: auto;
+    }
+  </style>
+</head>
+<body>
+  <form method="POST">
+    <input name="<?=USER?>" type="text" placeholder="Name" />
+    <input name="<?=PASSWORD?>" type="password" placeholder="Passwort" />
+    <input type="submit" value="Weiter" />
+  </form>
+</body>
+</html>
+<?php
+
+exit;
+}
+
+
 define('STORAGE_FILE', 'storage.yml');
 define('CAMERA', 'camera');
 define('PERSONS', 'persons');
@@ -130,17 +197,9 @@ if (isset($_GET['action'])) {
   exit;
 }
 
-header('Content-Type:text/html');
+
+html_start();
 ?>
-<!DOCTYPE html>
-<html lang="de" xml:lang="de">
-<head>
-  <meta charset="utf-8">
-  <meta name="robots" content="noindex,nofollow" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Familiennetz</title>
-  <meta name="description" content="private website" />
-  <link rel="icon" type="image/png" href="favicon.png" />
   <link rel="stylesheet" type="text/css" href="style.css" />
   <script src="linkurious/sigma.min.js"></script>
   <script src="linkurious/renderer/sigma.canvas.nodes.def.js"></script>
