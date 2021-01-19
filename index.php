@@ -248,14 +248,14 @@ header('Content-Type:text/html');
       <input id="person-form-name" type="text" placeholder="Vorname(n), Nachname(n)" />
     </div><div class="box-row">
       <label for="person-form-birth-day">Geburtstag: </label>
-      <input id="person-form-birth-day" type="text" placeholder="tt" />
-      <input id="person-form-birth-month" type="text" placeholder="mm" />
-      <input id="person-form-birth-year" type="text" placeholder="yyyy" />
+      <input id="person-form-birth-day" type="text" autocomplete="off" placeholder="tt" />
+      <input id="person-form-birth-month" type="text" autocomplete="off" placeholder="mm" />
+      <input id="person-form-birth-year" type="text" autocomplete="off" placeholder="yyyy" />
     </div><div class="box-row">
       <label for="person-form-death-day">Todestag: </label>
-      <input id="person-form-death-day" type="text" placeholder="tt" />
-      <input id="person-form-death-month" type="text" placeholder="mm" />
-      <input id="person-form-death-year" type="text" placeholder="yyyy" />
+      <input id="person-form-death-day" type="text" autocomplete="off" placeholder="tt" />
+      <input id="person-form-death-month" type="text" autocomplete="off" placeholder="mm" />
+      <input id="person-form-death-year" type="text" autocomplete="off" placeholder="yyyy" />
     </div><div class="box-row">
       <label for="person-form-note">Notiz: </label>
       <textarea id="person-form-note" rows="3"></textarea>

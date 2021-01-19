@@ -24,6 +24,10 @@ body {
   background: #ddd;
 }
 
+#graph {
+  user-select: none;
+}
+
 #modal-blocker {
   position: fixed;
   display: none;
