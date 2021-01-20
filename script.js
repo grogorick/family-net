@@ -101,36 +101,36 @@ const bounds = {
   weightMax: 1};
 s.settings('bounds', bounds);
 
-let data = { camera: { x: 0, y: 0, z: 0 }, persons: [], connections: [] };
+let data = { settings: { camera: { x: 0, y: 0, z: 0 }}, graph: { persons: [], connections: [] }};
 
 function getDataPerson(t)
 {
   let person = null;
-  data.persons.forEach(d => { if (d.t == t) person = d; });
+  data.graph.persons.forEach(d => { if (d.t == t) person = d; });
   return person;
 }
 function getDataPersonIndex(t)
 {
-  return data.persons.findIndex(d => d.t == t);
+  return data.graph.persons.findIndex(d => d.t == t);
 }
 function getDataConnection(t)
 {
   let connection = null;
-  data.connections.forEach(d => { if (d.t == t) connection = d; });
+  data.graph.connections.forEach(d => { if (d.t == t) connection = d; });
   return connection;
 }
 function getDataConnectionIndex(t)
 {
-  return data.connections.findIndex(d => d.t == t);
+  return data.graph.connections.findIndex(d => d.t == t);
 }
 
 function deleteDataPerson(t)
 {
-  return data.persons.splice(data.persons.findIndex(d => d.t == t), 1);
+  return data.graph.persons.splice(data.graph.persons.findIndex(d => d.t == t), 1);
 }
 function deleteDataConnection(t)
 {
-  data.connections.splice(data.connections.findIndex(d => d.t == t), 1);
+  data.graph.connections.splice(data.graph.connections.findIndex(d => d.t == t), 1);
 }
 
 function compareTs(c_p_t, p_t)
@@ -141,7 +141,7 @@ function compareTs(c_p_t, p_t)
 function getDataPersonConnections(t)
 {
   let connections = [];
-  data.connections.forEach(c =>
+  data.graph.connections.forEach(c =>
   {
     if ([c.p1, c.p2].some(p_t => compareTs(p_t, t))) {
       connections.push(c);
@@ -152,7 +152,7 @@ function getDataPersonConnections(t)
 
 function checkPersonsConnected(p1_t, p2_t)
 {
-  return data.connections.some(c =>
+  return data.graph.connections.some(c =>
     (compareTs(c.p1, p1_t) && compareTs(c.p2, p2_t)) ||
     (compareTs(c.p1, p2_t) && compareTs(c.p2, p1_t)));
 }
@@ -287,7 +287,7 @@ modalBlocker.addEventListener('click', e =>
 
 // load from file
 // ------------------------------------
-console.log('load data from file');
+console.log('load data');
 var xhttp = new XMLHttpRequest();
 xhttp.onreadystatechange = function()
 {
@@ -295,21 +295,21 @@ xhttp.onreadystatechange = function()
     data = JSON.parse(this.responseText);
     console.log(data);
     moveCamera({
-        x: parseFloat(data.camera.x),
-        y: parseFloat(data.camera.y),
-        z: parseFloat(data.camera.z)
+        x: parseFloat(data.settings.camera.x),
+        y: parseFloat(data.settings.camera.y),
+        z: parseFloat(data.settings.camera.z)
       },
       false, false, true, false);
     logAddPerson = 3;
     logAddConnection = 3;
-    data.persons.forEach(d => { addPerson(d, false, false, true, false); if (logAddPerson) --logAddPerson; });
-    data.connections.forEach(d => { addConnection(d, false, false, true, false); if (logAddConnection) --logAddConnection; });
+    data.graph.persons.forEach(d => { addPerson(d, false, false, true, false); if (logAddPerson) --logAddPerson; });
+    data.graph.connections.forEach(d => { addConnection(d, false, false, true, false); if (logAddConnection) --logAddConnection; });
     logAddPerson = true;
     logAddConnection = true;
     s.refresh();
   }
 };
-xhttp.open('GET', 'storage.yml', true);
+xhttp.open('GET', '/?action=init', true);
 xhttp.send();
 
 
@@ -338,7 +338,7 @@ function moveCamera(xyz, toData, toServer, toGraph, refreshGraph)
 {
   toServerDataGraph('moveCamera', xyz, {
       toServer: toServer,
-      toData: !toData ? null : () => { data.camera = xyz; },
+      toData: !toData ? null : () => { data.settings.camera = xyz; },
       toGraph: !toGraph ? null : () => {
         s.renderers[0].camera.x = xyz.x;
         s.renderers[0].camera.y = xyz.y;
@@ -653,7 +653,7 @@ function addPerson(d, toData, toServer, toGraph, refreshGraph, doneCallback = nu
 {
   toServerDataGraph('addPerson', d, {
       toServer: !toServer ? null : (t) => { d.t = t; },
-      toData: !toData ? null : () => { data.persons.push(d); },
+      toData: !toData ? null : () => { data.graph.persons.push(d); },
       toGraph: !toGraph ? null : () => {
         s.graph.addNode({
             id: d.t,
@@ -673,10 +673,10 @@ function editPerson(d, toData = true, toServer = true, toGraph = true, refreshGr
       toServer: toServer,
       toData: !toData ? null : () => {
           let i = getDataPersonIndex(d.t);
-          let old = data.persons[i];
+          let old = data.graph.persons[i];
           d.x = old.x;
           d.y = old.y;
-          data.persons[i] = d; },
+          data.graph.persons[i] = d; },
       toGraph: !toGraph ? null : () => {
         let n = s.graph.nodes(d.t);
         n.label = getPersonRufname(d.n);
@@ -885,7 +885,7 @@ function addConnection(d, toData, toServer, toGraph, refreshGraph, doneCallback 
   }
   toServerDataGraph('addConnection', d, {
       toServer: !toServer ? null : (t) => { d.t = t; },
-      toData: !toData ? null : () => { data.connections.push(d); },
+      toData: !toData ? null : () => { data.graph.connections.push(d); },
       toGraph: !toGraph ? null : () => {
         s.graph.addEdge({
             id: d.t,
@@ -906,10 +906,10 @@ function editConnection(d, toData = true, toServer = true, toGraph = true, refre
       toServer: toServer,
       toData: !toData ? null : () => {
         let i = getDataConnectionIndex(d.t);
-        let old = data.connections[i];
+        let old = data.graph.connections[i];
         d.p1 = old.p1;
         d.p2 = old.p2;
-        data.connections[i] = d; },
+        data.graph.connections[i] = d; },
       toGraph: !toGraph ? null : () => {
         let c = s.graph.edges(d.t);
         c.label = d.r;

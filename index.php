@@ -16,6 +16,7 @@ header('Content-Type:text/html');
   <link rel="icon" type="image/png" href="favicon.png" />
 <?php
 }
+
 function html_min_start()
 {
   html_start();
@@ -40,6 +41,7 @@ function html_min_start()
   <div>
 <?php
 }
+
 function html_min_end()
 {
 ?>
@@ -49,36 +51,90 @@ function html_min_end()
 <?php
 }
 
+function prepare_json_for_storage($arr)
+{
+  return str_replace([
+    '[{',
+    '},',
+    '}]'
+  ], [
+    '[' . PHP_EOL . '{',
+    '}' . PHP_EOL . ',',
+    '}' . PHP_EOL . ']'
+  ], json_encode($arr));
+}
+
+
 define('ACCOUNTS_FILE', 'accounts.yml');
-define('USER', 'user');
-define('PASSWORD', 'password');
-define('ADMIN', 'admin');
+define('USER', 'user'); define('USER_', 'u');
+define('PASSWORD', 'password'); define('PASSWORD_', 'p');
+define('TYPE', 'type'); define('TYPE_', 't');
+define('ADMIN_', 'a');
+define('NORMAL_', 'n');
+define('VIEWER_', 'v');
+define('ANONYMOUS_USER', 'Anonym');
+
 define('ACTION', 'action');
 
-$accounts = file_get_contents(ACCOUNTS_FILE);
-if ($accounts) {
-  $accounts = json_decode($accounts, true);
+define('SETTINGS_FILE', 'settings.yml');
+define('CAMERA', 'camera');
+
+define('STORAGE_DIR', 'storage');
+define('STORAGE_FILE', 'storage.yml');
+define('PERSONS', 'persons');
+define('CONNECTIONS', 'connections');
+
+$accounts = [];
+$settings = [ CAMERA => [ 'x' => 0, 'y' => 0, 'z' => 1] ];
+$data = [ PERSONS => [], CONNECTIONS => [] ];
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+session_start();
+
+$accounts_file_content = file_get_contents(ACCOUNTS_FILE);
+if ($accounts_file_content) {
+  $accounts = json_decode($accounts_file_content, true);
 }
 
 function save_accounts()
 {
   global $accounts;
-  $file_content = json_encode($accounts);
+  $file_content = prepare_json_for_storage($accounts);
   file_put_contents(ACCOUNTS_FILE, $file_content);
 }
 
-session_start();
+function init()
+{
+  global $accounts;
+  if ($_SESSION[USER] == ANONYMOUS_USER) {
+    $_SESSION[USER] = $accounts[0][USER_];
+  }
+  if (!file_exists(SETTINGS_FILE)) {
+    save_settings();
+  }
+  if (!file_exists(STORAGE_DIR)) {
+    exec('init.sh ' .
+      '"' . STORAGE_DIR . '" 2>&1', $output, $ret);
+    save_data('init');
+  }
+  header('Location: /');
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 
 if (!$accounts) {
-  $_SESSION[USER] = 'Anonym';
-  $_SESSION[ADMIN] = true;
+  $_SESSION[USER] = ANONYMOUS_USER;
+  $_SESSION[TYPE] = ADMIN_;
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 
 else if (isset($_POST[ACTION]) && $_POST[ACTION] === 'login') {
   foreach ($accounts as $a) {
-    if ($a['u'] === $_POST[USER] && password_verify($_POST[PASSWORD], $a['p'])) {
-      $_SESSION[USER] = $a['u'];
-      $_SESSION[ADMIN] = !!$a['a'];
+    if ($a[USER_] === $_POST[USER] && password_verify($_POST[PASSWORD], $a[PASSWORD_])) {
+      $_SESSION[USER] = $a[USER_];
+      $_SESSION[TYPE] = $a[TYPE_];
       break;
     }
   }
@@ -103,19 +159,21 @@ if (!isset($_SESSION[USER])) {
   exit;
 }
 
-if (isset($_GET['accounts']) && $_SESSION[ADMIN]) {
+if ((isset($_GET['accounts']) && $_SESSION[TYPE] === ADMIN_) || !$accounts) {
   if (isset($_POST[ACTION])) {
     switch ($_POST[ACTION]) {
       case 'new': {
         $accounts[] = [
-          'u' => trim($_POST[USER]),
-          'p' => password_hash($_POST[PASSWORD], PASSWORD_BCRYPT),
-          'a' => isset($_POST[ADMIN]) || !$accounts];
+          USER_ => trim($_POST[USER]),
+          PASSWORD_ => password_hash($_POST[PASSWORD], PASSWORD_BCRYPT),
+          TYPE_ => $_POST[TYPE]];
         save_accounts();
+        init();
       }
       break;
       case 'delete': {
-        array_splice($accounts, $_POST[USER], 1);
+        $i = $_POST[USER];
+        array_splice($accounts, $i, 1);
         save_accounts();
       }
       break;
@@ -123,17 +181,25 @@ if (isset($_GET['accounts']) && $_SESSION[ADMIN]) {
   }
 
   html_min_start();
+
+  if (!$accounts) {
+    echo '<i>Erstelle einen Account, um zu starten.</i>';
+  }
+  else {
 ?>
     <?=$_SESSION[USER]?>
     <a href="/" style="float: right;" title="Zurück zum Netz">X</a>
     <hr style="clear: both;" />
     <ul>
 <?php
-  foreach ($accounts as $i => &$a) {
+    foreach ($accounts as $i => &$a) {
 ?>
       <li>
-        <?=$a['u'] . ($a['a'] ? ' (Admin)' : '')?>
-
+        <?=$a[USER_] . ($a[TYPE_] === ADMIN_ ? ' (Admin)' : ($a[TYPE_] === VIEWER_ ? ' (Zuschauer)' : ''))?>
+<?php
+      $num_admins = count(array_filter($accounts, function($a) { return $a[TYPE_] === ADMIN_; }));
+      if (($accounts[$i][TYPE_] !== ADMIN_ || $num_admins > 1) && $accounts[$i][USER_] !== $_SESSION[USER]) {
+?>
         <form method="POST">
           <input type="hidden" name="<?=ACTION?>" value="delete" />
           <input type="hidden" name="<?=USER?>" value="<?=$i?>" />
@@ -141,15 +207,29 @@ if (isset($_GET['accounts']) && $_SESSION[ADMIN]) {
         </form>
       </li>
 <?php
-  }
+      }
+    }
 ?>
     </ul>
+<?php
+  }
+?>
     <hr />
     <form method="POST">
       <input type="hidden" name="<?=ACTION?>" value="new" />
       <input type="text" name="<?=USER?>" placeholder="Name" autocomplete="off" autofocus />
       <input type="text" name="<?=PASSWORD?>" placeholder="Passwort" autocomplete="off" />
-      <input type="checkbox" name="admin" id="admin" <?=(!$accounts) ? 'checked disabled' : ''?> /><label for="admin">Admin</label>
+      <select name="<?=TYPE?>">
+        <option value="<?=ADMIN_?>">Admin</option>
+<?php
+  if ($accounts) {
+?>
+        <option value="<?=NORMAL_?>" selected>Normal</option>
+        <option value="<?=VIEWER_?>">Zuschauer</option>
+<?php
+  }
+?>
+      </select>
       <input type="submit" value="Account hinzufügen" />
     </form>
 <?php
@@ -157,17 +237,31 @@ if (isset($_GET['accounts']) && $_SESSION[ADMIN]) {
   exit;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 
-define('STORAGE_FILE', 'storage.yml');
-define('CAMERA', 'camera');
-define('PERSONS', 'persons');
-define('CONNECTIONS', 'connections');
+$settings_file_content = file_get_contents(SETTINGS_FILE);
+if ($settings_file_content) {
+  $settings = json_decode($settings_file_content, true);
+}
+else {
+  $settings_file_content = json_encode($settings);
+}
 
-$data = [CAMERA => [ 'x' => 0, 'y' => 0, 'z' => 1], PERSONS => [], CONNECTIONS => []];
+function save_settings()
+{
+  global $settings;
+  $file_content = prepare_json_for_storage($settings);
+  file_put_contents(SETTINGS_FILE, $file_content);
+}
 
-$file_content = file_get_contents(STORAGE_FILE);
-if ($file_content) {
-  $data = json_decode($file_content, true);
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+$data_file_content = file_get_contents(STORAGE_DIR . '/' . STORAGE_FILE);
+if ($data_file_content) {
+  $data = json_decode($data_file_content, true);
+}
+else {
+  $data_file_content = json_encode($data);
 }
 
 //// update old data
@@ -176,12 +270,19 @@ if ($file_content) {
 //}
 //save();
 
-function save()
+function save_data($git_commit = 'update')
 {
   global $data;
-  $file_content = json_encode($data);
-  file_put_contents(STORAGE_FILE, $file_content);
+  $file_content = prepare_json_for_storage($data);
+  file_put_contents(STORAGE_DIR . '/' . STORAGE_FILE, $file_content);
+  exec('update.sh ' .
+    '"' . STORAGE_DIR . '" ' .
+    '"' . STORAGE_FILE . '" ' .
+    '"' . $_SESSION[USER] . '" ' .
+    '"' . $git_commit . '" 2>&1', $output, $ret);
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 
 function & getData($what, $t)
 {
@@ -221,11 +322,21 @@ if (isset($_GET[ACTION])) {
   $t = time();
   $d = json_decode(urldecode($_GET['d']), true);
   switch ($_GET[ACTION]) {
+    case 'init':
+    {
+      echo '{' .
+        '"settings":' . $settings_file_content . ',' .
+        '"graph":' . $data_file_content . '}';
+      exit;
+    }
+
     case 'moveCamera':
     {
-      $data[CAMERA] = $d;
+      $settings[CAMERA] = $d;
+      save_settings();
+      exit;
     }
-    break;
+
     case 'addPerson':
     {
       $d['t'] = $t;
@@ -282,7 +393,7 @@ if (isset($_GET[ACTION])) {
     }
     break;
   }
-  save();
+  save_data();
   echo $t;
   exit;
 }
@@ -316,7 +427,7 @@ html_start();
   <div id="account" class="box box-visible">
     <span><?=$_SESSION[USER]?></span>
 <?php
-  if ($_SESSION[ADMIN]) {
+  if ($_SESSION[TYPE] === ADMIN_) {
 ?>
   <a href="/?accounts"><button>Accounts</button></a><?php
   }
