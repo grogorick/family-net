@@ -361,9 +361,9 @@ html_start();
         <li>Eine Person hinzufügen:
           <ul>
             <li><i>Doppelklick</i> dort, wo die Person hinzugefügt werden soll</li>
-            <li>Daten der Person im Eingabefenster (<?=$boxPos?>) eintragen
+            <li>Daten der Person im Eingabefenster (<?=$boxPos?>) eintragen:
               <dl>
-                <dt><i>Namen:</i></dt>
+                <dt><i>Name</i></dt>
                 <dd>Vorname(n) und Nachname(n) mit einem Komma trennen.<br />
                     Der erste Vorname wird als Rufname im Netz angezeigt.<br />
                     Ein Sternchen (*) markiert andere Vornamen als Rufname.
@@ -403,7 +403,7 @@ html_start();
     <h2 class="opt opt-new">Neue Person</h2>
     <h2 class="opt opt-edit">Person bearbeiten</h2>
     <div class="box-row">
-      <label for="person-form-name">Namen: </label>
+      <label for="person-form-name">Name: </label>
       <input id="person-form-name" type="text" placeholder="Vorname(n), Nachname(n)" />
     </div><div class="box-row">
       <label for="person-form-birth-day">Geburtstag: </label>

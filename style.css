@@ -46,7 +46,6 @@ body {
   /*top: 50vh;*/
   /*left: 50vw;*/
   /*transform: translate(-50%, -50%);*/
-  padding: 20pt;
   background: white;
   box-shadow: 2px 1px 5px #0006;
 }
@@ -61,9 +60,6 @@ body {
 }
 .box-minimize-buttons {
   text-align: right;
-}
-.box.box-minimized {
-  padding: 0;
 }
 .box:not(.box-minimized) .box-minimize-buttons {
   margin-top: -20pt;
@@ -93,6 +89,13 @@ body {
 
 .box input, .box textarea {
   width: 150pt;
+  border: 1px solid #aaa;
+  border-radius: 3pt;
+  padding: 3pt;
+}
+.box input:hover, .box input:focus, .box textarea:hover, .box textarea:focus {
+  border-color: #555;
+  outline: none;
 }
 .box textarea {
   vertical-align: top;
@@ -107,15 +110,13 @@ body {
 }
 
 .box button {
-  margin: 10pt 0 0 0;
+  margin: 0;
   padding: 5pt 20pt;
   background: transparent;
   border: none;
-  border-top: 1px solid #eee;
 }
 .box button:hover {
   background: radial-gradient(circle, #fcfcfc 50%, #f9f9f9 100%);
-  border-top: 1px solid #ddd;
 }
 
 .collapse-trigger {
@@ -139,18 +140,17 @@ body {
   top: 10pt;
   right: initial;
   left: 10pt;
-  padding: 5pt 0 5pt 20pt;
   font-size: 85%;
 }
 #account.box span {
-  margin-right: 20pt;
+  margin: 0 20pt;
 }
 #account.box a {
+  display: inline-block;
   text-decoration: none;
 }
 #account.box button {
   color: #aaa;
-  margin: -5pt 0;
   font-size: 85%;
 }
 
@@ -163,9 +163,6 @@ body {
   height: 30%;
   min-width: 300pt;
 }
-#help.box .box-minimize-buttons button {
-  margin: 0;
-}
 #help.box h2 {
   border-bottom: 1px solid #eee;
 }
@@ -176,7 +173,7 @@ body {
   margin: 0 -20pt 0 0;
   padding: 0 20pt 0 0;
   height: 100%;
-  overflow-y: auto;
+  overflow-y: scroll;
 }
 #help.box > div > ul {
   padding: 0;
@@ -187,11 +184,20 @@ body {
 #help.box > div > ul > li {
   margin-bottom: 20pt;
 }
+#help.box ul ul {
+  padding-left: 20pt;
+}
+#help.box ul ul li {
+  list-style-type: '\2013  ';
+}
 #help.box li {
   margin-top: 5pt;
 }
 #help.box dl {
   margin: 5pt 0 0;
+}
+#help.box dd {
+  margin-left: 20pt;
 }
 
 #person-form.box, #connection-form.box {
@@ -200,4 +206,14 @@ body {
 #connection-form-persons {
   display: block;
   margin-bottom: 10pt;
+}
+#help.box:not(.box-minimized), #person-form.box, #connection-form.box {
+  padding: 20pt;
+}
+#person-form > button, #connection-form > button {
+  margin-top: 10pt;
+  border-top: 1px solid #eee;
+}
+#person-form > button:hover, #connection-form > button:hover {
+  border-top: 1px solid #ddd;
 }
