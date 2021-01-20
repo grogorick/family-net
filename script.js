@@ -374,6 +374,9 @@ function selectPerson(e, refreshGraph = true)
     console.log(['selectPerson', e]);
   }
   else {
+    if (activeState.nodes().length > 0 || activeState.edges().length > 1) {
+      deselectConnections(null, false)
+    }
     console.log(['selectPersonMultiple', e]);
   }
   let n = e.data.node;
@@ -459,6 +462,7 @@ function selectDirectRelatives(e)
     {
       console.log('c ' + c.r);
       if (c.p2 == p_t && getConnectionRelationSettings(c.r).level === 'v') {
+        activeState.addEdges(c.t);
         if (isChildConnectionNode(c.p1)) {
           getParentsFromChildConnectionNode(c.p1).forEach(recurseUp);
         }
@@ -479,6 +483,7 @@ function selectDirectRelatives(e)
     {
       console.log('c ' + c.r);
       if (compareTs(c.p1, p_t) && getConnectionRelationSettings(c.r).level === 'v') {
+        activeState.addEdges(c.t);
         recurseDown(c.p2);
       }
       else {

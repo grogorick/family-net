@@ -123,12 +123,10 @@ body {
   cursor: pointer;
 }
 .collapse-trigger::after {
-  /*content: '\25B2';*/
   content: '\25B4';
   float: right;
 }
 .collapse-trigger.collapsed::after {
-  /*content: '\25BC';*/
   content: '\25BE';
 }
 .collapse-trigger.collapsed + * {
