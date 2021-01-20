@@ -134,6 +134,26 @@ body {
   display: none;
 }
 
+#account.box {
+  bottom: initial;
+  top: 10pt;
+  right: initial;
+  left: 10pt;
+  padding: 5pt 0 5pt 20pt;
+  font-size: 85%;
+}
+#account.box span {
+  margin-right: 20pt;
+}
+#account.box a {
+  text-decoration: none;
+}
+#account.box button {
+  color: #aaa;
+  margin: -5pt 0;
+  font-size: 85%;
+}
+
 #help.box {
   bottom: initial;
   top: 10pt;

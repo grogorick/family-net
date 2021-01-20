@@ -16,29 +16,8 @@ header('Content-Type:text/html');
   <link rel="icon" type="image/png" href="favicon.png" />
 <?php
 }
-
-define('ACCOUNTS_FILE', 'accounts.yml');
-define('USER', 'login-user');
-define('PASSWORD', 'login-password');
-
-session_start();
-if (isset($_POST[USER]) && isset($_POST[PASSWORD])) {
-  $accounts = file_get_contents(ACCOUNTS_FILE);
-  if ($accounts) {
-    $accounts = json_decode($accounts, true);
-  }
-  foreach ($accounts as $a) {
-    if ($a['u'] === $_POST[USER] && $a['p'] === $_POST[PASSWORD]) {
-      $_SESSION[USER] = $_POST[USER];
-      break;
-    }
-  }
-}
-if (isset($_GET['logout'])) {
-  session_unset();
-  header('Location: /');
-}
-if (!isset($_SESSION[USER])) {
+function html_min_start()
+{
   html_start();
 ?>
   <style type="text/css">
@@ -49,22 +28,133 @@ if (!isset($_SESSION[USER])) {
       margin: 0;
       display: flex;
     }
-    form {
+    body > div {
       margin: auto;
+    }
+    form {
+      display: inline-block;
     }
   </style>
 </head>
 <body>
-  <form method="POST">
-    <input name="<?=USER?>" type="text" placeholder="Name" />
-    <input name="<?=PASSWORD?>" type="password" placeholder="Passwort" />
-    <input type="submit" value="Weiter" />
-  </form>
+  <div>
+<?php
+}
+function html_min_end()
+{
+?>
+  </div>
 </body>
 </html>
 <?php
+}
 
-exit;
+define('ACCOUNTS_FILE', 'accounts.yml');
+define('USER', 'user');
+define('PASSWORD', 'password');
+define('ADMIN', 'admin');
+define('ACTION', 'action');
+
+$accounts = file_get_contents(ACCOUNTS_FILE);
+if ($accounts) {
+  $accounts = json_decode($accounts, true);
+}
+
+function save_accounts()
+{
+  global $accounts;
+  $file_content = json_encode($accounts);
+  file_put_contents(ACCOUNTS_FILE, $file_content);
+}
+
+session_start();
+
+if (!$accounts) {
+  $_SESSION[USER] = 'Anonym';
+  $_SESSION[ADMIN] = true;
+}
+
+else if (isset($_POST[ACTION]) && $_POST[ACTION] === 'login') {
+  foreach ($accounts as $a) {
+    if ($a['u'] === $_POST[USER] && password_verify($_POST[PASSWORD], $a['p'])) {
+      $_SESSION[USER] = $a['u'];
+      $_SESSION[ADMIN] = !!$a['a'];
+      break;
+    }
+  }
+}
+
+else if (isset($_GET['logout'])) {
+  session_unset();
+  header('Location: /');
+}
+
+if (!isset($_SESSION[USER])) {
+  html_min_start();
+?>
+    <form method="POST">
+      <input type="hidden" name="<?=ACTION?>" value="login" />
+      <input name="<?=USER?>" type="text" placeholder="Name" autofocus />
+      <input name="<?=PASSWORD?>" type="password" placeholder="Passwort" />
+      <input type="submit" value="Weiter" />
+    </form>
+<?php
+  html_min_end();
+  exit;
+}
+
+if (isset($_GET['accounts']) && $_SESSION[ADMIN]) {
+  if (isset($_POST[ACTION])) {
+    switch ($_POST[ACTION]) {
+      case 'new': {
+        $accounts[] = [
+          'u' => trim($_POST[USER]),
+          'p' => password_hash($_POST[PASSWORD], PASSWORD_BCRYPT),
+          'a' => isset($_POST[ADMIN]) || !$accounts];
+        save_accounts();
+      }
+      break;
+      case 'delete': {
+        array_splice($accounts, $_POST[USER], 1);
+        save_accounts();
+      }
+      break;
+    }
+  }
+
+  html_min_start();
+?>
+    <?=$_SESSION[USER]?>
+    <a href="/" style="float: right;" title="Zurück zum Netz">X</a>
+    <hr style="clear: both;" />
+    <ul>
+<?php
+  foreach ($accounts as $i => &$a) {
+?>
+      <li>
+        <?=$a['u'] . ($a['a'] ? ' (Admin)' : '')?>
+
+        <form method="POST">
+          <input type="hidden" name="<?=ACTION?>" value="delete" />
+          <input type="hidden" name="<?=USER?>" value="<?=$i?>" />
+          <input type="submit" value="X" />
+        </form>
+      </li>
+<?php
+  }
+?>
+    </ul>
+    <hr />
+    <form method="POST">
+      <input type="hidden" name="<?=ACTION?>" value="new" />
+      <input type="text" name="<?=USER?>" placeholder="Name" autocomplete="off" autofocus />
+      <input type="text" name="<?=PASSWORD?>" placeholder="Passwort" autocomplete="off" />
+      <input type="checkbox" name="admin" id="admin" <?=(!$accounts) ? 'checked disabled' : ''?> /><label for="admin">Admin</label>
+      <input type="submit" value="Account hinzufügen" />
+    </form>
+<?php
+  html_min_end();
+  exit;
 }
 
 
@@ -126,11 +216,11 @@ function deleteData($what, $t)
   }
 }
 
-if (isset($_GET['action'])) {
+if (isset($_GET[ACTION])) {
   header('Content-Type: text/plain; charset=utf-8');
   $t = time();
   $d = json_decode(urldecode($_GET['d']), true);
-  switch ($_GET['action']) {
+  switch ($_GET[ACTION]) {
     case 'moveCamera':
     {
       $data[CAMERA] = $d;
@@ -223,6 +313,15 @@ html_start();
 <body>
   <div id="graph"></div>
   <div id="modal-blocker"></div>
+  <div id="account" class="box box-visible">
+    <span><?=$_SESSION[USER]?></span>
+<?php
+  if ($_SESSION[ADMIN]) {
+?>
+  <a href="/?accounts"><button>Accounts</button></a><?php
+  }
+?><a href="/?logout"><button>Logout</button></a>
+  </div>
   <div id="help" class="box box-visible box-minimized">
     <div class="box-minimize-buttons">
       <button class="box-restore">?</button>
