@@ -309,7 +309,7 @@ xhttp.onreadystatechange = function()
     s.refresh();
   }
 };
-xhttp.open('GET', '/?action=init', true);
+xhttp.open('GET', '?action=init', true);
 xhttp.send();
 
 

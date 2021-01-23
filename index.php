@@ -1,6 +1,8 @@
 <?php
 //phpinfo();
 
+$server_dir = substr($_SERVER["PHP_SELF"], 0, 1 + strrpos($_SERVER["PHP_SELF"], '/'));
+
 function html_start()
 {
 header('Content-Type:text/html');
@@ -142,7 +144,7 @@ else if (isset($_POST[ACTION]) && $_POST[ACTION] === 'login') {
 
 else if (isset($_GET['logout'])) {
   session_unset();
-  header('Location: /');
+  header('Location: ' . $server_dir);
 }
 
 if (!isset($_SESSION[USER])) {
@@ -187,8 +189,7 @@ if ((isset($_GET['accounts']) && $_SESSION[TYPE] === ADMIN_) || !$accounts) {
   }
   else {
 ?>
-    <?=$_SESSION[USER]?>
-    <a href="/" style="float: right;" title="Zurück zum Netz">X</a>
+    <a href="<?=$server_dir?>" style="float: right;" title="Zurück zum Netz">X</a>
     <hr style="clear: both;" />
     <ul>
 <?php
@@ -429,9 +430,9 @@ html_start();
 <?php
   if ($_SESSION[TYPE] === ADMIN_) {
 ?>
-  <a href="/?accounts"><button>Accounts</button></a><?php
+  <a href="<?=$server_dir?>?accounts"><button>Accounts</button></a><?php
   }
-?><a href="/?logout"><button>Logout</button></a>
+?><a href="<?=$server_dir?>?logout"><button>Logout</button></a>
   </div>
   <div id="help" class="box box-visible box-minimized">
     <div class="box-minimize-buttons">
