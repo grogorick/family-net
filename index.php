@@ -58,11 +58,19 @@ function prepare_json_for_storage($arr)
   return str_replace([
     '[{',
     '},',
-    '}]'
+    '}]',
+
+    '[[',
+    '],',
+    ']]'
   ], [
     '[' . PHP_EOL . '{',
     '}' . PHP_EOL . ',',
-    '}' . PHP_EOL . ']'
+    '}' . PHP_EOL . ']',
+
+    '[' . PHP_EOL . '[',
+    ']' . PHP_EOL . ',',
+    ']' . PHP_EOL . ']'
   ], json_encode($arr));
 }
 
@@ -193,7 +201,7 @@ if ((isset($_GET['accounts']) && $_SESSION[TYPE] === ADMIN_) || !$accounts) {
     <hr style="clear: both;" />
     <ul>
 <?php
-    foreach ($accounts as $i => &$a) {
+    foreach ($accounts as $i => $a) {
 ?>
       <li>
         <?=$a[USER_] . ($a[TYPE_] === ADMIN_ ? ' (Admin)' : ($a[TYPE_] === VIEWER_ ? ' (Zuschauer)' : ''))?>
@@ -257,6 +265,19 @@ function save_settings()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+function get_log()
+{
+  exec('cd ' . STORAGE_DIR . '; git log --author-date-order --format=format:\'%h|||%ai|||%an|||%s\'', $out);
+  $out = array_map(function($line) {
+    $line = explode('|||', $line);
+    $line[1] = preg_replace('/ [+-]\d{4}/', '', $line[1]);
+    return $line;
+  }, $out);
+  return $out;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
 $data_file_content = file_get_contents(STORAGE_DIR . '/' . STORAGE_FILE);
 if ($data_file_content) {
   $data = json_decode($data_file_content, true);
@@ -269,9 +290,9 @@ else {
 //foreach ($data[PERSONS] as &$p) {
 //  $p['b'] = '--';
 //}
-//save();
+//save_data('manual update');
 
-function save_data($git_commit = 'update')
+function save_data($git_commit)
 {
   global $data;
   $file_content = prepare_json_for_storage($data);
@@ -285,7 +306,7 @@ function save_data($git_commit = 'update')
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-function & getData($what, $t)
+function & get_data($what, $t)
 {
   global $data;
   foreach ($data[$what] as &$d) {
@@ -293,24 +314,13 @@ function & getData($what, $t)
       return $d;
     }
   }
-  return null;
+  die('ERROR | get_data(' . $what . ', ' . $t . ') | requested record not found.');
 }
 
-function getDataIndex($what, $t)
+function delete_data($what, $t)
 {
   global $data;
-  foreach ($data[$what] as $idx => &$d) {
-    if ($d['t'] == $t) {
-      return $idx;
-    }
-  }
-  return -1;
-}
-
-function deleteData($what, $t)
-{
-  global $data;
-  foreach ($data[$what] as $index => &$d) {
+  foreach ($data[$what] as $index => $d) {
     if ($d['t'] == $t) {
       array_splice($data[$what], $index, 1);
       return;
@@ -321,13 +331,16 @@ function deleteData($what, $t)
 if (isset($_GET[ACTION])) {
   header('Content-Type: text/plain; charset=utf-8');
   $t = time();
+  $ret = $t;
   $d = json_decode(urldecode($_GET['d']), true);
   switch ($_GET[ACTION]) {
     case 'init':
     {
       echo '{' .
-        '"settings":' . $settings_file_content . ',' .
-        '"graph":' . $data_file_content . '}';
+          '"settings":' . $settings_file_content . PHP_EOL . ',' .
+          '"graph":' . $data_file_content . PHP_EOL . ',' .
+          '"log":' . prepare_json_for_storage(get_log()) .
+        '}';
       exit;
     }
 
@@ -342,33 +355,35 @@ if (isset($_GET[ACTION])) {
     {
       $d['t'] = $t;
       $data[PERSONS][] = $d;
+      $ret = 'p ' . $t;
     }
     break;
     case 'editPerson':
     {
       $t = $d['t'];
-      $p = &getData(PERSONS, $t);
+      $p = &get_data(PERSONS, $t);
       $d['x'] = $p['x'];
       $d['y'] = $p['y'];
       $p = $d;
+      $ret = 'p ' . $t;
     }
     break;
     case 'deletePerson':
     {
-      $t = $d;
-      deleteData(PERSONS, $d);
+      delete_data(PERSONS, $d);
+      $ret = 'p ' . $d;
     }
     break;
     case 'movePersons':
     {
-      $t = [];
-      foreach ($d as &$d_) {
-        $t[] = $d_['t'];
-        $p = &getData(PERSONS, $d_['t']);
+      $ts = [];
+      foreach ($d as $d_) {
+        $p = &get_data(PERSONS, $d_['t']);
         $p['x'] = $d_['x'];
         $p['y'] = $d_['y'];
+        $ts[] = $d_['t'];
       }
-      $t = '[' . implode(', ', $t) . ']';
+      $ret = 'p ' . implode(', ', $ts);
     }
     break;
 
@@ -376,26 +391,28 @@ if (isset($_GET[ACTION])) {
     {
       $d['t'] = $t;
       $data[CONNECTIONS][] = $d;
+      $ret = 'c ' . $t;
     }
     break;
     case 'editConnection':
     {
       $t = $d['t'];
-      $c = &getData(CONNECTIONS, $t);
+      $c = &get_data(CONNECTIONS, $t);
       $d['p1'] = $c['p1'];
       $d['p2'] = $c['p2'];
       $c = $d;
+      $ret = 'c ' . $t;
     }
     break;
     case 'deleteConnection':
     {
-      $t = $d;
-      deleteData(CONNECTIONS, $t);
+      delete_data(CONNECTIONS, $d);
+      $ret = 'c ' . $d;
     }
     break;
   }
-  save_data();
-  echo $t;
+  save_data('update :: ' . $ret);
+  echo $ret;
   exit;
 }
 
@@ -438,9 +455,9 @@ html_start();
     <div class="box-minimize-buttons">
       <button class="box-restore">?</button>
       <button class="box-minimize">&mdash;</button>
-    </div>
-<?php $boxPos = 'unten rechts'; ?>
-<?php $modKeys = '<i>Shift/Strg</i>'; ?>
+    </div><?php
+    $boxPos = 'unten rechts';
+    $modKeys = '<i>Shift/Strg</i>'; ?>
     <div>
       <h2 class="collapse-trigger collapsed">Ansehen</h2>
       <ul>
@@ -509,6 +526,16 @@ html_start();
           </ul>
         </li>
       </ul>
+    </div>
+  </div>
+  <div id="log" class="box box-visible box-minimized">
+    <div class="box-minimize-buttons">
+      <button class="box-restore">&olarr;</button>
+      <button class="box-minimize">&mdash;</button>
+    </div>
+    <div>
+      <h2>Änderungesverlauf</h2>
+      <ul id="log-list"></ul>
     </div>
   </div>
   <div id="person-form" class="box">

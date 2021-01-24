@@ -109,13 +109,14 @@ body {
   width: 4em;
 }
 
-.box button {
+.button, .box button {
   margin: 0;
   padding: 5pt 20pt;
-  background: transparent;
+  cursor: default;
   border: none;
+  background: transparent;
 }
-.box button:hover {
+.button:hover, .box button:hover {
   background: radial-gradient(circle, #fcfcfc 50%, #f9f9f9 100%);
 }
 
@@ -152,9 +153,14 @@ body {
   font-size: 85%;
 }
 
+#help.box:not(.box-minimized), #log.box:not(.box-minimized), #person-form.box, #connection-form.box {
+  padding: 20pt;
+}
+
 #help.box {
   bottom: initial;
   top: 10pt;
+  right: 40pt;
   white-space: nowrap;
 }
 #help.box:not(.box-minimized) {
@@ -198,15 +204,28 @@ body {
   margin-left: 20pt;
 }
 
+#log.box {
+  bottom: initial;
+  top: 40pt;
+}
+#log.box ul {
+  list-style-type: none;
+  padding-left: 0;
+}
+#log.box li {
+  margin: 0 -20pt;
+}
+#log.box li span {
+  display: block;
+  font-size: 80%;
+}
+
 #person-form.box, #connection-form.box {
   width: 280pt;
 }
 #connection-form-persons {
   display: block;
   margin-bottom: 10pt;
-}
-#help.box:not(.box-minimized), #person-form.box, #connection-form.box {
-  padding: 20pt;
 }
 #person-form > button, #connection-form > button {
   margin-top: 10pt;

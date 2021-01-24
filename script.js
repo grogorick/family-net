@@ -6,8 +6,8 @@ const settings = {
 
   edgeSize: .25,
   edgeColor: '#DDD',
-  edgeColorWarning: '#E6BDB2',
-  edgeColorHighlight: '#AAA',
+  edgeColorWarning: '#E6AD92',
+  edgeColorHighlight: '#000',
 
   gridStep: 20,
   saveCameraTimeout: 5000,
@@ -101,7 +101,10 @@ const bounds = {
   weightMax: 1};
 s.settings('bounds', bounds);
 
-let data = { settings: { camera: { x: 0, y: 0, z: 0 }}, graph: { persons: [], connections: [] }};
+let data = {
+  settings: { camera: { x: 0, y: 0, z: 0 }},
+  graph: { persons: [], connections: [] },
+  log: [] };
 
 function getDataPerson(t)
 {
@@ -267,6 +270,7 @@ function showForm(f, opt = null)
     f.classList.add(opt);
   }
 
+  moveBoxToForeground(f);
   f.classList.add('box-visible');
   let firstInput = f.querySelector('input, textarea');
   if (firstInput) {
@@ -301,11 +305,79 @@ xhttp.onreadystatechange = function()
       },
       false, false, true, false);
     logAddPerson = 3;
-    logAddConnection = 3;
-    data.graph.persons.forEach(d => { addPerson(d, false, false, true, false); if (logAddPerson) --logAddPerson; });
-    data.graph.connections.forEach(d => { addConnection(d, false, false, true, false); if (logAddConnection) --logAddConnection; });
+    data.graph.persons.forEach(p => { addPerson(p, false, false, true, false); if (logAddPerson) --logAddPerson; });
     logAddPerson = true;
+    logAddConnection = 3;
+    data.graph.connections.forEach(c => { addConnection(c, false, false, true, false); if (logAddConnection) --logAddConnection; });
     logAddConnection = true;
+
+    let ul = document.getElementById('log-list');
+    let userSelectedNodes = [];
+    let userSelectedEdges = [];
+    ul.addEventListener('mouseenter', e =>
+    {
+      console.log('enter ul');
+      userSelectedNodes = activeState.nodes().map(n => n.id);
+      userSelectedEdges = activeState.edges().map(e => e.id);
+      activeState.dropNodes();
+      activeState.dropEdges();
+    });
+    ul.addEventListener('mouseleave', e =>
+    {
+      console.log('leave ul');
+      activeState.addNodes(userSelectedNodes);
+      activeState.addEdges(userSelectedEdges);
+      s.refresh();
+    });
+    let i = 0;
+    let addLog = () => {
+      let j = Math.min(i + 10, data.log.length);
+      for (; i < j; ++i) {
+        let l = data.log[i];
+        console.log(l);
+        // let hash = l[0];
+        let logDate = l[1];
+        let logAuthor = l[2];
+        let logM = l[3].split(' :: ');
+        let logMsg = logM[0];
+        let li = document.createElement('li');
+        li.innerHTML = logAuthor + '<span>' + new Date(logDate).toLocaleString() + '</span>';
+        // li.title = l[3];
+        li.title = logMsg;
+        li.classList.add('button');
+        ul.appendChild(li);
+        if (logM.length === 2) {
+          let updatedNodesOrEdges = logM[1].substr(0, 2);
+          if (['p ', 'c '].includes(updatedNodesOrEdges))   {
+            let logTs = logM[1].substr(2).split(', ');
+            li.addEventListener('mouseenter', e =>
+            {
+              console.log(['enter li', logTs]);
+              if (updatedNodesOrEdges === 'p ') {
+                let existingNodeIDs = s.graph.nodes(logTs).filter(n => n !== undefined).map(n => n.id);
+                activeState.addNodes(existingNodeIDs);
+              }
+              if (updatedNodesOrEdges === 'c ') {
+                let existingEdgeIDs = s.graph.edges(logTs).filter(e => e !== undefined).map(e => e.id);
+                activeState.addEdges(existingEdgeIDs);
+              }
+              s.refresh();
+            });
+            li.addEventListener('mouseleave', e =>
+            {
+              console.log('leave li');
+              activeState.dropNodes();
+              activeState.dropEdges();
+              s.refresh();
+            });
+          }
+        }
+      }
+      if (i < data.log.length - 1) {
+        setTimeout(addLog, 1000);
+      }
+    };
+    addLog();
     s.refresh();
   }
 };
@@ -601,10 +673,10 @@ personMenuAdd.addEventListener('click', e =>
       o: personMenuNote.value.trim()
     },
     true, true, true, true,
-    (d) =>
+    (p) =>
     {
       deselectAll(e, false);
-      activeState.addNodes(d.t);
+      activeState.addNodes(p.t);
       s.refresh();
     });
 });
@@ -649,48 +721,48 @@ approveDeleteOrCancelKeys(
   personMenuCancel);
 
 let logAddPerson = true;
-function addPerson(d, toData, toServer, toGraph, refreshGraph, doneCallback = null)
+function addPerson(p, toData, toServer, toGraph, refreshGraph, doneCallback = null)
 {
-  toServerDataGraph('addPerson', d, {
-      toServer: !toServer ? null : (t) => { d.t = t; },
-      toData: !toData ? null : () => { data.graph.persons.push(d); },
+  toServerDataGraph('addPerson', p, {
+      toServer: !toServer ? null : (p_t) => { p.t = p_t; },
+      toData: !toData ? null : () => { data.graph.persons.push(p); },
       toGraph: !toGraph ? null : () => {
         s.graph.addNode({
-            id: d.t,
-            x: d.x,
-            y: d.y,
-            label: getPersonRufname(d.n),
+            id: p.t,
+            x: p.x,
+            y: p.y,
+            label: getPersonRufname(p.n),
             size: settings.nodeSize,
-            color: getNodeColorFromPerson(d) }); },
+            color: getNodeColorFromPerson(p) }); },
       refreshGraph: refreshGraph,
       doneCallback: doneCallback
     }, logAddPerson);
 }
 
-function editPerson(d, toData = true, toServer = true, toGraph = true, refreshGraph = true)
+function editPerson(p, toData = true, toServer = true, toGraph = true, refreshGraph = true)
 {
-  toServerDataGraph('editPerson', d, {
+  toServerDataGraph('editPerson', p, {
       toServer: toServer,
       toData: !toData ? null : () => {
-          let i = getDataPersonIndex(d.t);
+          let i = getDataPersonIndex(p.t);
           let old = data.graph.persons[i];
-          d.x = old.x;
-          d.y = old.y;
-          data.graph.persons[i] = d; },
+          p.x = old.x;
+          p.y = old.y;
+          data.graph.persons[i] = p; },
       toGraph: !toGraph ? null : () => {
-        let n = s.graph.nodes(d.t);
-        n.label = getPersonRufname(d.n);
-        n.color = getNodeColorFromPerson(d); },
+        let n = s.graph.nodes(p.t);
+        n.label = getPersonRufname(p.n);
+        n.color = getNodeColorFromPerson(p); },
       refreshGraph: refreshGraph
     });
 }
 
-function deletePerson(t, toData = true, toServer = true, toGraph = true, refreshGraph = true)
+function deletePerson(p_t, toData = true, toServer = true, toGraph = true, refreshGraph = true)
 {
-  toServerDataGraph('deletePerson', t, {
+  toServerDataGraph('deletePerson', p_t, {
       toServer: toServer,
-      toData: !toData ? null : () => { deleteDataPerson(t); },
-      toGraph: !toGraph ? null : () => { s.graph.dropNode(t); },
+      toData: !toData ? null : () => { deleteDataPerson(p_t); },
+      toGraph: !toGraph ? null : () => { s.graph.dropNode(p_t); },
       refreshGraph: refreshGraph
     });
 }
@@ -715,15 +787,11 @@ function movePersons(e, toData, toServer, toGraph, refreshGraph, alignNodesToGri
   toServerDataGraph('movePersons', ds, {
       toServer: toServer,
       toData: !toData ? null : () => {
-        nodes.forEach(d => {
-          let p = getDataPerson(d.id);
-          p.x = d.x;
-          p.y = d.y; }); },
-      toGraph: !toGraph ? null : () => {
-        nodes.forEach(d => {
-          let n = s.graph.nodes(d.id);
-          n.x = d.x;
-          n.y = d.y; }); },
+        nodes.forEach(n => {
+          let p = getDataPerson(n.id);
+          p.x = n.x;
+          p.y = n.y; }); },
+      toGraph: null,
       refreshGraph: refreshGraph
     }, log);
 }
@@ -780,7 +848,7 @@ function showConnectionInfo(t)
     p1_n = getPersonRufname(getDataPerson(c.p1).n);
   }
   let p2 = getDataPerson(c.p2);
-  connectionMenuPersons.innerHTML = p1_n + ' &mdash; ' + getPersonRufname(p2.n);
+  connectionMenuPersons.innerHTML = escapeHtml(p1_n) + ' &mdash; ' + escapeHtml(getPersonRufname(p2.n));
   connectionMenuRelation.value = c.r;
   connectionMenuDesc.value = c.d;
   connectionMenuDelete.style.display = getDataChildConnections(c).length ? 'none' : '';
@@ -798,10 +866,10 @@ connectionMenuAdd.addEventListener('click', e =>
       r: connectionMenuRelation.value.trim(),
       d: connectionMenuDesc.value.trim()
     }, true, true, true, true,
-    (d) =>
+    (c) =>
     {
       deselectAll(e, false);
-      activeState.addEdges(d.t);
+      activeState.addEdges(c.t);
       s.refresh();
     });
 });
@@ -820,10 +888,10 @@ connectionMenuAddChild.addEventListener('click', e =>
       r: connectionMenuRelation.value.trim(),
       d: connectionMenuDesc.value.trim()
     }, true, true, true, true,
-    (d) =>
+    (c) =>
     {
       deselectAll(null, false);
-      activeState.addEdges(d.t);
+      activeState.addEdges(c.t);
       s.refresh();
     });
 });
@@ -866,16 +934,16 @@ approveDeleteOrCancelKeys(
   connectionMenuCancel);
 
 let logAddConnection = true;
-function addConnection(d, toData, toServer, toGraph, refreshGraph, doneCallback = null)
+function addConnection(c, toData, toServer, toGraph, refreshGraph, doneCallback = null)
 {
-  if (toGraph && isChildConnectionNode(d.p1)) {
-    if (!s.graph.nodes(d.p1)) {
-      let p1 = getParentsFromChildConnectionNode(d.p1);
+  if (toGraph && isChildConnectionNode(c.p1)) {
+    if (!s.graph.nodes(c.p1)) {
+      let p1 = getParentsFromChildConnectionNode(c.p1);
       let p1_1 = getDataPerson(p1[0]);
       let p1_2 = getDataPerson(p1[1]);
       let p12 = getChildConnectionNodePosition(p1_1, p1_2);
       s.graph.addNode({
-        id: d.p1,
+        id: c.p1,
         x: p12.x,
         y: p12.y,
         size: .1,
@@ -883,48 +951,48 @@ function addConnection(d, toData, toServer, toGraph, refreshGraph, doneCallback 
       });
     }
   }
-  toServerDataGraph('addConnection', d, {
-      toServer: !toServer ? null : (t) => { d.t = t; },
-      toData: !toData ? null : () => { data.graph.connections.push(d); },
+  toServerDataGraph('addConnection', c, {
+      toServer: !toServer ? null : (c_t) => { c.t = c_t; },
+      toData: !toData ? null : () => { data.graph.connections.push(c); },
       toGraph: !toGraph ? null : () => {
         s.graph.addEdge({
-            id: d.t,
-            source: d.p1,
-            target: d.p2,
-            label: d.r,
+            id: c.t,
+            source: c.p1,
+            target: c.p2,
+            label: c.r,
             size: settings.edgeSize,
-            type: getConnectionRelationSettings(d.r).lineType,
-            color: getEdgeColorFromConnection(d) }); },
+            type: getConnectionRelationSettings(c.r).lineType,
+            color: getEdgeColorFromConnection(c) }); },
       refreshGraph: refreshGraph,
       doneCallback: doneCallback
     }, logAddConnection);
 }
 
-function editConnection(d, toData = true, toServer = true, toGraph = true, refreshGraph = true)
+function editConnection(c, toData = true, toServer = true, toGraph = true, refreshGraph = true)
 {
-  toServerDataGraph('editConnection', d, {
+  toServerDataGraph('editConnection', c, {
       toServer: toServer,
       toData: !toData ? null : () => {
-        let i = getDataConnectionIndex(d.t);
+        let i = getDataConnectionIndex(c.t);
         let old = data.graph.connections[i];
-        d.p1 = old.p1;
-        d.p2 = old.p2;
-        data.graph.connections[i] = d; },
+        c.p1 = old.p1;
+        c.p2 = old.p2;
+        data.graph.connections[i] = c; },
       toGraph: !toGraph ? null : () => {
-        let c = s.graph.edges(d.t);
-        c.label = d.r;
-        c.type = getConnectionRelationSettings(d.r).lineType;
-        c.color = getEdgeColorFromConnection(d); },
+        let e = s.graph.edges(c.t);
+        e.label = c.r;
+        e.type = getConnectionRelationSettings(c.r).lineType;
+        e.color = getEdgeColorFromConnection(c); },
       refreshGraph: refreshGraph
     });
 }
 
-function deleteConnection(t, toData = true, toServer = true, toGraph = true, refreshGraph = true)
+function deleteConnection(c_t, toData = true, toServer = true, toGraph = true, refreshGraph = true)
 {
-  toServerDataGraph('deleteConnection', t, {
+  toServerDataGraph('deleteConnection', c_t, {
       toServer: toServer,
-      toData: !toData ? null : () => { deleteDataConnection(t); },
-      toGraph: !toGraph ? null : () => { s.graph.dropEdge(t); },
+      toData: !toData ? null : () => { deleteDataConnection(c_t); },
+      toGraph: !toGraph ? null : () => { s.graph.dropEdge(c_t); },
       refreshGraph: refreshGraph
     });
 }

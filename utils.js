@@ -83,6 +83,15 @@ function twoDigits(v)
   return v;
 }
 
+function escapeHtml(unsafe) {
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 function toServerDataGraph(action, d, cb = { toServer: null, toData: null, toGraph: null, refreshGraph: false, doneCallback: null }, log = true)
 {
   console.log(log ? [action, d, 'toServer:', cb.toServer, 'toData:', cb.toData, 'toGraph:', cb.toGraph, 'refreshGraph:', cb.refreshGraph] : '...');
@@ -123,11 +132,27 @@ function toServerDataGraph(action, d, cb = { toServer: null, toData: null, toGra
   }
 }
 
+let zIndex = 1;
+function moveBoxToForeground(box)
+{
+  box.style.zIndex = (++zIndex).toString();
+}
+function moveBoxToBackground(box)
+{
+  box.style.zIndex = '';
+}
+
 document.querySelectorAll('.box-minimize, .box-restore').forEach(el =>
 {
   el.addEventListener('click', e =>
   {
-    el.parentNode.parentNode.classList.toggle('box-minimized');
+    let box = el.parentNode.parentNode;
+    if (box.classList.toggle('box-minimized')) {
+      moveBoxToBackground(box);
+    }
+    else {
+      moveBoxToForeground(box);
+    }
   });
 });
 
