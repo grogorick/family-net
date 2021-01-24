@@ -28,15 +28,17 @@ body {
   user-select: none;
 }
 
-#modal-blocker {
+#modal-blocker, #log-preview-blocker {
   position: fixed;
   display: none;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
+  background: #fff1;
+}
+#modal-blocker {
   backdrop-filter: blur(1pt);
-  background: #0001;
 }
 .box {
   display: none;
@@ -109,14 +111,14 @@ body {
   width: 4em;
 }
 
-.button, .box button {
+button, .button {
   margin: 0;
   padding: 5pt 20pt;
   cursor: default;
   border: none;
   background: transparent;
 }
-.button:hover, .box button:hover {
+button:hover, .button:hover {
   background: radial-gradient(circle, #fcfcfc 50%, #f9f9f9 100%);
 }
 
@@ -214,10 +216,28 @@ body {
 }
 #log.box li {
   margin: 0 -20pt;
+  position: relative;
+}
+#log.box li.selected {
+  border-top: 1px solid black;
+  padding-top: calc(5pt - 1px);/* 5pt from .button */
+}
+#log.box li.selected::before {
+  content: '\25BA';
+  position: absolute;
+  left: -2pt;
+  top: -7pt;
 }
 #log.box li span {
   display: block;
   font-size: 80%;
+}
+
+#log-preview-blocker button {
+  left: 50%;
+  padding: 5pt;
+  bottom: initial;
+  top: 10pt;
 }
 
 #person-form.box, #connection-form.box {

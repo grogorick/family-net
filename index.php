@@ -333,12 +333,19 @@ if (isset($_GET[ACTION])) {
   $t = time();
   $ret = $t;
   $d = json_decode(urldecode($_GET['d']), true);
+  $data_str = $data_file_content;
   switch ($_GET[ACTION]) {
+    case 'preview':
+    {
+      exec('cd ' . STORAGE_DIR . '; git show ' . $_GET['hash'] . ':' . STORAGE_FILE, $out);
+      $data_str = implode(PHP_EOL, $out);
+    }
+    // no break here, to continue preview like init but with different data
     case 'init':
     {
       echo '{' .
           '"settings":' . $settings_file_content . PHP_EOL . ',' .
-          '"graph":' . $data_file_content . PHP_EOL . ',' .
+          '"graph":' . $data_str . PHP_EOL . ',' .
           '"log":' . prepare_json_for_storage(get_log()) .
         '}';
       exit;
@@ -441,6 +448,9 @@ html_start();
 </head>
 <body>
   <div id="graph"></div>
+  <div id="log-preview-blocker">
+    <button class="box box-visible">Von diesen Punkt weiterarbeiten</button>
+  </div>
   <div id="modal-blocker"></div>
   <div id="account" class="box box-visible">
     <span><?=$_SESSION[USER]?></span>

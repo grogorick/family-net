@@ -240,7 +240,7 @@ function moveChildConnectionNodes(nodes)
     {
       [c.p1, c.p2].forEach(p_t =>
       {
-        if (isChildConnectionNode(p_t)) {
+        if (isChildConnectionNode(p_t) && c.p2 != n1.id) {
           if (alreadyDone.includes(p_t)) {
             // console.log('child ' + childConnectionNodeId + ' already moved');
             return;
@@ -248,7 +248,7 @@ function moveChildConnectionNodes(nodes)
           alreadyDone.push(p_t);
           let childConnectionNode = s.graph.nodes(p_t);
           let ps = getParentsFromChildConnectionNode(p_t);
-          let n2 = getDataPerson((ps[0] == n1.id) ? ps[1] : ps[0]);
+          let n2 = s.graph.nodes((ps[0] == n1.id) ? ps[1] : ps[0]);
           let newPos = getChildConnectionNodePosition(n1, n2);
           childConnectionNode.x = newPos.x;
           childConnectionNode.y = newPos.y;
@@ -291,98 +291,126 @@ modalBlocker.addEventListener('click', e =>
 
 // load from file
 // ------------------------------------
-console.log('load data');
-var xhttp = new XMLHttpRequest();
-xhttp.onreadystatechange = function()
-{
-  if (this.readyState === 4 && this.status === 200) {
-    data = JSON.parse(this.responseText);
-    console.log(data);
-    moveCamera({
-        x: parseFloat(data.settings.camera.x),
-        y: parseFloat(data.settings.camera.y),
-        z: parseFloat(data.settings.camera.z)
-      },
-      false, false, true, false);
-    logAddPerson = 3;
-    data.graph.persons.forEach(p => { addPerson(p, false, false, true, false); if (logAddPerson) --logAddPerson; });
-    logAddPerson = true;
-    logAddConnection = 3;
-    data.graph.connections.forEach(c => { addConnection(c, false, false, true, false); if (logAddConnection) --logAddConnection; });
-    logAddConnection = true;
+let logPreviewBlocker = document.getElementById('log-preview-blocker');
 
-    let ul = document.getElementById('log-list');
-    let userSelectedNodes = [];
-    let userSelectedEdges = [];
-    ul.addEventListener('mouseenter', e =>
-    {
-      console.log('enter ul');
-      userSelectedNodes = activeState.nodes().map(n => n.id);
-      userSelectedEdges = activeState.edges().map(e => e.id);
-      activeState.dropNodes();
-      activeState.dropEdges();
-    });
-    ul.addEventListener('mouseleave', e =>
-    {
-      console.log('leave ul');
-      activeState.addNodes(userSelectedNodes);
-      activeState.addEdges(userSelectedEdges);
+function load_data(previewHash = null)
+{
+  activeState.dropNodes();
+  activeState.dropEdges();
+  s.graph.clear();
+
+  console.log('load data ' + previewHash);
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function()
+  {
+    if (this.readyState === 4 && this.status === 200) {
+      data = JSON.parse(this.responseText);
+      console.log(data);
+      moveCamera({
+          x: parseFloat(data.settings.camera.x),
+          y: parseFloat(data.settings.camera.y),
+          z: parseFloat(data.settings.camera.z)
+        },
+        false, false, true, false);
+      logAddPerson = 3;
+      data.graph.persons.forEach(p => { addPerson(p, false, false, true, false); if (logAddPerson) --logAddPerson; });
+      logAddPerson = true;
+      logAddConnection = 3;
+      data.graph.connections.forEach(c => { addConnection(c, false, false, true, false); if (logAddConnection) --logAddConnection; });
+      logAddConnection = true;
       s.refresh();
-    });
-    let i = 0;
-    let addLog = () => {
-      let j = Math.min(i + 10, data.log.length);
-      for (; i < j; ++i) {
-        let l = data.log[i];
-        console.log(l);
-        // let hash = l[0];
-        let logDate = l[1];
-        let logAuthor = l[2];
-        let logM = l[3].split(' :: ');
-        let logMsg = logM[0];
-        let li = document.createElement('li');
-        li.innerHTML = logAuthor + '<span>' + new Date(logDate).toLocaleString() + '</span>';
-        // li.title = l[3];
-        li.title = logMsg;
-        li.classList.add('button');
-        ul.appendChild(li);
-        if (logM.length === 2) {
-          let updatedNodesOrEdges = logM[1].substr(0, 2);
-          if (['p ', 'c '].includes(updatedNodesOrEdges))   {
-            let logTs = logM[1].substr(2).split(', ');
-            li.addEventListener('mouseenter', e =>
+
+      let ul = document.getElementById('log-list');
+      let userSelectedNodes = [];
+      let userSelectedEdges = [];
+      ul.addEventListener('mouseenter', e =>
+      {
+        console.log('enter ul');
+        userSelectedNodes = activeState.nodes().map(n => n.id);
+        userSelectedEdges = activeState.edges().map(e => e.id);
+        activeState.dropNodes();
+        activeState.dropEdges();
+      });
+      ul.addEventListener('mouseleave', e =>
+      {
+        console.log('leave ul');
+        activeState.addNodes(userSelectedNodes);
+        activeState.addEdges(userSelectedEdges);
+        s.refresh();
+      });
+      if (!previewHash) {
+        let i = 0;
+        let addLog = () => {
+          let j = Math.min(i + 10, data.log.length);
+          for (; i < j; ++i) {
+            let l = data.log[i];
+            console.log(l);
+            let hash = l[0];
+            let logDate = l[1];
+            let logAuthor = l[2];
+            let logM = l[3].split(' :: ');
+            let logMsg = logM[0];
+            let li = document.createElement('li');
+            li.innerHTML = logAuthor + '<span>' + new Date(logDate).toLocaleString() + '</span>';
+            // li.title = l[3];
+            li.title = logMsg;
+            li.classList.add('button');
+            ul.appendChild(li);
+            li.addEventListener('click', e =>
             {
-              console.log(['enter li', logTs]);
-              if (updatedNodesOrEdges === 'p ') {
-                let existingNodeIDs = s.graph.nodes(logTs).filter(n => n !== undefined).map(n => n.id);
-                activeState.addNodes(existingNodeIDs);
-              }
-              if (updatedNodesOrEdges === 'c ') {
-                let existingEdgeIDs = s.graph.edges(logTs).filter(e => e !== undefined).map(e => e.id);
-                activeState.addEdges(existingEdgeIDs);
-              }
-              s.refresh();
+              console.log('log click');
+              ul.childNodes.forEach(li =>
+              {
+                li.classList.remove('selected');
+              });
+              li.classList.add('selected');
+              logPreviewBlocker.style.display = 'block';
+              load_data(hash);
             });
-            li.addEventListener('mouseleave', e =>
-            {
-              console.log('leave li');
-              activeState.dropNodes();
-              activeState.dropEdges();
-              s.refresh();
-            });
+            if (logM.length === 2) {
+              let updatedNodesOrEdges = logM[1].substr(0, 2);
+              if (['p ', 'c '].includes(updatedNodesOrEdges))   {
+                let logTs = logM[1].substr(2).split(', ');
+                li.addEventListener('mouseenter', e =>
+                {
+                  console.log(['enter li', logTs]);
+                  if (updatedNodesOrEdges === 'p ') {
+                    let existingNodeIDs = s.graph.nodes(logTs).filter(n => n !== undefined).map(n => n.id);
+                    activeState.addNodes(existingNodeIDs);
+                  }
+                  if (updatedNodesOrEdges === 'c ') {
+                    let existingEdgeIDs = s.graph.edges(logTs).filter(e => e !== undefined).map(e => e.id);
+                    activeState.addEdges(existingEdgeIDs);
+                  }
+                  s.refresh();
+                });
+                li.addEventListener('mouseleave', e =>
+                {
+                  console.log('leave li');
+                  activeState.dropNodes();
+                  activeState.dropEdges();
+                  s.refresh();
+                });
+              }
+            }
           }
-        }
+          if (i < data.log.length - 1) {
+            setTimeout(addLog, 1000);
+          }
+        };
+        addLog();
       }
-      if (i < data.log.length - 1) {
-        setTimeout(addLog, 1000);
-      }
-    };
-    addLog();
-    s.refresh();
+    }
+  };
+  if (!previewHash) {
+    xhttp.open('GET', '?action=init', true);
   }
-};
-xhttp.open('GET', '?action=init', true);
-xhttp.send();
+  else {
+    xhttp.open('GET', '?action=preview&hash=' + previewHash, true);
+  }
+  xhttp.send();
+}
+load_data();
 
 
 // move camera
