@@ -218,15 +218,30 @@ button:hover, .button:hover {
   margin: 0 -20pt;
   position: relative;
 }
-#log.box li.selected {
-  border-top: 1px solid black;
+#log.box li.selected, #log.box li:hover {
   padding-top: calc(5pt - 1px);/* 5pt from .button */
+  border-top: 1px solid;
 }
-#log.box li.selected::before {
+#log.box li.selected::before, #log.box li:hover::before {
   content: '\25BA';
   position: absolute;
   left: -2pt;
   top: -7pt;
+}
+#log.box li.selected {
+  border-top-color: #ccc !important;
+}
+#log.box li:hover {
+  border-top-color: #000;
+}
+#log.box li.selected::before {
+  color: #ccc !important;
+}
+#log.box li:hover::before {
+  color: #000;
+}
+#log.box li.selected:hover {
+  background: transparent;
 }
 #log.box li span {
   display: block;
@@ -235,7 +250,6 @@ button:hover, .button:hover {
 
 #log-preview-blocker button {
   left: 50%;
-  padding: 5pt;
   bottom: initial;
   top: 10pt;
 }

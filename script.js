@@ -356,6 +356,9 @@ function load_data(previewHash = null)
             li.title = logMsg;
             li.classList.add('button');
             ul.appendChild(li);
+            if (i === 0) {
+              li.classList.add('selected');
+            }
             li.addEventListener('click', e =>
             {
               console.log('log click');
@@ -367,32 +370,57 @@ function load_data(previewHash = null)
               logPreviewBlocker.style.display = 'block';
               load_data(hash);
             });
+            let logDC = '';
+            let logTs = [];
             if (logM.length === 2) {
-              let updatedNodesOrEdges = logM[1].substr(0, 2);
-              if (['p ', 'c '].includes(updatedNodesOrEdges))   {
-                let logTs = logM[1].substr(2).split(', ');
-                li.addEventListener('mouseenter', e =>
-                {
-                  console.log(['enter li', logTs]);
-                  if (updatedNodesOrEdges === 'p ') {
-                    let existingNodeIDs = s.graph.nodes(logTs).filter(n => n !== undefined).map(n => n.id);
-                    activeState.addNodes(existingNodeIDs);
-                  }
-                  if (updatedNodesOrEdges === 'c ') {
-                    let existingEdgeIDs = s.graph.edges(logTs).filter(e => e !== undefined).map(e => e.id);
-                    activeState.addEdges(existingEdgeIDs);
-                  }
-                  s.refresh();
-                });
-                li.addEventListener('mouseleave', e =>
-                {
-                  console.log('leave li');
-                  activeState.dropNodes();
-                  activeState.dropEdges();
-                  s.refresh();
-                });
+              logDC = logM[1].substr(0, 2);
+              if (['p ', 'c '].includes(logDC)) {
+                logTs = logM[1].substr(2).split(', ');
+              }
+              else {
+                logDC = '';
               }
             }
+            li.setAttribute('data-log-dc', logDC);
+            li.setAttribute('data-log-ts', logTs.join(','));
+            li.addEventListener('mouseenter', e =>
+            {
+              console.log('enter li');
+              if (li.classList.contains('selected')) {
+                console.log('cancel peview - already selected');
+                return;
+              }
+              let previewLogDC = logDC;
+              let previewLogTs = logTs;
+              let prevLi = li;
+              while ((prevLi = prevLi.previousElementSibling) != null) {
+                if (prevLi.classList.contains('selected')) {
+                  prevLi = li.previousElementSibling;
+                  previewLogDC = prevLi.getAttribute('data-log-dc');
+                  previewLogTs = prevLi.getAttribute('data-log-ts').split(',');
+                  break;
+                }
+              }
+              console.log([previewLogDC, previewLogTs]);
+              if (previewLogDC !== '') {
+                if (previewLogDC === 'p ') {
+                  let existingNodeIDs = s.graph.nodes(previewLogTs).filter(n => n !== undefined).map(n => n.id);
+                  activeState.addNodes(existingNodeIDs);
+                }
+                else if (previewLogDC === 'c ') {
+                  let existingEdgeIDs = s.graph.edges(previewLogTs).filter(e => e !== undefined).map(e => e.id);
+                  activeState.addEdges(existingEdgeIDs);
+                }
+                s.refresh();
+              }
+            });
+            li.addEventListener('mouseleave', e =>
+            {
+              console.log('leave li');
+              activeState.dropNodes();
+              activeState.dropEdges();
+              s.refresh();
+            });
           }
           if (i < data.log.length - 1) {
             setTimeout(addLog, 1000);

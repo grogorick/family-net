@@ -449,7 +449,7 @@ html_start();
 <body>
   <div id="graph"></div>
   <div id="log-preview-blocker">
-    <button class="box box-visible">Von diesen Punkt weiterarbeiten</button>
+    <button class="box box-visible">Das Netzwerk auf diesen Zustand zurücksetzen</button>
   </div>
   <div id="modal-blocker"></div>
   <div id="account" class="box box-visible">
