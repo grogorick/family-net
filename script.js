@@ -371,6 +371,7 @@ load_data();
 // log history
 // ------------------------------------
 let logListUL = document.getElementById('log-list');
+let logRestoreSelectedItem = document.getElementById('log-restore-selected-item');
 
 function addLogItem(l, prepend)
 {
@@ -393,19 +394,26 @@ function addLogItem(l, prepend)
   let logM = l[3].split(' :: ');
   let logMsg = logM[0];
   li.innerHTML = logAuthor + '<span>' + new Date(logDate).toLocaleString() + '</span>';
-  // li.title = l[3];
   li.title = logMsg;
   li.classList.add('button');
+  li.setAttribute('data-hash', hash);
   li.addEventListener('click', e =>
   {
     console.log('log click');
+    let isFirstLogItem = li.previousElementSibling == null;
+    if (!isFirstLogItem) {
+      logPreviewBlocker.style.display = 'block';
+    }
     logListUL.childNodes.forEach(li =>
     {
       li.classList.remove('selected');
     });
     li.classList.add('selected');
-    logPreviewBlocker.style.display = 'block';
     load_data(hash);
+    logRestoreSelectedItem.href = '?action=reset&hash=' + hash;
+    if (isFirstLogItem) {
+      logPreviewBlocker.style.display = 'none';
+    }
   });
   let logDC = '';
   let logTs = [];
@@ -459,7 +467,7 @@ function addLogItem(l, prepend)
     s.refresh();
   });
   return li;
-};
+}
 
 
 // move camera

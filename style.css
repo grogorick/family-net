@@ -3,7 +3,7 @@ html, body, #graph {
   height: 100%;
   margin: 0;
 }
-body, input {
+body, input, button {
   font-family: 'Josefin Sans', 'Trebuchet MS', sans-serif;
   color: #000;
 }
@@ -45,9 +45,6 @@ body {
   position: fixed;
   right: 10pt;
   bottom: 10pt;
-  /*top: 50vh;*/
-  /*left: 50vw;*/
-  /*transform: translate(-50%, -50%);*/
   background: white;
   box-shadow: 2px 1px 5px #0006;
 }
@@ -116,6 +113,8 @@ button, .button {
   padding: 5pt 20pt;
   cursor: default;
   border: none;
+  color: black;
+  text-decoration: none;
   background: transparent;
 }
 button:hover, .button:hover {
@@ -149,10 +148,6 @@ button:hover, .button:hover {
 #account.box a {
   display: inline-block;
   text-decoration: none;
-}
-#account.box button {
-  color: #aaa;
-  font-size: 85%;
 }
 
 #help.box:not(.box-minimized), #log.box:not(.box-minimized), #person-form.box, #connection-form.box {
@@ -213,9 +208,12 @@ button:hover, .button:hover {
 #log.box ul {
   list-style-type: none;
   padding-left: 0;
+  padding-top: 5pt;
+  margin: 0 -20pt;
+  height: 30vh;
+  overflow-y: scroll;
 }
 #log.box li {
-  margin: 0 -20pt;
   position: relative;
 }
 #log.box li.selected, #log.box li:hover {
@@ -248,9 +246,10 @@ button:hover, .button:hover {
   font-size: 80%;
 }
 
-#log-preview-blocker button {
-  left: 50%;
+#log-restore-selected-item {
+  right: initial;
   bottom: initial;
+  left: 50%;
   top: 10pt;
 }
 

@@ -94,6 +94,8 @@ define('STORAGE_FILE', 'storage.yml');
 define('PERSONS', 'persons');
 define('CONNECTIONS', 'connections');
 
+define('CD_STORAGE_DIR', 'cd ' . STORAGE_DIR . '; ');
+
 $accounts = [];
 $settings = [ CAMERA => [ 'x' => 0, 'y' => 0, 'z' => 1] ];
 $data = [ PERSONS => [], CONNECTIONS => [] ];
@@ -117,6 +119,7 @@ function save_accounts()
 function init()
 {
   global $accounts;
+  global $server_dir;
   if ($_SESSION[USER] == ANONYMOUS_USER) {
     $_SESSION[USER] = $accounts[0][USER_];
   }
@@ -128,7 +131,7 @@ function init()
       '"' . STORAGE_DIR . '" 2>&1', $output, $ret);
     save_data('init');
   }
-  header('Location: /');
+  header('Location: ' . $server_dir);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -267,7 +270,7 @@ function save_settings()
 
 function get_log($commit_count = 0)
 {
-  exec('cd ' . STORAGE_DIR . '; git log --author-date-order --format=format:\'%h|||%ai|||%an|||%s\'' . ($commit_count > 0 ? ' -' . $commit_count : ''), $out);
+  exec(CD_STORAGE_DIR . 'git log --author-date-order --format=format:\'%h|||%ai|||%an|||%s\'' . ($commit_count > 0 ? ' -' . $commit_count : ''), $out);
   $out = array_map(function($line) {
     $line = explode('|||', $line);
     $line[1] = preg_replace('/ [+-]\d{4}/', '', $line[1]);
@@ -340,7 +343,7 @@ if (isset($_GET[ACTION])) {
   switch ($_GET[ACTION]) {
     case 'preview':
     {
-      exec('cd ' . STORAGE_DIR . '; git show ' . $_GET['hash'] . ':' . STORAGE_FILE, $out);
+      exec(CD_STORAGE_DIR . 'git show ' . $_GET['hash'] . ':' . STORAGE_FILE, $out);
       $data_str = implode(PHP_EOL, $out);
     }
     // no break here, to continue preview like init but with different data
@@ -351,6 +354,14 @@ if (isset($_GET[ACTION])) {
           '"graph":' . $data_str . PHP_EOL . ',' .
           '"log":' . prepare_json_for_storage(get_log()) .
         '}';
+      exit;
+    }
+
+    case 'reset':
+    {
+      $hash = $_GET['hash'];
+      exec(CD_STORAGE_DIR . 'git tag reset-to-' . $hash . '-at-' . $t . '; git reset --hard ' . $hash);
+      header('Location: ' . $server_dir);
       exit;
     }
 
@@ -452,7 +463,7 @@ html_start();
 <body>
   <div id="graph"></div>
   <div id="log-preview-blocker">
-    <button class="box box-visible">Das Netzwerk auf diesen Zustand zurücksetzen</button>
+    <a id="log-restore-selected-item" class="box box-visible button">Das Netzwerk auf diesen Zustand zurücksetzen</a>
   </div>
   <div id="modal-blocker"></div>
   <div id="account" class="box box-visible">
