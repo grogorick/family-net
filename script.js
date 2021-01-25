@@ -320,10 +320,9 @@ function load_data(previewHash = null)
       logAddConnection = true;
       s.refresh();
 
-      let ul = document.getElementById('log-list');
       let userSelectedNodes = [];
       let userSelectedEdges = [];
-      ul.addEventListener('mouseenter', e =>
+      logListUL.addEventListener('mouseenter', e =>
       {
         console.log('enter ul');
         userSelectedNodes = activeState.nodes().map(n => n.id);
@@ -331,7 +330,7 @@ function load_data(previewHash = null)
         activeState.dropNodes();
         activeState.dropEdges();
       });
-      ul.addEventListener('mouseleave', e =>
+      logListUL.addEventListener('mouseleave', e =>
       {
         console.log('leave ul');
         activeState.addNodes(userSelectedNodes);
@@ -339,94 +338,22 @@ function load_data(previewHash = null)
         s.refresh();
       });
       if (!previewHash) {
-        let i = 0;
-        let addLog = () => {
-          let j = Math.min(i + 10, data.log.length);
-          for (; i < j; ++i) {
-            let l = data.log[i];
-            console.log(l);
-            let hash = l[0];
-            let logDate = l[1];
-            let logAuthor = l[2];
-            let logM = l[3].split(' :: ');
-            let logMsg = logM[0];
-            let li = document.createElement('li');
-            li.innerHTML = logAuthor + '<span>' + new Date(logDate).toLocaleString() + '</span>';
-            // li.title = l[3];
-            li.title = logMsg;
-            li.classList.add('button');
-            ul.appendChild(li);
-            if (i === 0) {
-              li.classList.add('selected');
+        if (data.log.length > 0) {
+          let li = addLogItem(data.log[0], false);
+          li.classList.add('selected');
+
+          let i = 1;
+          let addLog = () => {
+            let j = Math.min(i + 10, data.log.length);
+            for (; i < j; ++i) {
+              addLogItem(data.log[i], false);
             }
-            li.addEventListener('click', e =>
-            {
-              console.log('log click');
-              ul.childNodes.forEach(li =>
-              {
-                li.classList.remove('selected');
-              });
-              li.classList.add('selected');
-              logPreviewBlocker.style.display = 'block';
-              load_data(hash);
-            });
-            let logDC = '';
-            let logTs = [];
-            if (logM.length === 2) {
-              logDC = logM[1].substr(0, 2);
-              if (['p ', 'c '].includes(logDC)) {
-                logTs = logM[1].substr(2).split(', ');
-              }
-              else {
-                logDC = '';
-              }
+            if (i < data.log.length - 1) {
+              setTimeout(addLog, 1000);
             }
-            li.setAttribute('data-log-dc', logDC);
-            li.setAttribute('data-log-ts', logTs.join(','));
-            li.addEventListener('mouseenter', e =>
-            {
-              console.log('enter li');
-              if (li.classList.contains('selected')) {
-                console.log('cancel peview - already selected');
-                return;
-              }
-              let previewLogDC = logDC;
-              let previewLogTs = logTs;
-              let prevLi = li;
-              while ((prevLi = prevLi.previousElementSibling) != null) {
-                if (prevLi.classList.contains('selected')) {
-                  prevLi = li.previousElementSibling;
-                  previewLogDC = prevLi.getAttribute('data-log-dc');
-                  previewLogTs = prevLi.getAttribute('data-log-ts').split(',');
-                  break;
-                }
-              }
-              console.log([previewLogDC, previewLogTs]);
-              if (previewLogDC !== '') {
-                if (previewLogDC === 'p ') {
-                  let existingNodeIDs = s.graph.nodes(previewLogTs).filter(n => n !== undefined).map(n => n.id);
-                  activeState.addNodes(existingNodeIDs);
-                }
-                else if (previewLogDC === 'c ') {
-                  let existingEdgeIDs = s.graph.edges(previewLogTs).filter(e => e !== undefined).map(e => e.id);
-                  activeState.addEdges(existingEdgeIDs);
-                }
-                s.refresh();
-              }
-            });
-            li.addEventListener('mouseleave', e =>
-            {
-              console.log('leave li');
-              activeState.dropNodes();
-              activeState.dropEdges();
-              s.refresh();
-            });
-          }
-          if (i < data.log.length - 1) {
-            setTimeout(addLog, 1000);
-          }
-        };
-        addLog();
+          };
+          addLog();
+        }
       }
     }
   };
@@ -439,6 +366,100 @@ function load_data(previewHash = null)
   xhttp.send();
 }
 load_data();
+
+
+// log history
+// ------------------------------------
+let logListUL = document.getElementById('log-list');
+
+function addLogItem(l, prepend)
+{
+  console.log(['addLogItem', l]);
+  let li = document.createElement('li');
+  if (prepend) {
+    logListUL.childNodes.forEach(li =>
+    {
+      li.classList.remove('selected');
+    });
+    li.classList.add('selected');
+    logListUL.prepend(li);
+  }
+  else {
+    logListUL.appendChild(li);
+  }
+  let hash = l[0];
+  let logDate = l[1];
+  let logAuthor = l[2];
+  let logM = l[3].split(' :: ');
+  let logMsg = logM[0];
+  li.innerHTML = logAuthor + '<span>' + new Date(logDate).toLocaleString() + '</span>';
+  // li.title = l[3];
+  li.title = logMsg;
+  li.classList.add('button');
+  li.addEventListener('click', e =>
+  {
+    console.log('log click');
+    logListUL.childNodes.forEach(li =>
+    {
+      li.classList.remove('selected');
+    });
+    li.classList.add('selected');
+    logPreviewBlocker.style.display = 'block';
+    load_data(hash);
+  });
+  let logDC = '';
+  let logTs = [];
+  if (logM.length === 2) {
+    logDC = logM[1].substr(0, 2);
+    if (['p ', 'c '].includes(logDC)) {
+      logTs = logM[1].substr(2).split(', ');
+    }
+    else {
+      logDC = '';
+    }
+  }
+  li.setAttribute('data-log-dc', logDC);
+  li.setAttribute('data-log-ts', logTs.join(','));
+  li.addEventListener('mouseenter', e =>
+  {
+    console.log('enter li');
+    if (li.classList.contains('selected')) {
+      console.log('cancel peview - already selected');
+      return;
+    }
+    let previewLogDC = logDC;
+    let previewLogTs = logTs;
+    let prevLi = li;
+    while ((prevLi = prevLi.previousElementSibling) != null) {
+      if (prevLi.classList.contains('selected')) {
+        prevLi = li.previousElementSibling;
+        previewLogDC = prevLi.getAttribute('data-log-dc');
+        previewLogTs = prevLi.getAttribute('data-log-ts').split(',');
+        break;
+      }
+    }
+    console.log([previewLogDC, previewLogTs]);
+    if (previewLogDC !== '') {
+      if (previewLogDC === 'p ') {
+        let existingNodeIDs = s.graph.nodes(previewLogTs).filter(n => n !== undefined).map(n => n.id);
+        activeState.addNodes(existingNodeIDs);
+      }
+      else if (previewLogDC === 'c ') {
+        let existingEdgeIDs = s.graph.edges(previewLogTs).filter(e => e !== undefined).map(e => e.id);
+        activeState.addEdges(existingEdgeIDs);
+      }
+      s.refresh();
+    }
+  });
+  li.addEventListener('mouseleave', e =>
+  {
+    console.log('leave li');
+    activeState.dropNodes();
+    activeState.dropEdges();
+    s.refresh();
+  });
+  return li;
+};
 
 
 // move camera
@@ -780,7 +801,11 @@ let logAddPerson = true;
 function addPerson(p, toData, toServer, toGraph, refreshGraph, doneCallback = null)
 {
   toServerDataGraph('addPerson', p, {
-      toServer: !toServer ? null : (p_t) => { p.t = p_t; },
+      toServer: !toServer ? null : response => {
+          response = response.split(' ;; ');
+          p.t = response[0].substr(2);
+          addLogItem(JSON.parse(response[1]), true);
+        },
       toData: !toData ? null : () => { data.graph.persons.push(p); },
       toGraph: !toGraph ? null : () => {
         s.graph.addNode({
@@ -1008,7 +1033,11 @@ function addConnection(c, toData, toServer, toGraph, refreshGraph, doneCallback 
     }
   }
   toServerDataGraph('addConnection', c, {
-      toServer: !toServer ? null : (c_t) => { c.t = c_t; },
+      toServer: !toServer ? null : response => {
+          response = response.split(' ;; ');
+          c.t = response[0].substr(2);
+          addLogItem(JSON.parse(response[1]), true);
+        },
       toData: !toData ? null : () => { data.graph.connections.push(c); },
       toGraph: !toGraph ? null : () => {
         s.graph.addEdge({

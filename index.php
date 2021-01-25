@@ -265,14 +265,17 @@ function save_settings()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-function get_log()
+function get_log($commit_count = 0)
 {
-  exec('cd ' . STORAGE_DIR . '; git log --author-date-order --format=format:\'%h|||%ai|||%an|||%s\'', $out);
+  exec('cd ' . STORAGE_DIR . '; git log --author-date-order --format=format:\'%h|||%ai|||%an|||%s\'' . ($commit_count > 0 ? ' -' . $commit_count : ''), $out);
   $out = array_map(function($line) {
     $line = explode('|||', $line);
     $line[1] = preg_replace('/ [+-]\d{4}/', '', $line[1]);
     return $line;
   }, $out);
+  if ($commit_count === 1) {
+    return $out[0];
+  }
   return $out;
 }
 
@@ -301,7 +304,7 @@ function save_data($git_commit)
     '"' . STORAGE_DIR . '" ' .
     '"' . STORAGE_FILE . '" ' .
     '"' . $_SESSION[USER] . '" ' .
-    '"' . $git_commit . '" 2>&1', $output, $ret);
+    '"' . $git_commit . '" 2>&1', $out);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -419,7 +422,7 @@ if (isset($_GET[ACTION])) {
     break;
   }
   save_data('update :: ' . $ret);
-  echo $ret;
+  echo $ret . ' ;; ' . prepare_json_for_storage(get_log(1));
   exit;
 }
 
