@@ -25,7 +25,7 @@ body {
 }
 
 .hidden {
-  display: none;
+  display: none !important;
 }
 
 #graph, #modal-blocker, #log-preview-blocker {
