@@ -569,6 +569,15 @@ html_start();
             <li><i>Verbinden</i> klicken</li>
           </ul>
         </li>
+        <li>Zwei Eltern und ein Kind verbinden:
+          <ul>
+            <li><?=$modKeys?> gedrückt halten</li>
+            <li>Die Verbindung zwischen den Eltern anklicken</li>
+            <li>Das Kind anklicken</li>
+            <li>Daten der Verbindung im Eingabefenster (<?=$boxPos?>) eintragen</li>
+            <li><i>Verbinden</i> klicken</li>
+          </ul>
+        </li>
         <li>Eine Person entfernen:
           <ul>
             <li>(Die Person darf keine Verbindungen haben)</li>

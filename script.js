@@ -403,8 +403,14 @@ let logAddLogItem = true;
 function addLogItem(l, prepend, itemActive)
 {
   console.log(logAddLogItem ? ['addLogItem', l, 'prepend:', prepend, 'itemActive:', itemActive] : '...');
+  let hash = l[0];
+  let logDate = l[1];
+  let logAuthor = l[2];
+  let logM = l[3].split(' :: ');
+  let logMsg = logM[0];
   let li = document.createElement('li');
   if (prepend) {
+    data.current_hash = hash;
     logListUL.childNodes.forEach(li =>
     {
       li.classList.remove('selected');
@@ -415,11 +421,6 @@ function addLogItem(l, prepend, itemActive)
   else {
     logListUL.appendChild(li);
   }
-  let hash = l[0];
-  let logDate = l[1];
-  let logAuthor = l[2];
-  let logM = l[3].split(' :: ');
-  let logMsg = logM[0];
   li.innerHTML = logAuthor + '<span>' + new Date(logDate).toLocaleString() + '</span>';
   li.title = logMsg;
   li.classList.add('button');
@@ -477,7 +478,7 @@ function addLogItem(l, prepend, itemActive)
   li.addEventListener('click', e =>
   {
     console.log('log click');
-    let isFirstLogItem = li.previousElementSibling == null;
+    let isFirstLogItem = data.current_hash === hash;
     if (isFirstLogItem) {
       logPreviewBlocker.classList.add('hidden');
     }
