@@ -24,13 +24,16 @@ body {
   background: #ddd;
 }
 
+.hidden {
+  display: none;
+}
+
 #graph, #modal-blocker, #log-preview-blocker {
   user-select: none;
 }
 
 #modal-blocker, #log-preview-blocker {
   position: fixed;
-  display: none;
   top: 0;
   left: 0;
   width: 100%;
@@ -121,7 +124,7 @@ button, .button {
   background: transparent;
 }
 button:hover, .button:hover {
-  background: radial-gradient(circle, #fcfcfc 50%, #f9f9f9 100%);
+  background: radial-gradient(circle, #fcfcfc 50%, #f9f9f9 100%) !important;
 }
 
 .collapse-trigger {

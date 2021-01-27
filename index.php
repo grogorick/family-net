@@ -113,7 +113,7 @@ function save_accounts()
 {
   global $accounts;
   $file_content = prepare_json_for_storage($accounts);
-  file_put_contents(ACCOUNTS_FILE, $file_content);
+  file_put_contents(ACCOUNTS_FILE, $file_content, LOCK_EX);
 }
 
 function init()
@@ -263,7 +263,7 @@ function save_settings()
 {
   global $settings;
   $file_content = prepare_json_for_storage($settings);
-  file_put_contents(SETTINGS_FILE, $file_content);
+  file_put_contents(SETTINGS_FILE, $file_content, LOCK_EX);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -302,7 +302,7 @@ function save_data($git_commit)
 {
   global $data;
   $file_content = prepare_json_for_storage($data);
-  file_put_contents(STORAGE_DIR . '/' . STORAGE_FILE, $file_content);
+  file_put_contents(STORAGE_DIR . '/' . STORAGE_FILE, $file_content, LOCK_EX);
   exec('update.sh ' .
     '"' . STORAGE_DIR . '" ' .
     '"' . STORAGE_FILE . '" ' .
@@ -467,19 +467,33 @@ html_start();
 </head>
 <body>
   <div id="graph"></div>
-  <div id="log-preview-blocker">
+
+  <div id="modal-blocker" class="hidden"></div>
+
+  <div id="log-preview-blocker" class="hidden">
     <a id="log-restore-selected-item" class="box box-visible button">Das Netz auf diesen Zustand zurücksetzen</a>
   </div>
-  <div id="modal-blocker"></div>
+
   <div id="account" class="box box-visible">
     <span><?=$_SESSION[USER]?></span>
-<?php
-  if ($_SESSION[TYPE] === ADMIN_) {
-?>
-  <a href="<?=$server_dir?>?accounts"><button>Accounts</button></a><?php
-  }
-?><a href="<?=$server_dir?>?logout"><button>Logout</button></a>
+    <?php
+    if ($_SESSION[TYPE] === ADMIN_) {
+      ?><a href="<?=$server_dir?>?accounts"><button>Accounts</button></a><?php
+    }
+    ?><a href="<?=$server_dir?>?logout"><button>Logout</button></a>
   </div>
+
+  <div id="log" class="box box-visible box-minimized">
+    <div class="box-minimize-buttons">
+      <button class="box-restore">&olarr;</button>
+      <button class="box-minimize">&mdash;</button>
+    </div>
+    <div>
+      <h2>Änderungsverlauf</h2>
+      <ul id="log-list"></ul>
+    </div>
+  </div>
+
   <div id="help" class="box box-visible box-minimized">
     <div class="box-minimize-buttons">
       <button class="box-restore">?</button>
@@ -557,16 +571,7 @@ html_start();
       </ul>
     </div>
   </div>
-  <div id="log" class="box box-visible box-minimized">
-    <div class="box-minimize-buttons">
-      <button class="box-restore">&olarr;</button>
-      <button class="box-minimize">&mdash;</button>
-    </div>
-    <div>
-      <h2>Änderungesverlauf</h2>
-      <ul id="log-list"></ul>
-    </div>
-  </div>
+
   <div id="person-form" class="box">
     <h2 class="opt opt-new">Neue Person</h2>
     <h2 class="opt opt-edit">Person bearbeiten</h2>
@@ -592,6 +597,7 @@ html_start();
     <button id="person-form-delete" class="opt opt-edit">Entfernen</button>
     <button id="person-form-cancel">Abbrechen</button>
   </div>
+
   <div id="connection-form" class="box">
     <h2 class="opt opt-new opt-new-child">Neue Verbindung</h2>
     <h2 class="opt opt-edit">Verbindung bearbeiten</h2>
@@ -617,6 +623,7 @@ html_start();
     <button id="connection-form-delete" class="opt opt-edit">Entfernen</button>
     <button id="connection-form-cancel">Abbrechen</button>
   </div>
+
   <script>
     let currentUser = '<?=$_SESSION[USER]?>';
     let currentUserIsAdmin = <?=($_SESSION[TYPE] === ADMIN_) ? 'true' : 'false'?>;

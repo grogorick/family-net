@@ -261,7 +261,7 @@ function moveChildConnectionNodes(nodes)
 let modalBlocker = document.getElementById('modal-blocker');
 function showForm(f, opt = null)
 {
-  modalBlocker.style.display = 'block';
+  modalBlocker.classList.remove('hidden');
 
   f.classList.remove('opt-new');
   f.classList.remove('opt-new-child');
@@ -280,7 +280,7 @@ function showForm(f, opt = null)
 function hideForm(f)
 {
   f.classList.remove('box-visible');
-  modalBlocker.style.display = 'none';
+  modalBlocker.classList.add('hidden');
 }
 
 modalBlocker.addEventListener('click', e =>
@@ -369,17 +369,24 @@ let logCacheUserSelectedEdges = [];
 logListUL.addEventListener('mouseenter', e =>
 {
   console.log('enter ul');
-  logCacheUserSelectedNodes = activeState.nodes().map(n => n.id);
-  logCacheUserSelectedEdges = activeState.edges().map(e => e.id);
-  activeState.dropNodes();
-  activeState.dropEdges();
+  if (logPreviewBlocker.classList.contains('hidden')) {
+    logCacheUserSelectedNodes = activeState.nodes().map(n => n.id);
+    logCacheUserSelectedEdges = activeState.edges().map(e => e.id);
+    activeState.dropNodes();
+    activeState.dropEdges();
+    s.refresh();
+    hideForm(personMenuForm);
+    hideForm(connectionMenuForm);
+  }
 });
 logListUL.addEventListener('mouseleave', e =>
 {
   console.log('leave ul');
-  activeState.addNodes(logCacheUserSelectedNodes);
-  activeState.addEdges(logCacheUserSelectedEdges);
-  s.refresh();
+  if (logPreviewBlocker.classList.contains('hidden')) {
+    activeState.addNodes(logCacheUserSelectedNodes);
+    activeState.addEdges(logCacheUserSelectedEdges);
+    s.refresh();
+  }
 });
 
 let logAddLogItem = true;
@@ -462,7 +469,7 @@ function addLogItem(l, prepend, itemActive)
     console.log('log click');
     let isFirstLogItem = li.previousElementSibling == null;
     if (!isFirstLogItem) {
-      logPreviewBlocker.style.display = 'block';
+      logPreviewBlocker.classList.remove('hidden');
     }
     logListUL.childNodes.forEach(li =>
     {
@@ -472,16 +479,16 @@ function addLogItem(l, prepend, itemActive)
     load_data(hash);
     if (isFirstLogItem) {
       logRestoreSelectedItem.href = '';
-      logPreviewBlocker.style.display = 'none';
+      logPreviewBlocker.classList.add('hidden');
     }
     else {
       if (itemActive) {
         logRestoreSelectedItem.href = '?action=reset&hash=' + hash;
-        logRestoreSelectedItem.style.display = 'block';
+        logRestoreSelectedItem.classList.remove('hidden');
       }
       else {
         logRestoreSelectedItem.href = '';
-        logRestoreSelectedItem.style.display = 'none';
+        logRestoreSelectedItem.classList.add('hidden');
       }
     }
   });
