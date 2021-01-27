@@ -24,7 +24,7 @@ body {
   background: #ddd;
 }
 
-#graph {
+#graph, #modal-blocker, #log-preview-blocker {
   user-select: none;
 }
 
@@ -35,10 +35,13 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background: #fff1;
 }
 #modal-blocker {
   backdrop-filter: blur(1pt);
+  background: #fff1;
+}
+#log-preview-blocker {
+  background: #0001;
 }
 .box {
   display: none;
@@ -251,6 +254,7 @@ button:hover, .button:hover {
   bottom: initial;
   left: 50%;
   top: 10pt;
+  background: white;
 }
 
 #person-form.box, #connection-form.box {

@@ -360,7 +360,12 @@ if (isset($_GET[ACTION])) {
     case 'reset':
     {
       $hash = $_GET['hash'];
-      exec(CD_STORAGE_DIR . 'git tag reset-to-' . $hash . '-at-' . $t . '; git reset --hard ' . $hash);
+      exec(CD_STORAGE_DIR . 'git log --author-date-order --format=format:\'%an\' ' . $hash . '..', $out);
+      $checkOwnCommits = function($ret, $name) { return $ret && ($name === $_SESSION[USER]); };
+      if ($_SESSION[TYPE] === ADMIN_ || array_reduce($out, $checkOwnCommits, true)) {
+        exec(CD_STORAGE_DIR . 'git tag reset-to-' . $hash . '-by-' . preg_replace('/\\s/', '_', $_SESSION[USER]) . '-at-' . $t . ';');
+        exec(CD_STORAGE_DIR . 'git reset --hard ' . $hash);
+      }
       header('Location: ' . $server_dir);
       exit;
     }
@@ -463,7 +468,7 @@ html_start();
 <body>
   <div id="graph"></div>
   <div id="log-preview-blocker">
-    <a id="log-restore-selected-item" class="box box-visible button">Das Netzwerk auf diesen Zustand zurücksetzen</a>
+    <a id="log-restore-selected-item" class="box box-visible button">Das Netz auf diesen Zustand zurücksetzen</a>
   </div>
   <div id="modal-blocker"></div>
   <div id="account" class="box box-visible">
@@ -612,6 +617,10 @@ html_start();
     <button id="connection-form-delete" class="opt opt-edit">Entfernen</button>
     <button id="connection-form-cancel">Abbrechen</button>
   </div>
+  <script>
+    let currentUser = '<?=$_SESSION[USER]?>';
+    let currentUserIsAdmin = <?=($_SESSION[TYPE] === ADMIN_) ? 'true' : 'false'?>;
+  </script>
   <script src="utils.js"></script>
   <script src="script.js"></script>
 </body>
