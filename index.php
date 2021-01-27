@@ -270,7 +270,7 @@ function save_settings()
 
 function get_log($commit_count = 0)
 {
-  exec(CD_STORAGE_DIR . 'git log --author-date-order --format=format:\'%h|||%ai|||%an|||%s\'' . ($commit_count > 0 ? ' -' . $commit_count : ''), $out);
+  exec(CD_STORAGE_DIR . 'git log --author-date-order --format=format:\'%h|||%ai|||%an|||%s\'' . ($_SESSION[TYPE] === ADMIN_ ? ' --all' : '') . ($commit_count > 0 ? ' -' . $commit_count : ''), $out);
   $out = array_map(function($line) {
     $line = explode('|||', $line);
     $line[1] = preg_replace('/ [+-]\d{4}/', '', $line[1]);
@@ -280,6 +280,12 @@ function get_log($commit_count = 0)
     return $out[0];
   }
   return $out;
+}
+
+function get_current_log_hash()
+{
+  exec(CD_STORAGE_DIR . 'git log -1 --format=format:\'%h\'', $out);
+  return $out[0];
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -352,7 +358,8 @@ if (isset($_GET[ACTION])) {
       echo '{' .
           '"settings":' . $settings_file_content . PHP_EOL . ',' .
           '"graph":' . $data_str . PHP_EOL . ',' .
-          '"log":' . prepare_json_for_storage(get_log()) .
+          '"log":' . prepare_json_for_storage(get_log()) . ',' .
+          '"current_hash":"' . get_current_log_hash() . '"' .
         '}';
       exit;
     }
@@ -369,73 +376,80 @@ if (isset($_GET[ACTION])) {
       header('Location: ' . $server_dir);
       exit;
     }
+  }
 
-    case 'moveCamera':
-    {
-      $settings[CAMERA] = $d;
-      save_settings();
-      exit;
-    }
-
-    case 'addPerson':
-    {
-      $d['t'] = $t;
-      $data[PERSONS][] = $d;
-      $ret = 'p ' . $t;
-    }
-    break;
-    case 'editPerson':
-    {
-      $t = $d['t'];
-      $p = &get_data(PERSONS, $t);
-      $d['x'] = $p['x'];
-      $d['y'] = $p['y'];
-      $p = $d;
-      $ret = 'p ' . $t;
-    }
-    break;
-    case 'deletePerson':
-    {
-      delete_data(PERSONS, $d);
-      $ret = 'p ' . $d;
-    }
-    break;
-    case 'movePersons':
-    {
-      $ts = [];
-      foreach ($d as $d_) {
-        $p = &get_data(PERSONS, $d_['t']);
-        $p['x'] = $d_['x'];
-        $p['y'] = $d_['y'];
-        $ts[] = $d_['t'];
+  if ($_SESSION[TYPE] !== VIEWER_) {
+    switch ($_GET[ACTION]) {
+      case 'moveCamera':
+      {
+        $settings[CAMERA] = $d;
+        save_settings();
+        exit;
       }
-      $ret = 'p ' . implode(', ', $ts);
-    }
-    break;
 
-    case 'addConnection':
-    {
-      $d['t'] = $t;
-      $data[CONNECTIONS][] = $d;
-      $ret = 'c ' . $t;
+      case 'addPerson':
+      {
+        $d['t'] = $t;
+        $data[PERSONS][] = $d;
+        $ret = 'p ' . $t;
+      }
+      break;
+      case 'editPerson':
+      {
+        $t = $d['t'];
+        $p = &get_data(PERSONS, $t);
+        $d['x'] = $p['x'];
+        $d['y'] = $p['y'];
+        $p = $d;
+        $ret = 'p ' . $t;
+      }
+      break;
+      case 'deletePerson':
+      {
+        delete_data(PERSONS, $d);
+        $ret = 'p ' . $d;
+      }
+      break;
+      case 'movePersons':
+      {
+        $ts = [];
+        foreach ($d as $d_) {
+          $p = &get_data(PERSONS, $d_['t']);
+          $p['x'] = $d_['x'];
+          $p['y'] = $d_['y'];
+          $ts[] = $d_['t'];
+        }
+        $ret = 'p ' . implode(', ', $ts);
+      }
+      break;
+
+      case 'addConnection':
+      {
+        $d['t'] = $t;
+        $data[CONNECTIONS][] = $d;
+        $ret = 'c ' . $t;
+      }
+      break;
+      case 'editConnection':
+      {
+        $t = $d['t'];
+        $c = &get_data(CONNECTIONS, $t);
+        $d['p1'] = $c['p1'];
+        $d['p2'] = $c['p2'];
+        $c = $d;
+        $ret = 'c ' . $t;
+      }
+      break;
+      case 'deleteConnection':
+      {
+        delete_data(CONNECTIONS, $d);
+        $ret = 'c ' . $d;
+      }
+      break;
+
+      default:
+        exit;
     }
-    break;
-    case 'editConnection':
-    {
-      $t = $d['t'];
-      $c = &get_data(CONNECTIONS, $t);
-      $d['p1'] = $c['p1'];
-      $d['p2'] = $c['p2'];
-      $c = $d;
-      $ret = 'c ' . $t;
-    }
-    break;
-    case 'deleteConnection':
-    {
-      delete_data(CONNECTIONS, $d);
-      $ret = 'c ' . $d;
-    }
-    break;
   }
   save_data('update :: ' . $ret);
   echo $ret . ' ;; ' . prepare_json_for_storage(get_log(1));
@@ -471,16 +485,16 @@ html_start();
   <div id="modal-blocker" class="hidden"></div>
 
   <div id="log-preview-blocker" class="hidden">
+    <?php if ($_SESSION[TYPE] !== VIEWER_) { ?>
     <a id="log-restore-selected-item" class="box box-visible button">Das Netz auf diesen Zustand zurücksetzen</a>
+    <?php } ?>
   </div>
 
   <div id="account" class="box box-visible">
     <span><?=$_SESSION[USER]?></span>
-    <?php
-    if ($_SESSION[TYPE] === ADMIN_) {
-      ?><a href="<?=$server_dir?>?accounts"><button>Accounts</button></a><?php
-    }
-    ?><a href="<?=$server_dir?>?logout"><button>Logout</button></a>
+    <?php if ($_SESSION[TYPE] === ADMIN_) { ?>
+    <a href="<?=$server_dir?>?accounts"><button>Accounts</button></a><?php
+    } ?><a href="<?=$server_dir?>?logout"><button>Logout</button></a>
   </div>
 
   <div id="log" class="box box-visible box-minimized">
@@ -528,6 +542,7 @@ html_start();
           </ul>
         </li>
       </ul>
+      <?php if ($_SESSION[TYPE] !== VIEWER_) { ?>
       <h2 class="collapse-trigger collapsed">Bearbeiten</h2>
       <ul>
         <li>Eine Person hinzufügen:
@@ -569,6 +584,7 @@ html_start();
           </ul>
         </li>
       </ul>
+      <?php } ?>
     </div>
   </div>
 
@@ -577,24 +593,26 @@ html_start();
     <h2 class="opt opt-edit">Person bearbeiten</h2>
     <div class="box-row">
       <label for="person-form-name">Name: </label>
-      <input id="person-form-name" type="text" placeholder="Vorname(n), Nachname(n)" />
+      <input id="person-form-name" type="text" placeholder="Vorname(n), Nachname(n)" <?=($_SESSION[TYPE] === VIEWER_ ? 'disabled' : '')?> />
     </div><div class="box-row">
       <label for="person-form-birth-day">Geburtstag: </label>
-      <input id="person-form-birth-day" type="text" autocomplete="off" placeholder="tt" />
-      <input id="person-form-birth-month" type="text" autocomplete="off" placeholder="mm" />
-      <input id="person-form-birth-year" type="text" autocomplete="off" placeholder="yyyy" />
+      <input id="person-form-birth-day" type="text" autocomplete="off" placeholder="tt" <?=($_SESSION[TYPE] === VIEWER_ ? 'disabled' : '')?> />
+      <input id="person-form-birth-month" type="text" autocomplete="off" placeholder="mm" <?=($_SESSION[TYPE] === VIEWER_ ? 'disabled' : '')?> />
+      <input id="person-form-birth-year" type="text" autocomplete="off" placeholder="yyyy" <?=($_SESSION[TYPE] === VIEWER_ ? 'disabled' : '')?> />
     </div><div class="box-row">
       <label for="person-form-death-day">Todestag: </label>
-      <input id="person-form-death-day" type="text" autocomplete="off" placeholder="tt" />
-      <input id="person-form-death-month" type="text" autocomplete="off" placeholder="mm" />
-      <input id="person-form-death-year" type="text" autocomplete="off" placeholder="yyyy" />
+      <input id="person-form-death-day" type="text" autocomplete="off" placeholder="tt" <?=($_SESSION[TYPE] === VIEWER_ ? 'disabled' : '')?> />
+      <input id="person-form-death-month" type="text" autocomplete="off" placeholder="mm" <?=($_SESSION[TYPE] === VIEWER_ ? 'disabled' : '')?> />
+      <input id="person-form-death-year" type="text" autocomplete="off" placeholder="yyyy" <?=($_SESSION[TYPE] === VIEWER_ ? 'disabled' : '')?> />
     </div><div class="box-row">
       <label for="person-form-note">Notiz: </label>
-      <textarea id="person-form-note" rows="3"></textarea>
+      <textarea id="person-form-note" rows="3" <?=($_SESSION[TYPE] === VIEWER_ ? 'disabled' : '')?>></textarea>
     </div>
+    <?php if ($_SESSION[TYPE] !== VIEWER_) { ?>
     <button id="person-form-add" class="opt opt-new">Hinzufügen</button>
     <button id="person-form-edit" class="opt opt-edit">Speichern</button>
     <button id="person-form-delete" class="opt opt-edit">Entfernen</button>
+    <?php } ?>
     <button id="person-form-cancel">Abbrechen</button>
   </div>
 
@@ -604,7 +622,7 @@ html_start();
     <i id="connection-form-persons" class="opt opt-edit"></i>
     <div class="box-row">
       <label for="connection-form-relation">Art: </label>
-      <input id="connection-form-relation" list="connection-form-relation-suggestions">
+      <input id="connection-form-relation" list="connection-form-relation-suggestions" <?=($_SESSION[TYPE] === VIEWER_ ? 'disabled' : '')?>>
       <datalist id="connection-form-relation-suggestions">
         <option value="Kind">
         <option value="adoptiert">
@@ -615,18 +633,21 @@ html_start();
     </div>
     <div class="box-row">
       <label for="connection-form-desc">Info: </label>
-      <textarea id="connection-form-desc" rows="3"></textarea>
+      <textarea id="connection-form-desc" rows="3" <?=($_SESSION[TYPE] === VIEWER_ ? 'disabled' : '')?>></textarea>
     </div>
+    <?php if ($_SESSION[TYPE] !== VIEWER_) { ?>
     <button id="connection-form-add" class="opt opt-new">Verbinden</button>
     <button id="connection-form-add-child" class="opt opt-new-child">Verbinden</button>
     <button id="connection-form-edit" class="opt opt-edit">Speichern</button>
     <button id="connection-form-delete" class="opt opt-edit">Entfernen</button>
+    <?php } ?>
     <button id="connection-form-cancel">Abbrechen</button>
   </div>
 
   <script>
     let currentUser = '<?=$_SESSION[USER]?>';
     let currentUserIsAdmin = <?=($_SESSION[TYPE] === ADMIN_) ? 'true' : 'false'?>;
+    let currentUserIsViewer = <?=($_SESSION[TYPE] === VIEWER_) ? 'true' : 'false'?>;
   </script>
   <script src="utils.js"></script>
   <script src="script.js"></script>

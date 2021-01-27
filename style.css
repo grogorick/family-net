@@ -44,7 +44,7 @@ body {
   background: #fff1;
 }
 #log-preview-blocker {
-  background: #0001;
+  background: #00000003;
 }
 .box {
   display: none;

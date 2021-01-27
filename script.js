@@ -90,7 +90,10 @@ let s = new sigma({
 });
 
 let activeState = sigma.plugins.activeState(s);
-let dragListener = sigma.plugins.dragNodes(s, s.renderers[0], activeState);
+let dragListener = null;
+if (!currentUserIsViewer) {
+  dragListener = sigma.plugins.dragNodes(s, s.renderers[0], activeState);
+}
 
 const bounds = {
   minX: -500,
@@ -104,7 +107,8 @@ s.settings('bounds', bounds);
 let data = {
   settings: { camera: { x: 0, y: 0, z: 0 }},
   graph: { persons: [], connections: [] },
-  log: [] };
+  log: [],
+  current_hash: '' };
 
 function getDataPerson(t)
 {
@@ -272,9 +276,13 @@ function showForm(f, opt = null)
 
   moveBoxToForeground(f);
   f.classList.add('box-visible');
-  let firstInput = f.querySelector('input, textarea');
+  let firstInput = f.querySelector('input:not([disabled]), textarea:not([disabled])');
   if (firstInput) {
+    console.log(firstInput);
     firstInput.focus();
+  }
+  else {
+    let cancelButton = f.querySelector('button[id$="cancel"]').focus();
   }
 }
 function hideForm(f)
@@ -322,16 +330,19 @@ function load_data(previewHash = null)
 
       if (!previewHash) {
         if (data.log.length > 0) {
-          let logItemActive = currentUserIsAdmin || data.log[0][2] === currentUser;
+          let logItemActive = currentUserIsAdmin || (!currentUserIsViewer && data.log[0][2] === currentUser);
           logAddLogItem = 3;
           let i = 0;
           let addLog = () => {
             let j = Math.min(i + 10, data.log.length);
             for (; i < j; ++i) {
               let l = data.log[i];
-              addLogItem(l, false, logItemActive);
+              let li = addLogItem(l, false, logItemActive);
               if (!currentUserIsAdmin && logItemActive && l[2] !== currentUser) {
                 logItemActive = false;
+              }
+              if (l[0] === data.current_hash) {
+                li.classList.add('selected');
               }
               if (logAddLogItem) --logAddLogItem;
             }
@@ -343,7 +354,6 @@ function load_data(previewHash = null)
             }
           };
           addLog();
-          logListUL.childNodes[0].classList.add('selected');
         }
       }
     }
@@ -468,7 +478,10 @@ function addLogItem(l, prepend, itemActive)
   {
     console.log('log click');
     let isFirstLogItem = li.previousElementSibling == null;
-    if (!isFirstLogItem) {
+    if (isFirstLogItem) {
+      logPreviewBlocker.classList.add('hidden');
+    }
+    else {
       logPreviewBlocker.classList.remove('hidden');
     }
     logListUL.childNodes.forEach(li =>
@@ -477,18 +490,14 @@ function addLogItem(l, prepend, itemActive)
     });
     li.classList.add('selected');
     load_data(hash);
-    if (isFirstLogItem) {
-      logRestoreSelectedItem.href = '';
-      logPreviewBlocker.classList.add('hidden');
-    }
-    else {
-      if (itemActive) {
-        logRestoreSelectedItem.href = '?action=reset&hash=' + hash;
-        logRestoreSelectedItem.classList.remove('hidden');
-      }
-      else {
+    if (!currentUserIsViewer) {
+      if (isFirstLogItem || !itemActive) {
         logRestoreSelectedItem.href = '';
         logRestoreSelectedItem.classList.add('hidden');
+      }
+      else {
+        logRestoreSelectedItem.href = '?action=reset&hash=' + hash;
+        logRestoreSelectedItem.classList.remove('hidden');
       }
     }
   });
@@ -586,7 +595,7 @@ function selectPerson(e, refreshGraph = true)
     if (!multipleKey) {
       showPersonInfo(nodes[0].id);
     }
-    else {
+    else if (!currentUserIsViewer) {
       let edges = activeState.edges();
       if (edges.length === 1) {
         let c = edges[0];
@@ -599,7 +608,7 @@ function selectPerson(e, refreshGraph = true)
       }
     }
   }
-  else if (nodes.length === 2) {
+  else if (!currentUserIsViewer && nodes.length === 2) {
     if (!activeState.edges().length) {
       let p1 = nodes[0];
       let p2 = nodes[1];
@@ -774,57 +783,65 @@ function showPersonInfo(t)
   personMenuDeathYear.value = dd[0];
   updateDateValue(personMenuDeathDay, personMenuDeathMonth, personMenuDeathYear);
   personMenuNote.value = p.o;
-  personMenuDelete.style.display = getDataPersonConnections(t).length ? 'none' : '';
+  if (!currentUserIsViewer) {
+    personMenuDelete.style.display = getDataPersonConnections(t).length ? 'none' : '';
+  }
   showForm(personMenuForm, 'opt-edit');
 }
 
-personMenuAdd.addEventListener('click', e =>
-{
-  console.log('click person-form-add');
-  hideForm(personMenuForm);
-  addPerson({
-      x: newPersonPosition.x,
-      y: newPersonPosition.y,
-      n: personMenuName.value.trim(),
-      b: personMenuBirthDay.getAttribute('data-value'),
-      d: personMenuDeathDay.getAttribute('data-value'),
-      o: personMenuNote.value.trim()
-    },
-    true, true, true, true,
-    (p) =>
-    {
-      deselectAll(e, false);
-      activeState.addNodes(p.t);
-      s.refresh();
-    });
-});
+if (!currentUserIsViewer) {
+  personMenuAdd.addEventListener('click', e =>
+  {
+    console.log('click person-form-add');
+    hideForm(personMenuForm);
+    addPerson({
+        x: newPersonPosition.x,
+        y: newPersonPosition.y,
+        n: personMenuName.value.trim(),
+        b: personMenuBirthDay.getAttribute('data-value'),
+        d: personMenuDeathDay.getAttribute('data-value'),
+        o: personMenuNote.value.trim()
+      },
+      true, true, true, true,
+      (p) =>
+      {
+        deselectAll(e, false);
+        activeState.addNodes(p.t);
+        s.refresh();
+      });
+  });
+}
 
-personMenuEdit.addEventListener('click', e =>
-{
-  console.log('click person-form-edit');
-  hideForm(personMenuForm);
-  editPerson({
-      t: activeState.nodes()[0].id,
-      n: personMenuName.value.trim(),
-      b: personMenuBirthDay.getAttribute('data-value'),
-      d: personMenuDeathDay.getAttribute('data-value'),
-      o: personMenuNote.value.trim()
-    });
-});
+if (!currentUserIsViewer) {
+  personMenuEdit.addEventListener('click', e =>
+  {
+    console.log('click person-form-edit');
+    hideForm(personMenuForm);
+    editPerson({
+        t: activeState.nodes()[0].id,
+        n: personMenuName.value.trim(),
+        b: personMenuBirthDay.getAttribute('data-value'),
+        d: personMenuDeathDay.getAttribute('data-value'),
+        o: personMenuNote.value.trim()
+      });
+  });
+}
 
-personMenuDelete.addEventListener('click', e =>
-{
-  console.log('click person-form-delete');
-  let t = activeState.nodes()[0].id;
-  let connections = getDataPersonConnections(t);
-  if (connections.length) {
-    console.log(['cancelled - person to delete must not have connections', connections]);
-    return;
-  }
-  hideForm(personMenuForm);
-  activeState.dropNodes();
-  deletePerson(t);
-});
+if (!currentUserIsViewer) {
+  personMenuDelete.addEventListener('click', e =>
+  {
+    console.log('click person-form-delete');
+    let t = activeState.nodes()[0].id;
+    let connections = getDataPersonConnections(t);
+    if (connections.length) {
+      console.log(['cancelled - person to delete must not have connections', connections]);
+      return;
+    }
+    hideForm(personMenuForm);
+    activeState.dropNodes();
+    deletePerson(t);
+  });
+}
 
 personMenuCancel.addEventListener('click', e =>
 {
@@ -833,7 +850,7 @@ personMenuCancel.addEventListener('click', e =>
 });
 
 approveDeleteOrCancelKeys(
-  [ personMenuName, personMenuBirthDay, personMenuBirthMonth, personMenuBirthYear, personMenuDeathDay, personMenuDeathMonth, personMenuDeathYear, personMenuNote ],
+  [ personMenuName, personMenuBirthDay, personMenuBirthMonth, personMenuBirthYear, personMenuDeathDay, personMenuDeathMonth, personMenuDeathYear, personMenuNote, personMenuCancel ],
   [ personMenuAdd, personMenuEdit ],
   personMenuDelete,
   personMenuCancel);
@@ -981,75 +998,85 @@ function showConnectionInfo(t)
   connectionMenuPersons.innerHTML = escapeHtml(p1_n) + ' &mdash; ' + escapeHtml(getPersonRufname(p2.n));
   connectionMenuRelation.value = c.r;
   connectionMenuDesc.value = c.d;
-  connectionMenuDelete.style.display = getDataChildConnections(c).length ? 'none' : '';
+  if (!currentUserIsViewer) {
+    connectionMenuDelete.style.display = getDataChildConnections(c).length ? 'none' : '';
+  }
   showForm(connectionMenuForm, 'opt-edit');
 }
 
-connectionMenuAdd.addEventListener('click', e =>
-{
-  console.log('click connection-form-add');
-  hideForm(connectionMenuForm);
-  let n = activeState.nodes();
-  addConnection({
-      p1: n[0].id,
-      p2: n[1].id,
-      r: connectionMenuRelation.value.trim(),
-      d: connectionMenuDesc.value.trim()
-    }, true, true, true, true,
-    (c) =>
-    {
-      deselectAll(e, false);
-      activeState.addEdges(c.t);
-      s.refresh();
-    });
-});
+if (!currentUserIsViewer) {
+  connectionMenuAdd.addEventListener('click', e =>
+  {
+    console.log('click connection-form-add');
+    hideForm(connectionMenuForm);
+    let n = activeState.nodes();
+    addConnection({
+        p1: n[0].id,
+        p2: n[1].id,
+        r: connectionMenuRelation.value.trim(),
+        d: connectionMenuDesc.value.trim()
+      }, true, true, true, true,
+      (c) =>
+      {
+        deselectAll(e, false);
+        activeState.addEdges(c.t);
+        s.refresh();
+      });
+  });
+}
 
-connectionMenuAddChild.addEventListener('click', e =>
-{
-  console.log('click connection-form-add-child');
-  hideForm(connectionMenuForm);
-  let c = activeState.edges()[0];
-  let p = activeState.nodes()[0];
-  let p1 = s.graph.nodes(c.source);
-  let p2 = s.graph.nodes(c.target);
-  addConnection({
-      p1: createChildConnectionNodeId(p1.id, p2.id),
-      p2: p.id,
-      r: connectionMenuRelation.value.trim(),
-      d: connectionMenuDesc.value.trim()
-    }, true, true, true, true,
-    (c) =>
-    {
-      deselectAll(null, false);
-      activeState.addEdges(c.t);
-      s.refresh();
-    });
-});
+if (!currentUserIsViewer) {
+  connectionMenuAddChild.addEventListener('click', e =>
+  {
+    console.log('click connection-form-add-child');
+    hideForm(connectionMenuForm);
+    let c = activeState.edges()[0];
+    let p = activeState.nodes()[0];
+    let p1 = s.graph.nodes(c.source);
+    let p2 = s.graph.nodes(c.target);
+    addConnection({
+        p1: createChildConnectionNodeId(p1.id, p2.id),
+        p2: p.id,
+        r: connectionMenuRelation.value.trim(),
+        d: connectionMenuDesc.value.trim()
+      }, true, true, true, true,
+      (c) =>
+      {
+        deselectAll(null, false);
+        activeState.addEdges(c.t);
+        s.refresh();
+      });
+  });
+}
 
-connectionMenuEdit.addEventListener('click', e =>
-{
-  console.log('click connection-form-edit');
-  hideForm(connectionMenuForm);
-  editConnection({
-      t: activeState.edges()[0].id,
-      r: connectionMenuRelation.value.trim(),
-      d: connectionMenuDesc.value.trim()
-    });
-});
+if (!currentUserIsViewer) {
+  connectionMenuEdit.addEventListener('click', e =>
+  {
+    console.log('click connection-form-edit');
+    hideForm(connectionMenuForm);
+    editConnection({
+        t: activeState.edges()[0].id,
+        r: connectionMenuRelation.value.trim(),
+        d: connectionMenuDesc.value.trim()
+      });
+  });
+}
 
-connectionMenuDelete.addEventListener('click', e =>
-{
-  console.log('click connection-form-delete');
-  let t = activeState.edges()[0].id;
-  let childConnections = getDataChildConnections(getDataConnection(t));
-  if (childConnections.length) {
-    console.log(['cancelled - connection to delete must not have child connections', childConnections]);
-    return;
-  }
-  hideForm(connectionMenuForm);
-  activeState.dropEdges();
-  deleteConnection(t);
-});
+if (!currentUserIsViewer) {
+  connectionMenuDelete.addEventListener('click', e =>
+  {
+    console.log('click connection-form-delete');
+    let t = activeState.edges()[0].id;
+    let childConnections = getDataChildConnections(getDataConnection(t));
+    if (childConnections.length) {
+      console.log(['cancelled - connection to delete must not have child connections', childConnections]);
+      return;
+    }
+    hideForm(connectionMenuForm);
+    activeState.dropEdges();
+    deleteConnection(t);
+  });
+}
 
 connectionMenuCancel.addEventListener('click', e =>
 {
@@ -1058,7 +1085,7 @@ connectionMenuCancel.addEventListener('click', e =>
 });
 
 approveDeleteOrCancelKeys(
-  [ connectionMenuRelation, connectionMenuDesc ],
+  [ connectionMenuRelation, connectionMenuDesc, connectionMenuCancel ],
   [ connectionMenuAdd, connectionMenuAddChild, connectionMenuEdit ],
   connectionMenuDelete,
   connectionMenuCancel);
@@ -1142,9 +1169,7 @@ function deleteConnection(c_t, toData = true, toServer = true, toGraph = true, r
 // ------------------------------------
 let skipClickNodeAfterDrop = false;
 let cdcNode = clickDoubleClick(
-
   e => { if (skipClickNodeAfterDrop) { skipClickNodeAfterDrop = false; return; } selectPerson(e); },
-
   selectDirectRelatives);
 
 s.bind('clickNode', cdcNode.click.bind(cdcNode));
@@ -1152,32 +1177,37 @@ s.bind('doubleClickNode', cdcNode.doubleClick.bind(cdcNode));
 
 s.bind('hovers', hoverPersons);
 
-
 s.bind('clickEdge', selectConnection);
 
+let clickStage = e => { if (!e.data.captor.isDragging && !multipleKeyPressed(e)) { deselectAll(e); } };
+if (currentUserIsViewer) {
+  s.bind('clickStage', clickStage);
+}
+else {
+  let cdcStage = clickDoubleClick(
+    clickStage,
+    e => { deselectAll(e); startNewPerson(e); });
+  s.bind('clickStage', cdcStage.click.bind(cdcStage));
+  s.bind('doubleClickStage', cdcStage.doubleClick.bind(cdcStage));
+}
 
-let cdcStage = clickDoubleClick(
+if (!currentUserIsViewer) {
+  let skipCoordinatesUpdatedAfterDrag = false
+  s.bind('coordinatesUpdated', e => { if (skipCoordinatesUpdatedAfterDrag) { skipCoordinatesUpdatedAfterDrag = false; return; } cameraMoved(e); });
+}
 
-  e => { if (!e.data.captor.isDragging && !multipleKeyPressed(e)) { deselectAll(e); } },
-
-  e => { deselectAll(e); startNewPerson(e); });
-
-s.bind('clickStage', cdcStage.click.bind(cdcStage));
-s.bind('doubleClickStage', cdcStage.doubleClick.bind(cdcStage));
-
-
-let skipCoordinatesUpdatedAfterDrag = false
-s.bind('coordinatesUpdated', e => { if (skipCoordinatesUpdatedAfterDrag) { skipCoordinatesUpdatedAfterDrag = false; return; } cameraMoved(e); });
-
-
-dragListener.bind('drag', e =>
-{
-  movePersons(e, false, false, false, false, false, false);
-  skipCoordinatesUpdatedAfterDrag = true;
-});
-
-
-dragListener.bind('drop', e => { console.log('(drop)'); movePersons(e, true, true, false, false, true, true); skipClickNodeAfterDrop = true; });
+if (!currentUserIsViewer) {
+  dragListener.bind('drag', e =>
+  {
+    movePersons(e, false, false, false, false, false, false);// move child nodes
+    skipCoordinatesUpdatedAfterDrag = true;
+  });
+  dragListener.bind('drop', e =>
+  {
+    console.log('(drop)');
+    movePersons(e, true, true, false, false, true, true); skipClickNodeAfterDrop = true;
+  });
+}
 
 
 setTimeout(s.refresh.bind(s), 1000);

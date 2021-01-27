@@ -42,11 +42,13 @@ function approveDeleteOrCancelKeys(inputFields, approveButtonsToClick, deleteBut
         {
           if (i.tagName !== 'TEXTAREA' || isMultipleKeyPressed) {
             approveButtonsToClick.forEach(b => {
-              let isNewForm = b.classList.contains('opt-new') && b.parentNode.classList.contains('opt-new');
-              let isNewChildForm = b.classList.contains('opt-new-child') && b.parentNode.classList.contains('opt-new-child');
-              let isEditForm = b.classList.contains('opt-edit') && b.parentNode.classList.contains('opt-edit');
-              if (isNewForm || isNewChildForm || isEditForm) {
-                b.click();
+              if (b) {
+                let isNewForm = b.classList.contains('opt-new') && b.parentNode.classList.contains('opt-new');
+                let isNewChildForm = b.classList.contains('opt-new-child') && b.parentNode.classList.contains('opt-new-child');
+                let isEditForm = b.classList.contains('opt-edit') && b.parentNode.classList.contains('opt-edit');
+                if (isNewForm || isNewChildForm || isEditForm) {
+                  b.click();
+                }
               }
             });
           }
@@ -54,14 +56,16 @@ function approveDeleteOrCancelKeys(inputFields, approveButtonsToClick, deleteBut
         break;
         case 'Delete':
         {
-          if (isMultipleKeyPressed && deleteButtonToClick.parentNode.classList.contains('opt-edit')) {
+          if (deleteButtonToClick && isMultipleKeyPressed && deleteButtonToClick.parentNode.classList.contains('opt-edit')) {
             deleteButtonToClick.click();
           }
         }
         break;
         case 'Escape':
         {
-          cancelButtonToClick.click();
+          if (cancelButtonToClick) {
+            cancelButtonToClick.click();
+          }
         }
         break;
       }
