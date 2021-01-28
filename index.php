@@ -359,7 +359,7 @@ if (isset($_GET[ACTION])) {
           '"settings":' . $settings_file_content . PHP_EOL . ',' .
           '"graph":' . $data_str . PHP_EOL . ',' .
           '"log":' . prepare_json_for_storage(get_log()) . ',' .
-          '"current_hash":"' . get_current_log_hash() . '"' .
+          '"currentHash":"' . get_current_log_hash() . '"' .
         '}';
       exit;
     }

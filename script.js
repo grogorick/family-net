@@ -113,7 +113,7 @@ let data = {
   settings: { camera: { x: 0, y: 0, z: 0 }},
   graph: { persons: [], connections: [] },
   log: [],
-  current_hash: '' };
+  currentHash: '' };
 
 function currentUserCanEdit()
 {
@@ -310,59 +310,72 @@ modalBlocker.addEventListener('click', e =>
 
 // load from file
 // ------------------------------------
-function load_data(previewHash = null)
+function applyLoadedData(loadedData, addLogItems)
+{
+  data = loadedData;
+  console.log(data);
+  moveCamera({
+      x: parseFloat(data.settings.camera.x),
+      y: parseFloat(data.settings.camera.y),
+      z: parseFloat(data.settings.camera.z)
+    },
+    false, false, true, false);
+  logAddPerson = 3;
+  data.graph.persons.forEach(p => { addPerson(p, false, false, true, false); if (logAddPerson) --logAddPerson; });
+  logAddPerson = true;
+  logAddConnection = 3;
+  data.graph.connections.forEach(c => { addConnection(c, false, false, true, false); if (logAddConnection) --logAddConnection; });
+  logAddConnection = true;
+  s.refresh();
+
+  if (addLogItems) {
+    if (data.log.length > 0) {
+      let logItemRestorable = currentUserIsAdmin || (!currentUserIsViewer && data.log[0][2] === currentUser);
+      logAddLogItem = 3;
+      let i = 0;
+      let addLog = () => {
+        let j = Math.min(i + 10, data.log.length);
+        for (; i < j; ++i) {
+          let l = data.log[i];
+          let li = addLogItem(l, false, logItemRestorable);
+          logItemRestorable = logItemRestorable && (currentUserIsAdmin || (!currentUserIsViewer && l[2] === currentUser));
+          if (l[0] === data.currentHash) {
+            li.classList.add('selected');
+          }
+          if (logAddLogItem) --logAddLogItem;
+        }
+        if (i < data.log.length - 1) {
+          setTimeout(addLog, 1000);
+        }
+        else {
+          logAddLogItem = true;
+        }
+      };
+      addLog();
+    }
+  }
+}
+let dataCache = {};
+function loadData(previewHash = null)
 {
   activeState.dropNodes();
   activeState.dropEdges();
   s.graph.clear();
 
-  console.log('load data ' + previewHash);
+  if (previewHash in dataCache) {
+    console.log('load cached data ' + previewHash);
+    applyLoadedData(dataCache[previewHash], previewHash === null);
+    return;
+  }
+
+  console.log('load data from server ' + previewHash);
   var xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function()
   {
     if (this.readyState === 4 && this.status === 200) {
-      data = JSON.parse(this.responseText);
-      console.log(data);
-      moveCamera({
-          x: parseFloat(data.settings.camera.x),
-          y: parseFloat(data.settings.camera.y),
-          z: parseFloat(data.settings.camera.z)
-        },
-        false, false, true, false);
-      logAddPerson = 3;
-      data.graph.persons.forEach(p => { addPerson(p, false, false, true, false); if (logAddPerson) --logAddPerson; });
-      logAddPerson = true;
-      logAddConnection = 3;
-      data.graph.connections.forEach(c => { addConnection(c, false, false, true, false); if (logAddConnection) --logAddConnection; });
-      logAddConnection = true;
-      s.refresh();
-
-      if (!previewHash) {
-        if (data.log.length > 0) {
-          let logItemRestorable = currentUserIsAdmin || (!currentUserIsViewer && data.log[0][2] === currentUser);
-          logAddLogItem = 3;
-          let i = 0;
-          let addLog = () => {
-            let j = Math.min(i + 10, data.log.length);
-            for (; i < j; ++i) {
-              let l = data.log[i];
-              let li = addLogItem(l, false, logItemRestorable);
-              logItemRestorable = logItemRestorable && (currentUserIsAdmin || (!currentUserIsViewer && l[2] === currentUser));
-              if (l[0] === data.current_hash) {
-                li.classList.add('selected');
-              }
-              if (logAddLogItem) --logAddLogItem;
-            }
-            if (i < data.log.length - 1) {
-              setTimeout(addLog, 1000);
-            }
-            else {
-              logAddLogItem = true;
-            }
-          };
-          addLog();
-        }
-      }
+      let d = JSON.parse(this.responseText);
+      applyLoadedData(d, previewHash === null);
+      dataCache[previewHash ? previewHash : data.currentHash] = d;
     }
   };
   if (!previewHash) {
@@ -373,7 +386,7 @@ function load_data(previewHash = null)
   }
   xhttp.send();
 }
-load_data();
+loadData();
 
 
 // log history
@@ -418,7 +431,7 @@ function addLogItem(l, prepend, itemRestorable)
   let logMsg = logM[0];
   let li = document.createElement('li');
   if (prepend) {
-    data.current_hash = hash;
+    data.currentHash = hash;
     logListUL.childNodes.forEach(li =>
     {
       li.classList.remove('selected');
@@ -494,8 +507,8 @@ function addLogItem(l, prepend, itemRestorable)
       li.classList.remove('selected');
     });
     li.classList.add('selected');
-    load_data(hash);
-    logPreviewActive = hash !== data.current_hash;
+    loadData(hash);
+    logPreviewActive = hash !== data.currentHash;
     if (logPreviewActive) {
       dragListener.disable();
     }
