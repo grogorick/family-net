@@ -34,6 +34,9 @@ let s = new sigma({
     fontStyle: '',
     activeFontStyle: 'bold',
 
+    zoomingRatio: 1.2,
+    zoomMin: 1,
+    zoomMax: 10,
 
     // person
     minNodeSize: .1,
@@ -61,12 +64,14 @@ let s = new sigma({
     labelAlignment: 'bottom',
     labelHoverShadow: true,
     labelHoverShadowColor: '#ddd',
-
+    labelSize: 'proportional',
+    labelSizeRatio: 1.5,
+    labelThreshold: 5,
 
     // connection
     edgeColor: 'default',
     defaultEdgeColor: settings.edgeColor,
-    minEdgeSize: 0.1,
+    minEdgeSize: .1,
     maxEdgeSize: 5,
     minArrowSize: 5,
 
