@@ -484,20 +484,18 @@ html_start();
 
   <div id="modal-blocker" class="hidden"></div>
 
-  <div id="log-preview-blocker" class="hidden">
-    <?php if ($_SESSION[TYPE] !== VIEWER_) { ?>
-    <a id="log-restore-selected-item" class="box box-visible button">Das Netz auf diesen Zustand zurücksetzen</a>
-    <?php } ?>
-  </div>
+  <?php if ($_SESSION[TYPE] !== VIEWER_) { ?>
+  <a id="log-restore-selected-item" class="box button hidden">Das Netz auf diesen Zustand zurücksetzen</a>
+  <?php } ?>
 
-  <div id="account" class="box box-visible">
+  <div id="account" class="box">
     <span><?=$_SESSION[USER]?></span>
     <?php if ($_SESSION[TYPE] === ADMIN_) { ?>
     <a href="<?=$server_dir?>?accounts"><button>Accounts</button></a><?php
     } ?><a href="<?=$server_dir?>?logout"><button>Logout</button></a>
   </div>
 
-  <div id="log" class="box box-visible box-minimized">
+  <div id="log" class="box box-minimized">
     <div class="box-minimize-buttons">
       <button class="box-restore">&olarr;</button>
       <button class="box-minimize">&mdash;</button>
@@ -508,7 +506,7 @@ html_start();
     </div>
   </div>
 
-  <div id="help" class="box box-visible box-minimized">
+  <div id="help" class="box box-minimized">
     <div class="box-minimize-buttons">
       <button class="box-restore">?</button>
       <button class="box-minimize">&mdash;</button>
@@ -597,7 +595,7 @@ html_start();
     </div>
   </div>
 
-  <div id="person-form" class="box">
+  <div id="person-form" class="box hidden">
     <h2 class="opt opt-new">Neue Person</h2>
     <h2 class="opt opt-edit">Person bearbeiten</h2>
     <div class="box-row">
@@ -625,7 +623,7 @@ html_start();
     <button id="person-form-cancel">Abbrechen</button>
   </div>
 
-  <div id="connection-form" class="box">
+  <div id="connection-form" class="box hidden">
     <h2 class="opt opt-new opt-new-child">Neue Verbindung</h2>
     <h2 class="opt opt-edit">Verbindung bearbeiten</h2>
     <i id="connection-form-persons" class="opt opt-edit"></i>

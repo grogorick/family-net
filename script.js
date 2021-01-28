@@ -95,9 +95,9 @@ let s = new sigma({
 });
 
 let activeState = sigma.plugins.activeState(s);
-let dragListener = null;
-if (!currentUserIsViewer) {
-  dragListener = sigma.plugins.dragNodes(s, s.renderers[0], activeState);
+let dragListener = sigma.plugins.dragNodes(s, s.renderers[0], activeState);
+if (currentUserIsViewer) {
+  dragListener.disable();
 }
 
 const bounds = {
@@ -114,6 +114,11 @@ let data = {
   graph: { persons: [], connections: [] },
   log: [],
   current_hash: '' };
+
+function currentUserCanEdit()
+{
+  return !currentUserIsViewer && !logPreviewActive;
+}
 
 function getDataPerson(t)
 {
@@ -280,7 +285,8 @@ function showForm(f, opt = null)
   }
 
   moveBoxToForeground(f);
-  f.classList.add('box-visible');
+  f.classList.remove('hidden');
+
   let firstInput = f.querySelector('input:not([disabled]), textarea:not([disabled])');
   if (firstInput) {
     console.log(firstInput);
@@ -292,20 +298,18 @@ function showForm(f, opt = null)
 }
 function hideForm(f)
 {
-  f.classList.remove('box-visible');
+  f.classList.add('hidden');
   modalBlocker.classList.add('hidden');
 }
 
 modalBlocker.addEventListener('click', e =>
 {
-  document.querySelector('.box-visible button[id$="cancel"]').click();
+  document.querySelector('.box:not(.hidden) button[id$="cancel"]').click();
 });
 
 
 // load from file
 // ------------------------------------
-let logPreviewBlocker = document.getElementById('log-preview-blocker');
-
 function load_data(previewHash = null)
 {
   activeState.dropNodes();
@@ -335,17 +339,15 @@ function load_data(previewHash = null)
 
       if (!previewHash) {
         if (data.log.length > 0) {
-          let logItemActive = currentUserIsAdmin || (!currentUserIsViewer && data.log[0][2] === currentUser);
+          let logItemRestorable = currentUserIsAdmin || (!currentUserIsViewer && data.log[0][2] === currentUser);
           logAddLogItem = 3;
           let i = 0;
           let addLog = () => {
             let j = Math.min(i + 10, data.log.length);
             for (; i < j; ++i) {
               let l = data.log[i];
-              let li = addLogItem(l, false, logItemActive);
-              if (!currentUserIsAdmin && logItemActive && l[2] !== currentUser) {
-                logItemActive = false;
-              }
+              let li = addLogItem(l, false, logItemRestorable);
+              logItemRestorable = logItemRestorable && (currentUserIsAdmin || (!currentUserIsViewer && l[2] === currentUser));
               if (l[0] === data.current_hash) {
                 li.classList.add('selected');
               }
@@ -379,25 +381,26 @@ load_data();
 let logListUL = document.getElementById('log-list');
 let logRestoreSelectedItem = document.getElementById('log-restore-selected-item');
 
+let logPreviewActive = false;
 let logCacheUserSelectedNodes = [];
 let logCacheUserSelectedEdges = [];
 logListUL.addEventListener('mouseenter', e =>
 {
   console.log('enter ul');
-  if (logPreviewBlocker.classList.contains('hidden')) {
+  if (!logPreviewActive) {
     logCacheUserSelectedNodes = activeState.nodes().map(n => n.id);
     logCacheUserSelectedEdges = activeState.edges().map(e => e.id);
     activeState.dropNodes();
     activeState.dropEdges();
     s.refresh();
-    hideForm(personMenuForm);
-    hideForm(connectionMenuForm);
   }
+  hideForm(personMenuForm);
+  hideForm(connectionMenuForm);
 });
 logListUL.addEventListener('mouseleave', e =>
 {
   console.log('leave ul');
-  if (logPreviewBlocker.classList.contains('hidden')) {
+  if (!logPreviewActive) {
     activeState.addNodes(logCacheUserSelectedNodes);
     activeState.addEdges(logCacheUserSelectedEdges);
     s.refresh();
@@ -405,9 +408,9 @@ logListUL.addEventListener('mouseleave', e =>
 });
 
 let logAddLogItem = true;
-function addLogItem(l, prepend, itemActive)
+function addLogItem(l, prepend, itemRestorable)
 {
-  console.log(logAddLogItem ? ['addLogItem', l, 'prepend:', prepend, 'itemActive:', itemActive] : '...');
+  console.log(logAddLogItem ? ['addLogItem', l, 'prepend:', prepend, 'itemRestorable:', itemRestorable] : '...');
   let hash = l[0];
   let logDate = l[1];
   let logAuthor = l[2];
@@ -482,29 +485,30 @@ function addLogItem(l, prepend, itemActive)
   });
   li.addEventListener('click', e =>
   {
+    if (li.classList.contains('selected')) {
+      return;
+    }
     console.log('log click');
-    let isFirstLogItem = data.current_hash === hash;
-    if (isFirstLogItem) {
-      logPreviewBlocker.classList.add('hidden');
-    }
-    else {
-      logPreviewBlocker.classList.remove('hidden');
-    }
     logListUL.childNodes.forEach(li =>
     {
       li.classList.remove('selected');
     });
     li.classList.add('selected');
     load_data(hash);
-    if (!currentUserIsViewer) {
-      if (isFirstLogItem || !itemActive) {
-        logRestoreSelectedItem.href = '';
-        logRestoreSelectedItem.classList.add('hidden');
-      }
-      else {
-        logRestoreSelectedItem.href = '?action=reset&hash=' + hash;
-        logRestoreSelectedItem.classList.remove('hidden');
-      }
+    logPreviewActive = hash !== data.current_hash;
+    if (logPreviewActive) {
+      dragListener.disable();
+    }
+    else {
+      dragListener.enable();
+    }
+    if (logPreviewActive && itemRestorable) {
+      logRestoreSelectedItem.href = '?action=reset&hash=' + hash;
+      logRestoreSelectedItem.classList.remove('hidden');
+    }
+    else {
+      logRestoreSelectedItem.href = '';
+      logRestoreSelectedItem.classList.add('hidden');
     }
   });
   return li;
@@ -601,7 +605,7 @@ function selectPerson(e, refreshGraph = true)
     if (!multipleKey) {
       showPersonInfo(nodes[0].id);
     }
-    else if (!currentUserIsViewer) {
+    else if (currentUserCanEdit()) {
       let edges = activeState.edges();
       if (edges.length === 1) {
         let c = edges[0];
@@ -614,7 +618,7 @@ function selectPerson(e, refreshGraph = true)
       }
     }
   }
-  else if (!currentUserIsViewer && nodes.length === 2) {
+  else if (nodes.length === 2 && currentUserCanEdit()) {
     if (!activeState.edges().length) {
       let p1 = nodes[0];
       let p2 = nodes[1];
@@ -789,15 +793,36 @@ function showPersonInfo(t)
   personMenuDeathYear.value = dd[0];
   updateDateValue(personMenuDeathDay, personMenuDeathMonth, personMenuDeathYear);
   personMenuNote.value = p.o;
-  if (!currentUserIsViewer) {
-    personMenuDelete.style.display = getDataPersonConnections(t).length ? 'none' : '';
+  if (currentUserCanEdit()) {
+    personMenuDelete.classList.toggle('hidden', getDataPersonConnections(t).length > 0)
+    personMenuEdit.classList.remove('hidden');
+    personMenuName.disabled = false;
+    personMenuBirthDay.disabled = false;
+    personMenuBirthMonth.disabled = false;
+    personMenuBirthYear.disabled = false;
+    personMenuDeathDay.disabled = false;
+    personMenuDeathMonth.disabled = false;
+    personMenuDeathYear.disabled = false;
+    personMenuNote.disabled = false;
+  }
+  else {
+    personMenuDelete.classList.add('hidden');
+    personMenuEdit.classList.add('hidden');
+    personMenuName.disabled = true;
+    personMenuBirthDay.disabled = true;
+    personMenuBirthMonth.disabled = true;
+    personMenuBirthYear.disabled = true;
+    personMenuDeathDay.disabled = true;
+    personMenuDeathMonth.disabled = true;
+    personMenuDeathYear.disabled = true;
+    personMenuNote.disabled = true;
   }
   showForm(personMenuForm, 'opt-edit');
 }
 
-if (!currentUserIsViewer) {
-  personMenuAdd.addEventListener('click', e =>
-  {
+personMenuAdd.addEventListener('click', e =>
+{
+  if (currentUserCanEdit()) {
     console.log('click person-form-add');
     hideForm(personMenuForm);
     addPerson({
@@ -815,12 +840,12 @@ if (!currentUserIsViewer) {
         activeState.addNodes(p.t);
         s.refresh();
       });
-  });
-}
+  }
+});
 
-if (!currentUserIsViewer) {
-  personMenuEdit.addEventListener('click', e =>
-  {
+personMenuEdit.addEventListener('click', e =>
+{
+  if (currentUserCanEdit()) {
     console.log('click person-form-edit');
     hideForm(personMenuForm);
     editPerson({
@@ -830,12 +855,12 @@ if (!currentUserIsViewer) {
         d: personMenuDeathDay.getAttribute('data-value'),
         o: personMenuNote.value.trim()
       });
-  });
-}
+  }
+});
 
-if (!currentUserIsViewer) {
-  personMenuDelete.addEventListener('click', e =>
-  {
+personMenuDelete.addEventListener('click', e =>
+{
+  if (currentUserCanEdit()) {
     console.log('click person-form-delete');
     let t = activeState.nodes()[0].id;
     let connections = getDataPersonConnections(t);
@@ -846,8 +871,8 @@ if (!currentUserIsViewer) {
     hideForm(personMenuForm);
     activeState.dropNodes();
     deletePerson(t);
-  });
-}
+  }
+});
 
 personMenuCancel.addEventListener('click', e =>
 {
@@ -1004,15 +1029,24 @@ function showConnectionInfo(t)
   connectionMenuPersons.innerHTML = escapeHtml(p1_n) + ' &mdash; ' + escapeHtml(getPersonRufname(p2.n));
   connectionMenuRelation.value = c.r;
   connectionMenuDesc.value = c.d;
-  if (!currentUserIsViewer) {
-    connectionMenuDelete.style.display = getDataChildConnections(c).length ? 'none' : '';
+  if (currentUserCanEdit()) {
+    connectionMenuDelete.classList.toggle('hidden', getDataChildConnections(c).length > 0);
+    connectionMenuEdit.classList.remove('hidden');
+    connectionMenuRelation.disabled = false;
+    connectionMenuDesc.disabled = false;
+  }
+  else {
+    connectionMenuDelete.classList.add('hidden');
+    connectionMenuEdit.classList.add('hidden');
+    connectionMenuRelation.disabled = true;
+    connectionMenuDesc.disabled = true;
   }
   showForm(connectionMenuForm, 'opt-edit');
 }
 
-if (!currentUserIsViewer) {
-  connectionMenuAdd.addEventListener('click', e =>
-  {
+connectionMenuAdd.addEventListener('click', e =>
+{
+  if (currentUserCanEdit()) {
     console.log('click connection-form-add');
     hideForm(connectionMenuForm);
     let n = activeState.nodes();
@@ -1028,12 +1062,12 @@ if (!currentUserIsViewer) {
         activeState.addEdges(c.t);
         s.refresh();
       });
-  });
-}
+  }
+});
 
-if (!currentUserIsViewer) {
-  connectionMenuAddChild.addEventListener('click', e =>
-  {
+connectionMenuAddChild.addEventListener('click', e =>
+{
+  if (currentUserCanEdit()) {
     console.log('click connection-form-add-child');
     hideForm(connectionMenuForm);
     let c = activeState.edges()[0];
@@ -1052,12 +1086,12 @@ if (!currentUserIsViewer) {
         activeState.addEdges(c.t);
         s.refresh();
       });
-  });
-}
+  }
+});
 
-if (!currentUserIsViewer) {
-  connectionMenuEdit.addEventListener('click', e =>
-  {
+connectionMenuEdit.addEventListener('click', e =>
+{
+  if (currentUserCanEdit()) {
     console.log('click connection-form-edit');
     hideForm(connectionMenuForm);
     editConnection({
@@ -1065,12 +1099,12 @@ if (!currentUserIsViewer) {
         r: connectionMenuRelation.value.trim(),
         d: connectionMenuDesc.value.trim()
       });
-  });
-}
+  }
+});
 
-if (!currentUserIsViewer) {
-  connectionMenuDelete.addEventListener('click', e =>
-  {
+connectionMenuDelete.addEventListener('click', e =>
+{
+  if (currentUserCanEdit()) {
     console.log('click connection-form-delete');
     let t = activeState.edges()[0].id;
     let childConnections = getDataChildConnections(getDataConnection(t));
@@ -1081,8 +1115,8 @@ if (!currentUserIsViewer) {
     hideForm(connectionMenuForm);
     activeState.dropEdges();
     deleteConnection(t);
-  });
-}
+  }
+});
 
 connectionMenuCancel.addEventListener('click', e =>
 {
@@ -1185,35 +1219,40 @@ s.bind('hovers', hoverPersons);
 
 s.bind('clickEdge', selectConnection);
 
-let clickStage = e => { if (!e.data.captor.isDragging && !multipleKeyPressed(e)) { deselectAll(e); } };
-if (currentUserIsViewer) {
-  s.bind('clickStage', clickStage);
-}
-else {
-  let cdcStage = clickDoubleClick(
-    clickStage,
-    e => { deselectAll(e); startNewPerson(e); });
-  s.bind('clickStage', cdcStage.click.bind(cdcStage));
-  s.bind('doubleClickStage', cdcStage.doubleClick.bind(cdcStage));
-}
+let cdcStage = clickDoubleClick(
+  e => { if (!e.data.captor.isDragging && !multipleKeyPressed(e)) { deselectAll(e); } },
+  e => { deselectAll(e); if (currentUserCanEdit()) { startNewPerson(e); } });
 
-if (!currentUserIsViewer) {
-  let skipCoordinatesUpdatedAfterDrag = false
-  s.bind('coordinatesUpdated', e => { if (skipCoordinatesUpdatedAfterDrag) { skipCoordinatesUpdatedAfterDrag = false; return; } cameraMoved(e); });
-}
+s.bind('clickStage', cdcStage.click.bind(cdcStage));
+s.bind('doubleClickStage', cdcStage.doubleClick.bind(cdcStage));
 
-if (!currentUserIsViewer) {
-  dragListener.bind('drag', e =>
-  {
-    movePersons(e, false, false, false, false, false, false);// move child nodes
+let skipCoordinatesUpdatedAfterDrag = false
+s.bind('coordinatesUpdated', e =>
+{
+  if (currentUserCanEdit()) {
+    if (skipCoordinatesUpdatedAfterDrag) {
+      skipCoordinatesUpdatedAfterDrag = false;
+      return;
+    }
+    cameraMoved(e);
+  }
+});
+
+dragListener.bind('drag', e =>
+{
+  // console.log('drag');
+  if (currentUserCanEdit()) {
+    movePersons(e, false, false, false, false, false, false);// move only child nodes
     skipCoordinatesUpdatedAfterDrag = true;
-  });
-  dragListener.bind('drop', e =>
-  {
-    console.log('(drop)');
+  }
+});
+dragListener.bind('drop', e =>
+{
+  console.log('drop');
+  if (currentUserCanEdit()) {
     movePersons(e, true, true, false, false, true, true); skipClickNodeAfterDrop = true;
-  });
-}
+  }
+});
 
 
 setTimeout(s.refresh.bind(s), 1000);

@@ -28,11 +28,11 @@ body {
   display: none !important;
 }
 
-#graph, #modal-blocker, #log-preview-blocker {
+#graph, #modal-blocker {
   user-select: none;
 }
 
-#modal-blocker, #log-preview-blocker {
+#modal-blocker {
   position: fixed;
   top: 0;
   left: 0;
@@ -43,19 +43,13 @@ body {
   backdrop-filter: blur(1pt);
   background: #fff1;
 }
-#log-preview-blocker {
-  background: #00000003;
-}
 .box {
-  display: none;
+  display: block;
   position: fixed;
   right: 10pt;
   bottom: 10pt;
   background: white;
   box-shadow: 2px 1px 5px #0006;
-}
-.box.box-visible {
-  display: block;
 }
 
 .box-minimized > *:not(.box-minimize-buttons),
