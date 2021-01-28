@@ -83,8 +83,11 @@ define('ADMIN_', 'a');
 define('NORMAL_', 'n');
 define('VIEWER_', 'v');
 define('ANONYMOUS_USER', 'Anonym');
+define('EDITING', 'editing');
 
 define('ACTION', 'action');
+
+define('CURRENT_EDITOR_FILE', 'current_editor.yml');
 
 define('SETTINGS_FILE', 'settings.yml');
 define('CAMERA', 'camera');
@@ -120,7 +123,8 @@ function init()
 {
   global $accounts;
   global $server_dir;
-  if ($_SESSION[USER] == ANONYMOUS_USER) {
+  $init = $_SESSION[USER] == ANONYMOUS_USER;
+  if ($init) {
     $_SESSION[USER] = $accounts[0][USER_];
   }
   if (!file_exists(SETTINGS_FILE)) {
@@ -131,7 +135,9 @@ function init()
       '"' . STORAGE_DIR . '" 2>&1', $output, $ret);
     save_data('init');
   }
-  header('Location: ' . $server_dir);
+  if ($init) {
+    header('Location: ' . $server_dir);
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -139,6 +145,7 @@ function init()
 if (!$accounts) {
   $_SESSION[USER] = ANONYMOUS_USER;
   $_SESSION[TYPE] = ADMIN_;
+  $_SESSION[EDITING] = false;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -148,6 +155,7 @@ else if (isset($_POST[ACTION]) && $_POST[ACTION] === 'login') {
     if ($a[USER_] === $_POST[USER] && password_verify($_POST[PASSWORD], $a[PASSWORD_])) {
       $_SESSION[USER] = $a[USER_];
       $_SESSION[TYPE] = $a[TYPE_];
+      $_SESSION[EDITING] = false;
       break;
     }
   }
@@ -246,6 +254,64 @@ if ((isset($_GET['accounts']) && $_SESSION[TYPE] === ADMIN_) || !$accounts) {
     </form>
 <?php
   html_min_end();
+  exit;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+function startEditing()
+{
+  $ret = false;
+  fclose(fopen(CURRENT_EDITOR_FILE, 'a'));
+  $f = fopen(CURRENT_EDITOR_FILE, 'r+');
+  if ($f) {
+    if (flock($f, LOCK_EX | LOCK_NB)) {
+      $current_other_editor = fread($f, 1000);
+      if (!$current_other_editor) {
+        fwrite($f, $_SESSION[USER]);
+        $ret = true;
+      }
+      else if ($current_other_editor === $_SESSION[USER]) {
+        $ret = true;
+      }
+      else {
+        $_SESSION['current_other_editor'] = $current_other_editor;
+      }
+      flock($f, LOCK_UN);
+    }
+    fclose($f);
+  }
+  return $ret;
+}
+
+function stopEditing()
+{
+  $f = fopen(CURRENT_EDITOR_FILE, 'r+');
+  if ($f) {
+    if (flock($f, LOCK_EX | LOCK_NB)) {
+      $current_other_editor = fread($f, 1000);
+      if ($current_other_editor === $_SESSION[USER]) {
+        ftruncate($f, 0);
+      }
+      flock($f, LOCK_UN);
+    }
+    fclose($f);
+  }
+}
+
+if (isset($_GET['start-edit'])) {
+  if ($_SESSION[TYPE] !== VIEWER_) {
+    if (startEditing()) {
+      $_SESSION[EDITING] = true;
+    }
+  }
+  header('Location: ' . $server_dir);
+  exit;
+}
+
+else if (isset($_GET['stop-edit'])) {
+  stopEditing();
+  $_SESSION[EDITING] = false;
+  header('Location: ' . $server_dir);
   exit;
 }
 
@@ -378,7 +444,7 @@ if (isset($_GET[ACTION])) {
     }
   }
 
-  if ($_SESSION[TYPE] !== VIEWER_) {
+  if ($_SESSION[EDITING]) {
     switch ($_GET[ACTION]) {
       case 'moveCamera':
       {
@@ -484,18 +550,37 @@ html_start();
 
   <div id="modal-blocker" class="hidden"></div>
 
-  <?php if ($_SESSION[TYPE] !== VIEWER_) { ?>
+  <?php if ($_SESSION[EDITING]) { ?>
   <a id="log-restore-selected-item" class="box button hidden">Das Netz auf diesen Zustand zurücksetzen</a>
   <?php } ?>
 
   <div id="account" class="box">
-    <span><?=$_SESSION[USER]?></span>
-    <?php if ($_SESSION[TYPE] === ADMIN_) { ?>
-    <a href="<?=$server_dir?>?accounts"><button>Accounts</button></a><?php
-    } ?><a href="<?=$server_dir?>?logout"><button>Logout</button></a>
+    <span><?=$_SESSION[USER]?></span><!--
+    <?php if (!$_SESSION[EDITING]) { ?>
+    --><a href="<?=$server_dir?>?start-edit"><button>Bearbeiten</button></a><!--
+    <?php } else { ?>
+    --><a href="<?=$server_dir?>?stop-edit"><button>Fertig</button></a><!--
+    <?php } if ($_SESSION[TYPE] === ADMIN_) { ?>
+    --><a href="<?=$server_dir?>?accounts"><button>Accounts</button></a><!--
+    <?php } ?>
+    --><a href="<?=$server_dir?>?logout"><button>Logout</button></a>
   </div>
 
-  <div id="log" class="box box-minimized">
+  <?php
+  if (isset($_SESSION['current_other_editor'])) {
+    ?>
+    <div class="box box-padding box-message">
+      <?=$_SESSION['current_other_editor']?> bearbeitet das Netz im Moment.<br />
+      Versuche es später noch einmal.
+      <br />
+      <button class="button-line">OK</button>
+    </div>
+    <?php
+    unset($_SESSION['current_other_editor']);
+  }
+  ?>
+
+  <div id="log" class="box box-padding box-minimized">
     <div class="box-minimize-buttons">
       <button class="box-restore">&olarr;</button>
       <button class="box-minimize">&mdash;</button>
@@ -506,7 +591,7 @@ html_start();
     </div>
   </div>
 
-  <div id="help" class="box box-minimized">
+  <div id="help" class="box box-padding box-minimized">
     <div class="box-minimize-buttons">
       <button class="box-restore">?</button>
       <button class="box-minimize">&mdash;</button>
@@ -595,41 +680,39 @@ html_start();
     </div>
   </div>
 
-  <div id="person-form" class="box hidden">
+  <div id="person-form" class="box box-padding hidden">
     <h2 class="opt opt-new">Neue Person</h2>
     <h2 class="opt opt-edit">Person bearbeiten</h2>
     <div class="box-row">
       <label for="person-form-name">Name: </label>
-      <input id="person-form-name" type="text" placeholder="Vorname(n), Nachname(n)" <?=($_SESSION[TYPE] === VIEWER_ ? 'disabled' : '')?> />
+      <input id="person-form-name" type="text" placeholder="Vorname(n), Nachname(n)" <?=(!$_SESSION[EDITING] ? 'disabled' : '')?> />
     </div><div class="box-row">
       <label for="person-form-birth-day">Geburtstag: </label>
-      <input id="person-form-birth-day" type="text" autocomplete="off" placeholder="tt" <?=($_SESSION[TYPE] === VIEWER_ ? 'disabled' : '')?> />
-      <input id="person-form-birth-month" type="text" autocomplete="off" placeholder="mm" <?=($_SESSION[TYPE] === VIEWER_ ? 'disabled' : '')?> />
-      <input id="person-form-birth-year" type="text" autocomplete="off" placeholder="yyyy" <?=($_SESSION[TYPE] === VIEWER_ ? 'disabled' : '')?> />
+      <input id="person-form-birth-day" type="text" autocomplete="off" placeholder="tt" <?=(!$_SESSION[EDITING] ? 'disabled' : '')?> />
+      <input id="person-form-birth-month" type="text" autocomplete="off" placeholder="mm" <?=(!$_SESSION[EDITING] ? 'disabled' : '')?> />
+      <input id="person-form-birth-year" type="text" autocomplete="off" placeholder="yyyy" <?=(!$_SESSION[EDITING] ? 'disabled' : '')?> />
     </div><div class="box-row">
       <label for="person-form-death-day">Todestag: </label>
-      <input id="person-form-death-day" type="text" autocomplete="off" placeholder="tt" <?=($_SESSION[TYPE] === VIEWER_ ? 'disabled' : '')?> />
-      <input id="person-form-death-month" type="text" autocomplete="off" placeholder="mm" <?=($_SESSION[TYPE] === VIEWER_ ? 'disabled' : '')?> />
-      <input id="person-form-death-year" type="text" autocomplete="off" placeholder="yyyy" <?=($_SESSION[TYPE] === VIEWER_ ? 'disabled' : '')?> />
+      <input id="person-form-death-day" type="text" autocomplete="off" placeholder="tt" <?=(!$_SESSION[EDITING] ? 'disabled' : '')?> />
+      <input id="person-form-death-month" type="text" autocomplete="off" placeholder="mm" <?=(!$_SESSION[EDITING] ? 'disabled' : '')?> />
+      <input id="person-form-death-year" type="text" autocomplete="off" placeholder="yyyy" <?=(!$_SESSION[EDITING] ? 'disabled' : '')?> />
     </div><div class="box-row">
       <label for="person-form-note">Notiz: </label>
-      <textarea id="person-form-note" rows="3" <?=($_SESSION[TYPE] === VIEWER_ ? 'disabled' : '')?>></textarea>
+      <textarea id="person-form-note" rows="3" <?=(!$_SESSION[EDITING] ? 'disabled' : '')?>></textarea>
     </div>
-    <?php if ($_SESSION[TYPE] !== VIEWER_) { ?>
-    <button id="person-form-add" class="opt opt-new">Hinzufügen</button>
-    <button id="person-form-edit" class="opt opt-edit">Speichern</button>
-    <button id="person-form-delete" class="opt opt-edit">Entfernen</button>
-    <?php } ?>
-    <button id="person-form-cancel">Abbrechen</button>
+    <button id="person-form-add" class="button-line opt opt-new">Hinzufügen</button>
+    <button id="person-form-edit" class="button-line opt opt-edit">Speichern</button>
+    <button id="person-form-delete" class="button-line opt opt-edit">Entfernen</button>
+    <button id="person-form-cancel" class="button-line">Abbrechen</button>
   </div>
 
-  <div id="connection-form" class="box hidden">
+  <div id="connection-form" class="box box-padding hidden">
     <h2 class="opt opt-new opt-new-child">Neue Verbindung</h2>
     <h2 class="opt opt-edit">Verbindung bearbeiten</h2>
     <i id="connection-form-persons" class="opt opt-edit"></i>
     <div class="box-row">
       <label for="connection-form-relation">Art: </label>
-      <input id="connection-form-relation" list="connection-form-relation-suggestions" <?=($_SESSION[TYPE] === VIEWER_ ? 'disabled' : '')?>>
+      <input id="connection-form-relation" list="connection-form-relation-suggestions" <?=(!$_SESSION[EDITING] ? 'disabled' : '')?>>
       <datalist id="connection-form-relation-suggestions">
         <option value="Kind">
         <option value="adoptiert">
@@ -640,21 +723,19 @@ html_start();
     </div>
     <div class="box-row">
       <label for="connection-form-desc">Info: </label>
-      <textarea id="connection-form-desc" rows="3" <?=($_SESSION[TYPE] === VIEWER_ ? 'disabled' : '')?>></textarea>
+      <textarea id="connection-form-desc" rows="3" <?=(!$_SESSION[EDITING] ? 'disabled' : '')?>></textarea>
     </div>
-    <?php if ($_SESSION[TYPE] !== VIEWER_) { ?>
-    <button id="connection-form-add" class="opt opt-new">Verbinden</button>
-    <button id="connection-form-add-child" class="opt opt-new-child">Verbinden</button>
-    <button id="connection-form-edit" class="opt opt-edit">Speichern</button>
-    <button id="connection-form-delete" class="opt opt-edit">Entfernen</button>
-    <?php } ?>
-    <button id="connection-form-cancel">Abbrechen</button>
+    <button id="connection-form-add" class="button-line opt opt-new">Verbinden</button>
+    <button id="connection-form-add-child" class="button-line opt opt-new-child">Verbinden</button>
+    <button id="connection-form-edit" class="button-line opt opt-edit">Speichern</button>
+    <button id="connection-form-delete" class="button-line opt opt-edit">Entfernen</button>
+    <button id="connection-form-cancel" class="button-line">Abbrechen</button>
   </div>
 
   <script>
     let currentUser = '<?=$_SESSION[USER]?>';
     let currentUserIsAdmin = <?=($_SESSION[TYPE] === ADMIN_) ? 'true' : 'false'?>;
-    let currentUserIsViewer = <?=($_SESSION[TYPE] === VIEWER_) ? 'true' : 'false'?>;
+    let currentUserIsViewer = <?=(!$_SESSION[EDITING]) ? 'true' : 'false'?>;
   </script>
   <script src="utils.js"></script>
   <script src="script.js"></script>

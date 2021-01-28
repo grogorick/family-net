@@ -136,6 +136,50 @@ function toServerDataGraph(action, d, cb = { toServer: null, toData: null, toGra
   }
 }
 
+let modalBlocker = document.getElementById('modal-blocker');
+let boxWithModalBlocker = null;
+function showForm(f, opt = null)
+{
+  modalBlocker.classList.remove('hidden');
+  boxWithModalBlocker = f;
+
+  f.classList.remove('opt-new');
+  f.classList.remove('opt-new-child');
+  f.classList.remove('opt-edit');
+  if (opt) {
+    f.classList.add(opt);
+  }
+
+  moveBoxToForeground(f);
+  f.classList.remove('hidden');
+
+  let firstInput = f.querySelector('input:not([disabled]), textarea:not([disabled])');
+  if (firstInput) {
+    console.log(firstInput);
+    firstInput.focus();
+  }
+  else {
+    let cancelButton = f.querySelector('button[id$="cancel"]').focus();
+  }
+}
+function hideForm(f)
+{
+  f.classList.add('hidden');
+  modalBlocker.classList.add('hidden');
+}
+
+modalBlocker.addEventListener('click', e =>
+{
+  let cancelButton = document.querySelector('.box:not(.hidden) button[id$="cancel"]');
+  if (cancelButton) {
+    cancelButton.click();
+  }
+  else if (boxWithModalBlocker) {
+    hideForm(boxWithModalBlocker);
+    boxWithModalBlocker = null;
+  }
+});
+
 let zIndex = 1;
 function moveBoxToForeground(box)
 {
@@ -145,6 +189,12 @@ function moveBoxToBackground(box)
 {
   box.style.zIndex = '';
 }
+
+document.querySelectorAll('.box-message').forEach(box =>
+{
+  document.getElementById('modal-blocker').classList.remove('hidden');
+  box.querySelector('button').addEventListener('click', e => hideForm(box));
+});
 
 document.querySelectorAll('.box-minimize, .box-restore').forEach(el =>
 {

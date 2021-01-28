@@ -272,41 +272,6 @@ function moveChildConnectionNodes(nodes)
   });
 }
 
-let modalBlocker = document.getElementById('modal-blocker');
-function showForm(f, opt = null)
-{
-  modalBlocker.classList.remove('hidden');
-
-  f.classList.remove('opt-new');
-  f.classList.remove('opt-new-child');
-  f.classList.remove('opt-edit');
-  if (opt) {
-    f.classList.add(opt);
-  }
-
-  moveBoxToForeground(f);
-  f.classList.remove('hidden');
-
-  let firstInput = f.querySelector('input:not([disabled]), textarea:not([disabled])');
-  if (firstInput) {
-    console.log(firstInput);
-    firstInput.focus();
-  }
-  else {
-    let cancelButton = f.querySelector('button[id$="cancel"]').focus();
-  }
-}
-function hideForm(f)
-{
-  f.classList.add('hidden');
-  modalBlocker.classList.add('hidden');
-}
-
-modalBlocker.addEventListener('click', e =>
-{
-  document.querySelector('.box:not(.hidden) button[id$="cancel"]').click();
-});
-
 
 // load from file
 // ------------------------------------
@@ -330,7 +295,7 @@ function applyLoadedData(loadedData, addLogItems)
 
   if (addLogItems) {
     if (data.log.length > 0) {
-      let logItemRestorable = currentUserIsAdmin || (!currentUserIsViewer && data.log[0][2] === currentUser);
+      let logItemRestorable = !currentUserIsViewer && (data.log[0][2] === currentUser || currentUserIsAdmin);
       logAddLogItem = 3;
       let i = 0;
       let addLog = () => {
@@ -338,7 +303,7 @@ function applyLoadedData(loadedData, addLogItems)
         for (; i < j; ++i) {
           let l = data.log[i];
           let li = addLogItem(l, false, logItemRestorable);
-          logItemRestorable = logItemRestorable && (currentUserIsAdmin || (!currentUserIsViewer && l[2] === currentUser));
+          logItemRestorable = logItemRestorable && (!currentUserIsViewer && (l[2] === currentUser || currentUserIsAdmin));
           if (l[0] === data.currentHash) {
             li.classList.add('selected');
           }
@@ -1220,9 +1185,9 @@ function deleteConnection(c_t, toData = true, toServer = true, toGraph = true, r
 
 // events
 // ------------------------------------
-let skipClickNodeAfterDrop = false;
+let skipClickNodeAfterDropOrCoordinatesUpdated = false;
 let cdcNode = clickDoubleClick(
-  e => { if (skipClickNodeAfterDrop) { skipClickNodeAfterDrop = false; return; } selectPerson(e); },
+  e => { if (skipClickNodeAfterDropOrCoordinatesUpdated) { skipClickNodeAfterDropOrCoordinatesUpdated = false; return; } selectPerson(e); },
   selectDirectRelatives);
 
 s.bind('clickNode', cdcNode.click.bind(cdcNode));
@@ -1242,11 +1207,13 @@ s.bind('doubleClickStage', cdcStage.doubleClick.bind(cdcStage));
 let skipCoordinatesUpdatedAfterDrag = false
 s.bind('coordinatesUpdated', e =>
 {
+  // console.log('coordinatesUpdated');
+  if (skipCoordinatesUpdatedAfterDrag) {
+    skipCoordinatesUpdatedAfterDrag = false;
+    return;
+  }
+  skipClickNodeAfterDropOrCoordinatesUpdated = true;
   if (currentUserCanEdit()) {
-    if (skipCoordinatesUpdatedAfterDrag) {
-      skipCoordinatesUpdatedAfterDrag = false;
-      return;
-    }
     cameraMoved(e);
   }
 });
@@ -1256,14 +1223,15 @@ dragListener.bind('drag', e =>
   // console.log('drag');
   if (currentUserCanEdit()) {
     movePersons(e, false, false, false, false, false, false);// move only child nodes
-    skipCoordinatesUpdatedAfterDrag = true;
   }
+  skipCoordinatesUpdatedAfterDrag = true;
 });
 dragListener.bind('drop', e =>
 {
   console.log('drop');
+  skipClickNodeAfterDropOrCoordinatesUpdated = true;
   if (currentUserCanEdit()) {
-    movePersons(e, true, true, false, false, true, true); skipClickNodeAfterDrop = true;
+    movePersons(e, true, true, false, false, true, true);
   }
 });
 

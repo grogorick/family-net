@@ -51,6 +51,9 @@ body {
   background: white;
   box-shadow: 2px 1px 5px #0006;
 }
+.box.box-padding:not(.box-minimized) {
+  padding: 20pt;
+}
 
 .box-minimized > *:not(.box-minimize-buttons),
 .box-minimized .box-minimize,
@@ -120,6 +123,13 @@ button, .button {
 button:hover, .button:hover {
   background: radial-gradient(circle, #fcfcfc 50%, #f9f9f9 100%) !important;
 }
+.button-line {
+  margin-top: 10pt;
+  border-top: 1px solid #eee;
+}
+.button-line:hover {
+  border-top: 1px solid #ddd;
+}
 
 .collapse-trigger {
   cursor: pointer;
@@ -133,6 +143,17 @@ button:hover, .button:hover {
 }
 .collapse-trigger.collapsed + * {
   display: none;
+}
+
+.box-message.box {
+  bottom: initial;
+  right: initial;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+.box-message.box button {
+  float: right;
 }
 
 #account.box {
@@ -149,9 +170,8 @@ button:hover, .button:hover {
   display: inline-block;
   text-decoration: none;
 }
-
-#help.box:not(.box-minimized), #log.box:not(.box-minimized), #person-form.box, #connection-form.box {
-  padding: 20pt;
+#account:not(:hover) a:not(:first-of-type) {
+  display: none;
 }
 
 #help.box {
@@ -260,11 +280,4 @@ button:hover, .button:hover {
 #connection-form-persons {
   display: block;
   margin-bottom: 10pt;
-}
-#person-form > button, #connection-form > button {
-  margin-top: 10pt;
-  border-top: 1px solid #eee;
-}
-#person-form > button:hover, #connection-form > button:hover {
-  border-top: 1px solid #ddd;
 }
