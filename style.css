@@ -112,6 +112,7 @@ body {
 }
 
 button, .button {
+  display: inline-block;
   margin: 0;
   padding: 5pt 20pt;
   cursor: default;
@@ -163,11 +164,10 @@ button:hover, .button:hover {
   left: 10pt;
   font-size: 85%;
 }
-#account.box span {
+#account.box #account-name {
   margin: 0 20pt;
 }
 #account.box a {
-  display: inline-block;
   text-decoration: none;
 }
 #account:not(:hover) a:not(:first-of-type) {

@@ -11,6 +11,7 @@ const settings = {
 
   gridStep: 20,
   saveCameraTimeout: 5000,
+  checkOtherEditorInterval: 10000,
 
   relations: {
     _default: { lineType: 'line', level: null },
@@ -119,6 +120,43 @@ function currentUserCanEdit()
 {
   return !currentUserIsViewer && !logPreviewActive;
 }
+
+let startEdit = document.getElementById('start-edit');
+if (startEdit) {
+  setInterval(() =>
+  {
+    console.log('check other editor');
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function()
+    {
+      if (this.readyState === 4 && this.status === 200) {
+        if (this.responseText) {
+          startEdit.classList.add('hidden');
+          startEdit.nextElementSibling.innerHTML = '(' + this.responseText + ' bearbeitet gerade)';
+          startEdit.nextElementSibling.classList.remove('hidden');
+        }
+        else {
+          startEdit.nextElementSibling.classList.add('hidden');
+          startEdit.classList.remove('hidden');
+        }
+      }
+    };
+    xhttp.open('GET', '?action=get-editor', true);
+    xhttp.send();
+  }, settings.checkOtherEditorInterval);
+}
+
+let stopEditTimer = document.getElementById('stop-edit-timer');
+if (stopEditTimer && editingTimeout) {
+  setInterval(() =>
+  {
+    if (!--editingTimeout) {
+      window.location.reload();
+    }
+    stopEditTimer.innerHTML = ' (' + ((editingTimeout >= 60) ? Math.floor(editingTimeout / 60) + 'm' : ((editingTimeout % 60) + 's')) + ')';
+  }, 1000);
+}
+
 
 function getDataPerson(t)
 {

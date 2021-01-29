@@ -88,6 +88,7 @@ define('EDITING', 'editing');
 define('ACTION', 'action');
 
 define('CURRENT_EDITOR_FILE', 'current_editor.yml');
+define('CURRENT_EDITOR_TIMEOUT', 10 * 60);
 
 define('SETTINGS_FILE', 'settings.yml');
 define('CAMERA', 'camera');
@@ -162,6 +163,9 @@ else if (isset($_POST[ACTION]) && $_POST[ACTION] === 'login') {
 }
 
 else if (isset($_GET['logout'])) {
+  if ($_SESSION[EDITING]) {
+    stopEditing();
+  }
   session_unset();
   header('Location: ' . $server_dir);
 }
@@ -264,17 +268,45 @@ function startEditing()
   fclose(fopen(CURRENT_EDITOR_FILE, 'a'));
   $f = fopen(CURRENT_EDITOR_FILE, 'r+');
   if ($f) {
-    if (flock($f, LOCK_EX | LOCK_NB)) {
-      $current_other_editor = fread($f, 1000);
-      if (!$current_other_editor) {
-        fwrite($f, $_SESSION[USER]);
-        $ret = true;
-      }
-      else if ($current_other_editor === $_SESSION[USER]) {
+    if (flock($f, LOCK_EX /*| LOCK_NB*/)) {
+      $time = time();
+      $current_user_str = $time . '|||' . $_SESSION[USER];
+      $other_editor = explode('|||', fread($f, 1000));
+      $other_editor = (count($other_editor) === 2) ? [intval($other_editor[0]), $other_editor[1]] : false;
+      if (($other_editor === false) // no other editor
+       || ($other_editor[1] === $_SESSION[USER]) // renew timeout
+       || ($time > ($other_editor[0] + CURRENT_EDITOR_TIMEOUT))) // other editor timed out
+      {
+        ftruncate($f, 0);
+        rewind($f);
+        fwrite($f, $current_user_str);
+        fflush($f);
         $ret = true;
       }
       else {
-        $_SESSION['current_other_editor'] = $current_other_editor;
+        $_SESSION['current_other_editor'] = $other_editor[1];
+      }
+      flock($f, LOCK_UN);
+    }
+    fclose($f);
+  }
+  return $ret;
+}
+
+function getEditor()
+{
+  $ret = false;
+  fclose(fopen(CURRENT_EDITOR_FILE, 'a'));
+  $f = fopen(CURRENT_EDITOR_FILE, 'r+');
+  if ($f) {
+    if (flock($f, LOCK_SH /*| LOCK_NB*/)) {
+      $time = time();
+      $other_editor = explode('|||', fread($f, 1000));
+      $other_editor = (count($other_editor) === 2) ? [intval($other_editor[0]), $other_editor[1]] : false;
+      if ($other_editor !== false) {
+        if ($time < ($other_editor[0] + CURRENT_EDITOR_TIMEOUT)) {
+          $ret = $other_editor[1];
+        }
       }
       flock($f, LOCK_UN);
     }
@@ -285,11 +317,13 @@ function startEditing()
 
 function stopEditing()
 {
+  fclose(fopen(CURRENT_EDITOR_FILE, 'a'));
   $f = fopen(CURRENT_EDITOR_FILE, 'r+');
   if ($f) {
     if (flock($f, LOCK_EX | LOCK_NB)) {
-      $current_other_editor = fread($f, 1000);
-      if ($current_other_editor === $_SESSION[USER]) {
+      $other_editor = explode('|||', fread($f, 1000));
+      $other_editor = (count($other_editor) === 2) ? [intval($other_editor[0]), $other_editor[1]] : false;
+      if ($other_editor[1] === $_SESSION[USER]) {
         ftruncate($f, 0);
       }
       flock($f, LOCK_UN);
@@ -301,7 +335,7 @@ function stopEditing()
 if (isset($_GET['start-edit'])) {
   if ($_SESSION[TYPE] !== VIEWER_) {
     if (startEditing()) {
-      $_SESSION[EDITING] = true;
+      $_SESSION[EDITING] = time();
     }
   }
   header('Location: ' . $server_dir);
@@ -313,6 +347,12 @@ else if (isset($_GET['stop-edit'])) {
   $_SESSION[EDITING] = false;
   header('Location: ' . $server_dir);
   exit;
+}
+
+else if (isset($_SESSION[EDITING])) {
+  if (time() > $_SESSION[EDITING] + CURRENT_EDITOR_TIMEOUT) {
+    unset($_SESSION[EDITING]);
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -442,6 +482,12 @@ if (isset($_GET[ACTION])) {
       header('Location: ' . $server_dir);
       exit;
     }
+
+    case 'get-editor':
+    {
+      echo getEditor();
+      exit;
+    }
   }
 
   if ($_SESSION[EDITING]) {
@@ -555,15 +601,15 @@ html_start();
   <?php } ?>
 
   <div id="account" class="box">
-    <span><?=$_SESSION[USER]?></span><!--
+    <span id="account-name"><?=$_SESSION[USER]?></span><!--
     <?php if (!$_SESSION[EDITING]) { ?>
-    --><a href="<?=$server_dir?>?start-edit"><button>Bearbeiten</button></a><!--
+    --><a href="<?=$server_dir?>?start-edit" class="button" id="start-edit">Bearbeiten</a><div class="button hidden"></div><!--
     <?php } else { ?>
-    --><a href="<?=$server_dir?>?stop-edit"><button>Fertig</button></a><!--
+    --><a href="<?=$server_dir?>?stop-edit" class="button">Fertig<span id="stop-edit-timer"></span></a><!--
     <?php } if ($_SESSION[TYPE] === ADMIN_) { ?>
-    --><a href="<?=$server_dir?>?accounts"><button>Accounts</button></a><!--
+    --><a href="<?=$server_dir?>?accounts" class="button">Accounts</a><!--
     <?php } ?>
-    --><a href="<?=$server_dir?>?logout"><button>Logout</button></a>
+    --><a href="<?=$server_dir?>?logout" class="button">Logout</a>
   </div>
 
   <?php
@@ -735,7 +781,8 @@ html_start();
   <script>
     let currentUser = '<?=$_SESSION[USER]?>';
     let currentUserIsAdmin = <?=($_SESSION[TYPE] === ADMIN_) ? 'true' : 'false'?>;
-    let currentUserIsViewer = <?=(!$_SESSION[EDITING]) ? 'true' : 'false'?>;
+    let currentUserIsViewer = <?=$_SESSION[EDITING] ? 'false' : 'true'?>;
+    let editingTimeout = <?=$_SESSION[EDITING] ? ($_SESSION[EDITING] + CURRENT_EDITOR_TIMEOUT - time()) : '0'?>;
   </script>
   <script src="utils.js"></script>
   <script src="script.js"></script>
