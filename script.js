@@ -121,18 +121,25 @@ function currentUserCanEdit()
   return !currentUserIsViewer && !logPreviewActive;
 }
 
+function durationToString(duration)
+{
+  return (duration >= 60) ? Math.floor(duration / 60) + 'm' : ((duration % 60) + 's')
+}
+
 let startEdit = document.getElementById('start-edit');
 if (startEdit) {
-  setInterval(() =>
+  let checkOtherEditor = () =>
   {
     console.log('check other editor');
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function()
     {
       if (this.readyState === 4 && this.status === 200) {
-        if (this.responseText) {
+        let otherEditor = JSON.parse(this.responseText);
+        if (otherEditor !== false) {
           startEdit.classList.add('hidden');
-          startEdit.nextElementSibling.innerHTML = '(' + this.responseText + ' bearbeitet gerade)';
+          let otherEditorTimeout = otherEditor[0] + editingTimeoutDuration - Math.floor(new Date().getTime() / 1000);
+          startEdit.nextElementSibling.innerHTML = '(' + otherEditor[1] + ' bearbeitet gerade - ' + durationToString(otherEditorTimeout) + ')';
           startEdit.nextElementSibling.classList.remove('hidden');
         }
         else {
@@ -143,18 +150,26 @@ if (startEdit) {
     };
     xhttp.open('GET', '?action=get-editor', true);
     xhttp.send();
-  }, settings.checkOtherEditorInterval);
+  };
+  setInterval(checkOtherEditor, settings.checkOtherEditorInterval);
+  checkOtherEditor();
 }
 
 let stopEditTimer = document.getElementById('stop-edit-timer');
 if (stopEditTimer && editingTimeout) {
   setInterval(() =>
   {
-    if (!--editingTimeout) {
+    let remainingDuration = editingTimeout + editingTimeoutDuration - Math.floor(new Date().getTime() / 1000);
+    if (remainingDuration <= 0) {
       window.location.reload();
     }
-    stopEditTimer.innerHTML = ' (' + ((editingTimeout >= 60) ? Math.floor(editingTimeout / 60) + 'm' : ((editingTimeout % 60) + 's')) + ')';
+    stopEditTimer.innerHTML = ' (' + durationToString(remainingDuration) + ')';
   }, 1000);
+}
+
+function restartEditingStopTimer()
+{
+  editingTimeout =  Math.floor(new Date().getTime() / 1000);
 }
 
 
@@ -340,11 +355,8 @@ function applyLoadedData(loadedData, addLogItems)
         let j = Math.min(i + 10, data.log.length);
         for (; i < j; ++i) {
           let l = data.log[i];
-          let li = addLogItem(l, false, logItemRestorable);
+          addLogItem(l, false, logItemRestorable);
           logItemRestorable = logItemRestorable && (!currentUserIsViewer && (l[2] === currentUser || currentUserIsAdmin));
-          if (l[0] === data.currentHash) {
-            li.classList.add('selected');
-          }
           if (logAddLogItem) --logAddLogItem;
         }
         if (i < data.log.length - 1) {
@@ -358,6 +370,7 @@ function applyLoadedData(loadedData, addLogItems)
     }
   }
 }
+
 let dataCache = {};
 function loadData(previewHash = null)
 {
@@ -365,9 +378,9 @@ function loadData(previewHash = null)
   activeState.dropEdges();
   s.graph.clear();
 
-  if (previewHash in dataCache) {
+  if (previewHash && previewHash in dataCache) {
     console.log('load cached data ' + previewHash);
-    applyLoadedData(dataCache[previewHash], previewHash === null);
+    applyLoadedData(dataCache[previewHash], false);
     return;
   }
 
@@ -377,8 +390,9 @@ function loadData(previewHash = null)
   {
     if (this.readyState === 4 && this.status === 200) {
       let d = JSON.parse(this.responseText);
+      let hash = previewHash ? previewHash : d.currentHash;
       applyLoadedData(d, previewHash === null);
-      dataCache[previewHash ? previewHash : data.currentHash] = d;
+      dataCache[hash] = JSON.parse(this.responseText);
     }
   };
   if (!previewHash) {
@@ -424,6 +438,8 @@ logListUL.addEventListener('mouseleave', e =>
 });
 
 let logAddLogItem = true;
+let logItemSelectedMaster = null;
+let logItemSelectedPreview = null;
 function addLogItem(l, prepend, itemRestorable)
 {
   console.log(logAddLogItem ? ['addLogItem', l, 'prepend:', prepend, 'itemRestorable:', itemRestorable] : '...');
@@ -458,6 +474,18 @@ function addLogItem(l, prepend, itemRestorable)
     else {
       logPC = '';
     }
+  }
+  if (hash === data.currentHash) {
+    if (logItemSelectedMaster) {
+      logItemSelectedMaster.classList.remove('log-item-master');
+    }
+    if (logItemSelectedPreview) {
+      logItemSelectedPreview.classList.remove('log-item-preview');
+    }
+    logItemSelectedMaster = li;
+    logItemSelectedPreview = li;
+    logItemSelectedMaster.classList.add('log-item-master');
+    logItemSelectedPreview.classList.add('log-item-preview');
   }
   li.setAttribute('data-log-pc', logPC);
   li.setAttribute('data-log-ts', logTs.join(','));
@@ -501,15 +529,13 @@ function addLogItem(l, prepend, itemRestorable)
   });
   li.addEventListener('click', e =>
   {
-    if (li.classList.contains('selected')) {
+    if (li === logItemSelectedPreview) {
       return;
     }
     console.log('log click');
-    logListUL.childNodes.forEach(li =>
-    {
-      li.classList.remove('selected');
-    });
-    li.classList.add('selected');
+    logItemSelectedPreview.classList.remove('log-item-preview');
+    logItemSelectedPreview = li;
+    logItemSelectedPreview.classList.add('log-item-preview');
     loadData(hash);
     logPreviewActive = hash !== data.currentHash;
     if (logPreviewActive) {
@@ -570,6 +596,9 @@ function moveCamera(xyz, toData, toServer, toGraph, refreshGraph)
         s.renderers[0].camera.ratio = xyz.z; },
       refreshGraph: refreshGraph
     });
+  if (toServer) {
+    restartEditingStopTimer();
+  }
 }
 
 
@@ -925,6 +954,9 @@ function addPerson(p, toData, toServer, toGraph, refreshGraph, doneCallback = nu
       refreshGraph: refreshGraph,
       doneCallback: doneCallback
     }, logAddPerson);
+  if (toServer) {
+    restartEditingStopTimer();
+  }
 }
 
 function editPerson(p, toData = true, toServer = true, toGraph = true, refreshGraph = true)
@@ -947,6 +979,9 @@ function editPerson(p, toData = true, toServer = true, toGraph = true, refreshGr
       },
       refreshGraph: refreshGraph
     });
+  if (toServer) {
+    restartEditingStopTimer();
+  }
 }
 
 function deletePerson(p_t, toData = true, toServer = true, toGraph = true, refreshGraph = true)
@@ -957,6 +992,9 @@ function deletePerson(p_t, toData = true, toServer = true, toGraph = true, refre
       toGraph: !toGraph ? null : () => s.graph.dropNode(p_t),
       refreshGraph: refreshGraph
     });
+  if (toServer) {
+    restartEditingStopTimer();
+  }
 }
 
 function movePersons(e, toData, toServer, toGraph, refreshGraph, alignNodesToGrid, log)
@@ -988,6 +1026,9 @@ function movePersons(e, toData, toServer, toGraph, refreshGraph, alignNodesToGri
       toGraph: null,
       refreshGraph: refreshGraph
     }, log);
+  if (toServer) {
+    restartEditingStopTimer();
+  }
 }
 
 function hoverPersons(e)
@@ -1185,6 +1226,9 @@ function addConnection(c, toData, toServer, toGraph, refreshGraph, doneCallback 
       refreshGraph: refreshGraph,
       doneCallback: doneCallback
     }, logAddConnection);
+  if (toServer) {
+    restartEditingStopTimer();
+  }
 }
 
 function editConnection(c, toData = true, toServer = true, toGraph = true, refreshGraph = true)
@@ -1208,6 +1252,9 @@ function editConnection(c, toData = true, toServer = true, toGraph = true, refre
       },
       refreshGraph: refreshGraph
     });
+  if (toServer) {
+    restartEditingStopTimer();
+  }
 }
 
 function deleteConnection(c_t, toData = true, toServer = true, toGraph = true, refreshGraph = true)
@@ -1218,6 +1265,9 @@ function deleteConnection(c_t, toData = true, toServer = true, toGraph = true, r
       toGraph: !toGraph ? null : () => s.graph.dropEdge(c_t),
       refreshGraph: refreshGraph
     });
+  if (toServer) {
+    restartEditingStopTimer();
+  }
 }
 
 

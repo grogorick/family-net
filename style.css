@@ -51,6 +51,10 @@ body {
   background: white;
   box-shadow: 2px 1px 5px #0006;
 }
+.box:hover {
+  z-index: 1;
+}
+
 .box.box-padding:not(.box-minimized) {
   padding: 20pt;
 }
@@ -177,7 +181,7 @@ button:hover, .button:hover {
 #help.box {
   bottom: initial;
   top: 10pt;
-  right: 40pt;
+  right: 60pt;
   white-space: nowrap;
 }
 #help.box:not(.box-minimized) {
@@ -220,6 +224,12 @@ button:hover, .button:hover {
 #help.box dd {
   margin-left: 20pt;
 }
+#help.box .help-button {
+  display: inline-block;
+  padding: 3pt 5pt;
+  margin: 0 3pt;
+  box-shadow: 1pt 1pt 3pt #00000022;
+}
 
 #log.box {
   bottom: initial;
@@ -235,30 +245,36 @@ button:hover, .button:hover {
 }
 #log.box li {
   position: relative;
+  display: block;
 }
-#log.box li.selected, #log.box li:hover {
+#log.box li.log-item-master, #log.box li.log-item-preview, #log.box li:hover {
   padding-top: calc(5pt - 1px);/* 5pt from .button */
-  border-top: 1px solid;
 }
-#log.box li.selected::before, #log.box li:hover::before {
+#log.box li.log-item-master::before, #log.box li.log-item-preview::before, #log.box li:hover::before {
   content: '\25BA';
   position: absolute;
   left: -2pt;
   top: -7pt;
 }
-#log.box li.selected {
-  border-top-color: #ccc !important;
+#log.box li.log-item-master {
+  border-top: 1px dashed #ddd;
+}
+#log.box li.log-item-preview {
+  border-top: 1px solid #bbb;
 }
 #log.box li:hover {
-  border-top-color: #000;
+  border-top: 1px solid #000 !important;
 }
-#log.box li.selected::before {
-  color: #ccc !important;
+#log.box li.log-item-master::before {
+  color: #ddd;
+}
+#log.box li.log-item-preview::before {
+  color: #bbb;
 }
 #log.box li:hover::before {
-  color: #000;
+  color: #000 !important;
 }
-#log.box li.selected:hover {
+#log.box li.log-item-master:hover, #log.box li.log-item-preview:hover {
   background: transparent;
 }
 #log.box li span {

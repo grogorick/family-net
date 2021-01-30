@@ -282,6 +282,7 @@ function startEditing()
         fwrite($f, $current_user_str);
         fflush($f);
         $ret = true;
+        $_SESSION[EDITING] = $time;
       }
       else {
         $_SESSION['current_other_editor'] = $other_editor[1];
@@ -305,7 +306,7 @@ function getEditor()
       $other_editor = (count($other_editor) === 2) ? [intval($other_editor[0]), $other_editor[1]] : false;
       if ($other_editor !== false) {
         if ($time < ($other_editor[0] + CURRENT_EDITOR_TIMEOUT)) {
-          $ret = $other_editor[1];
+          $ret = $other_editor;
         }
       }
       flock($f, LOCK_UN);
@@ -330,13 +331,12 @@ function stopEditing()
     }
     fclose($f);
   }
+  $_SESSION[EDITING] = false;
 }
 
 if (isset($_GET['start-edit'])) {
   if ($_SESSION[TYPE] !== VIEWER_) {
-    if (startEditing()) {
-      $_SESSION[EDITING] = time();
-    }
+    startEditing();
   }
   header('Location: ' . $server_dir);
   exit;
@@ -344,14 +344,13 @@ if (isset($_GET['start-edit'])) {
 
 else if (isset($_GET['stop-edit'])) {
   stopEditing();
-  $_SESSION[EDITING] = false;
   header('Location: ' . $server_dir);
   exit;
 }
 
 else if (isset($_SESSION[EDITING])) {
   if (time() > $_SESSION[EDITING] + CURRENT_EDITOR_TIMEOUT) {
-    unset($_SESSION[EDITING]);
+    stopEditing();
   }
 }
 
@@ -470,28 +469,30 @@ if (isset($_GET[ACTION])) {
       exit;
     }
 
-    case 'reset':
-    {
-      $hash = $_GET['hash'];
-      exec(CD_STORAGE_DIR . 'git log --author-date-order --format=format:\'%an\' ' . $hash . '..', $out);
-      $checkOwnCommits = function($ret, $name) { return $ret && ($name === $_SESSION[USER]); };
-      if ($_SESSION[TYPE] === ADMIN_ || array_reduce($out, $checkOwnCommits, true)) {
-        exec(CD_STORAGE_DIR . 'git tag reset-to-' . $hash . '-by-' . preg_replace('/\\s/', '_', $_SESSION[USER]) . '-at-' . $t . ';');
-        exec(CD_STORAGE_DIR . 'git reset --hard ' . $hash);
-      }
-      header('Location: ' . $server_dir);
-      exit;
-    }
-
     case 'get-editor':
     {
-      echo getEditor();
+      echo json_encode(getEditor());
       exit;
     }
   }
 
   if ($_SESSION[EDITING]) {
+    startEditing();
+
     switch ($_GET[ACTION]) {
+      case 'reset':
+      {
+        $hash = $_GET['hash'];
+        exec(CD_STORAGE_DIR . 'git log --author-date-order --format=format:\'%an\' ' . $hash . '..', $out);
+        $checkOwnCommits = function($ret, $name) { return $ret && ($name === $_SESSION[USER]); };
+        if ($_SESSION[TYPE] === ADMIN_ || array_reduce($out, $checkOwnCommits, true)) {
+          exec(CD_STORAGE_DIR . 'git tag reset-to-' . $hash . '-by-' . preg_replace('/\\s/', '_', $_SESSION[USER]) . '-at-' . $t . ';');
+          exec(CD_STORAGE_DIR . 'git reset --hard ' . $hash);
+        }
+        header('Location: ' . $server_dir);
+        exit;
+      }
+
       case 'moveCamera':
       {
         $settings[CAMERA] = $d;
@@ -596,9 +597,7 @@ html_start();
 
   <div id="modal-blocker" class="hidden"></div>
 
-  <?php if ($_SESSION[EDITING]) { ?>
   <a id="log-restore-selected-item" class="box button hidden">Das Netz auf diesen Zustand zurücksetzen</a>
-  <?php } ?>
 
   <div id="account" class="box">
     <span id="account-name"><?=$_SESSION[USER]?></span><!--
@@ -674,6 +673,13 @@ html_start();
       <?php if ($_SESSION[TYPE] !== VIEWER_) { ?>
       <h2 class="collapse-trigger collapsed">Bearbeiten</h2>
       <ul>
+        <li>Bearbeitungsmodus de-/aktivieren:
+          <ul>
+            <li>Oben links <span class="help-button">Bearbeiten</span> klicken zum aktivieren</li>
+            <li>Anschließend <span class="help-button">Fertig</span> klicken zum deaktivieren</li>
+            <li>Es kann immer nur ein Nutzer im Bearbeitungsmodus sein</li>
+          </ul>
+        </li>
         <li>Eine Person hinzufügen:
           <ul>
             <li><i>Doppelklick</i> dort, wo die Person hinzugefügt werden soll</li>
@@ -686,7 +692,7 @@ html_start();
                 </dd>
               </dl>
             </li>
-            <li><i>Hinzufügen</i> klicken</li>
+            <li><span class="help-button">Hinzufügen</span> klicken</li>
           </ul>
         </li>
         <li>Zwei Personen verbinden:
@@ -695,7 +701,7 @@ html_start();
             <li>Die erste Person anklicken</li>
             <li>Die zweite Person anklicken</li>
             <li>Daten der Verbindung im Eingabefenster (<?=$boxPos?>) eintragen</li>
-            <li><i>Verbinden</i> klicken</li>
+            <li><span class="help-button">Verbinden</span> klicken</li>
           </ul>
         </li>
         <li>Zwei Eltern und ein Kind verbinden:
@@ -704,21 +710,29 @@ html_start();
             <li>Die Verbindung zwischen den Eltern anklicken</li>
             <li>Das Kind anklicken</li>
             <li>Daten der Verbindung im Eingabefenster (<?=$boxPos?>) eintragen</li>
-            <li><i>Verbinden</i> klicken</li>
+            <li><span class="help-button">Verbinden</span> klicken</li>
           </ul>
         </li>
         <li>Eine Person entfernen:
           <ul>
             <li>(Die Person darf keine Verbindungen haben)</li>
             <li>Die Person anklicken</li>
-            <li>Im Detailfenster (<?=$boxPos?>) <i>Entfernen</i> klicken<br />oder<br /><?=$modKeys?> gedrückt halten und <i>Entf</i> tippen</li>
+            <li>Im Detailfenster (<?=$boxPos?>) <span class="help-button">Entfernen</span> klicken<br />oder<br /><?=$modKeys?> gedrückt halten und <i>Entf</i> tippen</li>
           </ul>
         </li>
         <li>Eine Verbindung entfernen:
           <ul>
             <li>(Die Verbindung darf keine Kind-Verbindungen haben)</li>
             <li>Die Verbindung anklicken</li>
-            <li>Im Detailfenster (<?=$boxPos?>) <i>Entfernen</i> klicken<br />oder<br /><?=$modKeys?> gedrückt halten und <i>Entf</i> tippen</li>
+            <li>Im Detailfenster (<?=$boxPos?>) <span class="help-button">Entfernen</span> klicken<br />oder<br /><?=$modKeys?> gedrückt halten und <i>Entf</i> tippen</li>
+          </ul>
+        </li>
+        <li>Änderungen rückgängig machen:
+          <ul>
+            <li>Oben rechts <span class="help-button">&olarr;</span> klicken</li>
+            <li>Einen früheren Zustand auswählen</li>
+            <li>Das Netz wird als Vorschau entsprechend angezeigt</li>
+            <li>Oben mittig <span class="help-button">Das Netz auf diesen Zustand zurücksetzen</span> klicken</li>
           </ul>
         </li>
       </ul>
@@ -782,7 +796,8 @@ html_start();
     let currentUser = '<?=$_SESSION[USER]?>';
     let currentUserIsAdmin = <?=($_SESSION[TYPE] === ADMIN_) ? 'true' : 'false'?>;
     let currentUserIsViewer = <?=$_SESSION[EDITING] ? 'false' : 'true'?>;
-    let editingTimeout = <?=$_SESSION[EDITING] ? ($_SESSION[EDITING] + CURRENT_EDITOR_TIMEOUT - time()) : '0'?>;
+    let editingTimeout = <?=$_SESSION[EDITING] ?: '0'?>;
+    let editingTimeoutDuration = <?=CURRENT_EDITOR_TIMEOUT?>;
   </script>
   <script src="utils.js"></script>
   <script src="script.js"></script>

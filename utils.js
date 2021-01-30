@@ -183,11 +183,11 @@ modalBlocker.addEventListener('click', e =>
 let zIndex = 1;
 function moveBoxToForeground(box)
 {
-  box.style.zIndex = (++zIndex).toString();
+  // box.style.zIndex = (++zIndex).toString();
 }
 function moveBoxToBackground(box)
 {
-  box.style.zIndex = '';
+  // box.style.zIndex = '';
 }
 
 document.querySelectorAll('.box-message').forEach(box =>
