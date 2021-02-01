@@ -170,6 +170,8 @@ button:hover, .button:hover {
 }
 #account.box #account-name {
   margin: 0 20pt;
+  padding: 5pt 20pt;
+  display: inline-block;
 }
 #account.box a {
   text-decoration: none;

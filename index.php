@@ -219,7 +219,7 @@ if ((isset($_GET['accounts']) && $_SESSION[TYPE] === ADMIN_) || !$accounts) {
     foreach ($accounts as $i => $a) {
 ?>
       <li>
-        <?=$a[USER_] . ($a[TYPE_] === ADMIN_ ? ' (Admin)' : ($a[TYPE_] === VIEWER_ ? ' (Zuschauer)' : ''))?>
+        <?=$a[USER_] . ($a[TYPE_] === ADMIN_ ? ' (Admin)' : ($a[TYPE_] === VIEWER_ ? ' (Betrachter)' : ''))?>
 <?php
       $num_admins = count(array_filter($accounts, function($a) { return $a[TYPE_] === ADMIN_; }));
       if (($accounts[$i][TYPE_] !== ADMIN_ || $num_admins > 1) && $accounts[$i][USER_] !== $_SESSION[USER]) {
@@ -249,7 +249,7 @@ if ((isset($_GET['accounts']) && $_SESSION[TYPE] === ADMIN_) || !$accounts) {
   if ($accounts) {
 ?>
         <option value="<?=NORMAL_?>" selected>Normal</option>
-        <option value="<?=VIEWER_?>">Zuschauer</option>
+        <option value="<?=VIEWER_?>">Betrachter</option>
 <?php
   }
 ?>
@@ -795,7 +795,8 @@ html_start();
   <script>
     let currentUser = '<?=$_SESSION[USER]?>';
     let currentUserIsAdmin = <?=($_SESSION[TYPE] === ADMIN_) ? 'true' : 'false'?>;
-    let currentUserIsViewer = <?=$_SESSION[EDITING] ? 'false' : 'true'?>;
+    let currentUserIsViewer = <?=($_SESSION[TYPE] === VIEWER_) ? 'true' : 'false'?>;
+    let currentUserIsEditing = <?=$_SESSION[EDITING] ? 'false' : 'true'?>;
     let editingTimeout = <?=$_SESSION[EDITING] ?: '0'?>;
     let editingTimeoutDuration = <?=CURRENT_EDITOR_TIMEOUT?>;
   </script>

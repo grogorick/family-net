@@ -97,7 +97,7 @@ let s = new sigma({
 
 let activeState = sigma.plugins.activeState(s);
 let dragListener = sigma.plugins.dragNodes(s, s.renderers[0], activeState);
-if (currentUserIsViewer) {
+if (currentUserIsEditing) {
   dragListener.disable();
 }
 
@@ -118,7 +118,7 @@ let data = {
 
 function currentUserCanEdit()
 {
-  return !currentUserIsViewer && !logPreviewActive;
+  return !currentUserIsEditing && !logPreviewActive;
 }
 
 function durationToString(duration)
@@ -128,6 +128,9 @@ function durationToString(duration)
 
 let startEdit = document.getElementById('start-edit');
 if (startEdit) {
+  if (currentUserIsViewer) {
+    startEdit.classList.add('hidden');
+  }
   let checkOtherEditor = () =>
   {
     console.log('check other editor');
@@ -137,14 +140,18 @@ if (startEdit) {
       if (this.readyState === 4 && this.status === 200) {
         let otherEditor = JSON.parse(this.responseText);
         if (otherEditor !== false) {
-          startEdit.classList.add('hidden');
+          if (!currentUserIsViewer) {
+            startEdit.classList.add('hidden');
+          }
           let otherEditorTimeout = otherEditor[0] + editingTimeoutDuration - Math.floor(new Date().getTime() / 1000);
           startEdit.nextElementSibling.innerHTML = '(' + otherEditor[1] + ' bearbeitet gerade - ' + durationToString(otherEditorTimeout) + ')';
           startEdit.nextElementSibling.classList.remove('hidden');
         }
         else {
           startEdit.nextElementSibling.classList.add('hidden');
-          startEdit.classList.remove('hidden');
+          if (!currentUserIsViewer) {
+            startEdit.classList.remove('hidden');
+          }
         }
       }
     };
@@ -348,7 +355,7 @@ function applyLoadedData(loadedData, addLogItems)
 
   if (addLogItems) {
     if (data.log.length > 0) {
-      let logItemRestorable = !currentUserIsViewer && (data.log[0][2] === currentUser || currentUserIsAdmin);
+      let logItemRestorable = !currentUserIsEditing && (data.log[0][2] === currentUser || currentUserIsAdmin);
       logAddLogItem = 3;
       let i = 0;
       let addLog = () => {
@@ -356,7 +363,7 @@ function applyLoadedData(loadedData, addLogItems)
         for (; i < j; ++i) {
           let l = data.log[i];
           addLogItem(l, false, logItemRestorable);
-          logItemRestorable = logItemRestorable && (!currentUserIsViewer && (l[2] === currentUser || currentUserIsAdmin));
+          logItemRestorable = logItemRestorable && (!currentUserIsEditing && (l[2] === currentUser || currentUserIsAdmin));
           if (logAddLogItem) --logAddLogItem;
         }
         if (i < data.log.length - 1) {
