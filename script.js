@@ -1315,17 +1315,24 @@ s.bind('coordinatesUpdated', e =>
 
 dragListener.bind('drag', e =>
 {
-  // console.log('drag');
+  // console.log(['drag', e]);
+  if (!multipleKeyPressed(e)) {
+    let oldNode = getDataPerson(e.data.node.id);
+    e.data.node.x = oldNode.x;
+    e.data.node.y = oldNode.y;
+    s.refresh();
+    return;
+  }
   if (currentUserCanEdit()) {
-    movePersons(e, false, false, false, false, false, false);// move only child nodes
+    movePersons(e, false, false, false, false, false, false); // move child nodes
   }
   skipCoordinatesUpdatedAfterDrag = true;
 });
 dragListener.bind('drop', e =>
 {
-  console.log('drop');
+  console.log(['drop', e]);
   skipClickNodeAfterDropOrCoordinatesUpdated = true;
-  if (currentUserCanEdit()) {
+  if (multipleKeyPressed(e) && currentUserCanEdit()) {
     movePersons(e, true, true, false, false, true, true);
   }
 });

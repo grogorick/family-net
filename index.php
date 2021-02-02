@@ -644,7 +644,7 @@ html_start();
     $boxPos = 'unten rechts';
     $modKeys = '<i>Shift/Strg</i>'; ?>
     <div>
-      <h2 class="collapse-trigger collapsed">Ansehen</h2>
+      <h2 class="collapse-trigger<?=($_SESSION[TYPE] !== VIEWER_) ? ' collapsed' : ''?>">Ansehen</h2>
       <ul>
         <li>Sichtbaren Ausschnitt ändern:
           <ul>
@@ -693,6 +693,12 @@ html_start();
               </dl>
             </li>
             <li><span class="help-button">Hinzufügen</span> klicken</li>
+          </ul>
+        </li>
+        <li>Eine Person verschieben:
+          <ul>
+            <li><?=$modKeys?> gedrückt halten</li>
+            <li>Auf die Person klicken und halten und ziehen</li>
           </ul>
         </li>
         <li>Zwei Personen verbinden:
