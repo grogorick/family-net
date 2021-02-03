@@ -28,21 +28,22 @@ body {
   display: none !important;
 }
 
-#graph, #modal-blocker {
+#graph, .modal-blocker {
   user-select: none;
 }
 
-#modal-blocker {
+.modal-blocker {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-}
-#modal-blocker {
-  backdrop-filter: blur(1pt);
   background: #fff1;
 }
+.backdrop-blur {
+  backdrop-filter: blur(1pt);
+}
+
 .box {
   display: block;
   position: fixed;
@@ -128,11 +129,11 @@ button, .button {
 button:hover, .button:hover {
   background: radial-gradient(circle, #fcfcfc 50%, #f9f9f9 100%) !important;
 }
-.button-line {
+.button-border {
   margin-top: 10pt;
   border-top: 1px solid #eee;
 }
-.button-line:hover {
+.button-border:hover {
   border-top: 1px solid #ddd;
 }
 
@@ -150,14 +151,17 @@ button:hover, .button:hover {
   display: none;
 }
 
-.box-message.box {
+.message.backdrop-blur {
+  background: #0001;
+}
+.message .box {
   bottom: initial;
   right: initial;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
 }
-.box-message.box button {
+.message .box button {
   float: right;
 }
 
@@ -298,4 +302,16 @@ button:hover, .button:hover {
 #connection-form-persons {
   display: block;
   margin-bottom: 10pt;
+}
+
+.tutorial-highlight {
+  display: block;
+  position: fixed;
+  box-shadow: 0 0 100pt #48f;
+  transform: translate(-50%, -50%);
+  left: 50%;
+  top: 50%;
+  width: 200pt;
+  height: 200pt;
+  border-radius: 100pt;
 }

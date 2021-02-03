@@ -76,16 +76,20 @@ function prepare_json_for_storage($arr)
 
 
 define('ACCOUNTS_FILE', 'accounts.yml');
+
 define('USER', 'user'); define('USER_', 'u');
 define('PASSWORD', 'password'); define('PASSWORD_', 'p');
+define('ANONYMOUS_USER', 'Anonym');
+
 define('TYPE', 'type'); define('TYPE_', 't');
 define('ADMIN_', 'a');
 define('NORMAL_', 'n');
 define('VIEWER_', 'v');
-define('ANONYMOUS_USER', 'Anonym');
-define('EDITING', 'editing');
+
+define('FIRST_LOGIN_', 'f');
 
 define('ACTION', 'action');
+define('EDITING', 'editing');
 
 define('CURRENT_EDITOR_FILE', 'current_editor.yml');
 define('CURRENT_EDITOR_TIMEOUT', 10 * 60);
@@ -100,7 +104,7 @@ define('CONNECTIONS', 'connections');
 
 define('CD_STORAGE_DIR', 'cd ' . STORAGE_DIR . '; ');
 
-$accounts = [];
+$accounts = []; $firstLogin = false;
 $settings = [ CAMERA => [ 'x' => 0, 'y' => 0, 'z' => 1] ];
 $data = [ PERSONS => [], CONNECTIONS => [] ];
 
@@ -152,11 +156,16 @@ if (!$accounts) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 else if (isset($_POST[ACTION]) && $_POST[ACTION] === 'login') {
-  foreach ($accounts as $a) {
+  foreach ($accounts as &$a) {
     if ($a[USER_] === $_POST[USER] && password_verify($_POST[PASSWORD], $a[PASSWORD_])) {
       $_SESSION[USER] = $a[USER_];
       $_SESSION[TYPE] = $a[TYPE_];
       $_SESSION[EDITING] = false;
+      if (array_key_exists(FIRST_LOGIN_, $a)) {
+        unset($a[FIRST_LOGIN_]);
+        save_accounts();
+        $firstLogin = true;
+      }
       break;
     }
   }
@@ -191,7 +200,8 @@ if ((isset($_GET['accounts']) && $_SESSION[TYPE] === ADMIN_) || !$accounts) {
         $accounts[] = [
           USER_ => trim($_POST[USER]),
           PASSWORD_ => password_hash($_POST[PASSWORD], PASSWORD_BCRYPT),
-          TYPE_ => $_POST[TYPE]];
+          TYPE_ => $_POST[TYPE],
+          FIRST_LOGIN_ => true];
         save_accounts();
         init();
       }
@@ -283,9 +293,6 @@ function startEditing()
         fflush($f);
         $ret = true;
         $_SESSION[EDITING] = $time;
-      }
-      else {
-        $_SESSION['current_other_editor'] = $other_editor[1];
       }
       flock($f, LOCK_UN);
     }
@@ -595,7 +602,7 @@ html_start();
 <body>
   <div id="graph"></div>
 
-  <div id="modal-blocker" class="hidden"></div>
+  <div id="modal-blocker-graph" class="modal-blocker backdrop-blur hidden"></div>
 
   <a id="log-restore-selected-item" class="box button hidden">Das Netz auf diesen Zustand zurücksetzen</a>
 
@@ -608,22 +615,8 @@ html_start();
     <?php } if ($_SESSION[TYPE] === ADMIN_) { ?>
     --><a href="<?=$server_dir?>?accounts" class="button">Accounts</a><!--
     <?php } ?>
-    --><a href="<?=$server_dir?>?logout" class="button">Logout</a>
+    --><a href="<?=$server_dir?>?logout" class="button">Abmelden</a>
   </div>
-
-  <?php
-  if (isset($_SESSION['current_other_editor'])) {
-    ?>
-    <div class="box box-padding box-message">
-      <?=$_SESSION['current_other_editor']?> bearbeitet das Netz im Moment.<br />
-      Versuche es später noch einmal.
-      <br />
-      <button class="button-line">OK</button>
-    </div>
-    <?php
-    unset($_SESSION['current_other_editor']);
-  }
-  ?>
 
   <div id="log" class="box box-padding box-minimized">
     <div class="box-minimize-buttons">
@@ -766,10 +759,10 @@ html_start();
       <label for="person-form-note">Notiz: </label>
       <textarea id="person-form-note" rows="3" <?=(!$_SESSION[EDITING] ? 'disabled' : '')?>></textarea>
     </div>
-    <button id="person-form-add" class="button-line opt opt-new">Hinzufügen</button>
-    <button id="person-form-edit" class="button-line opt opt-edit">Speichern</button>
-    <button id="person-form-delete" class="button-line opt opt-edit">Entfernen</button>
-    <button id="person-form-cancel" class="button-line">Abbrechen</button>
+    <button id="person-form-add" class="button-border opt opt-new">Hinzufügen</button>
+    <button id="person-form-edit" class="button-border opt opt-edit">Speichern</button>
+    <button id="person-form-delete" class="button-border opt opt-edit">Entfernen</button>
+    <button id="person-form-cancel" class="button-border">Abbrechen</button>
   </div>
 
   <div id="connection-form" class="box box-padding hidden">
@@ -791,11 +784,18 @@ html_start();
       <label for="connection-form-desc">Info: </label>
       <textarea id="connection-form-desc" rows="3" <?=(!$_SESSION[EDITING] ? 'disabled' : '')?>></textarea>
     </div>
-    <button id="connection-form-add" class="button-line opt opt-new">Verbinden</button>
-    <button id="connection-form-add-child" class="button-line opt opt-new-child">Verbinden</button>
-    <button id="connection-form-edit" class="button-line opt opt-edit">Speichern</button>
-    <button id="connection-form-delete" class="button-line opt opt-edit">Entfernen</button>
-    <button id="connection-form-cancel" class="button-line">Abbrechen</button>
+    <button id="connection-form-add" class="button-border opt opt-new">Verbinden</button>
+    <button id="connection-form-add-child" class="button-border opt opt-new-child">Verbinden</button>
+    <button id="connection-form-edit" class="button-border opt opt-edit">Speichern</button>
+    <button id="connection-form-delete" class="button-border opt opt-edit">Entfernen</button>
+    <button id="connection-form-cancel" class="button-border">Abbrechen</button>
+  </div>
+
+  <div id="message-template" class="modal-blocker backdrop-blur message hidden">
+    <div class="box box-padding">
+      <div class="message-content"></div>
+      <button class="button-border">OK</button>
+    </div>
   </div>
 
   <script>
@@ -805,8 +805,10 @@ html_start();
     let currentUserIsEditing = <?=$_SESSION[EDITING] ? 'false' : 'true'?>;
     let editingTimeout = <?=$_SESSION[EDITING] ?: '0'?>;
     let editingTimeoutDuration = <?=CURRENT_EDITOR_TIMEOUT?>;
+    let firstLogin = <?=$firstLogin ? 'true' : 'false'?>;
   </script>
   <script src="utils.js"></script>
   <script src="script.js"></script>
+  <script src="tutorial.js"></script>
 </body>
 </html>

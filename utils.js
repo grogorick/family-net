@@ -136,9 +136,9 @@ function toServerDataGraph(action, d, cb = { toServer: null, toData: null, toGra
   }
 }
 
-let modalBlocker = document.getElementById('modal-blocker');
+let modalBlocker = document.getElementById('modal-blocker-graph');
 let boxWithModalBlocker = null;
-function showForm(f, opt = null)
+function showForm(f, opt = null, autofocus = true)
 {
   modalBlocker.classList.remove('hidden');
   boxWithModalBlocker = f;
@@ -150,16 +150,17 @@ function showForm(f, opt = null)
     f.classList.add(opt);
   }
 
-  moveBoxToForeground(f);
   f.classList.remove('hidden');
 
-  let firstInput = f.querySelector('input:not([disabled]), textarea:not([disabled])');
-  if (firstInput) {
-    console.log(firstInput);
-    firstInput.focus();
-  }
-  else {
-    let cancelButton = f.querySelector('button[id$="cancel"]').focus();
+  if (autofocus) {
+    let firstInput = f.querySelector('input:not([disabled]), textarea:not([disabled])');
+    if (firstInput) {
+      console.log(firstInput);
+      firstInput.focus();
+    }
+    else {
+      let cancelButton = f.querySelector('button[id$="cancel"]').focus();
+    }
   }
 }
 function hideForm(f)
@@ -167,7 +168,6 @@ function hideForm(f)
   f.classList.add('hidden');
   modalBlocker.classList.add('hidden');
 }
-
 modalBlocker.addEventListener('click', e =>
 {
   let cancelButton = document.querySelector('.box:not(.hidden) button[id$="cancel"]');
@@ -180,14 +180,22 @@ modalBlocker.addEventListener('click', e =>
   }
 });
 
-let zIndex = 1;
-function moveBoxToForeground(box)
+function showMessage(msg, addDefaultButtonCloseAction = true)
 {
-  // box.style.zIndex = (++zIndex).toString();
-}
-function moveBoxToBackground(box)
-{
-  // box.style.zIndex = '';
+  let template = document.getElementById('message-template');
+  let m = {};
+  m.modalBlocker = template.cloneNode(true);
+  m.modalBlocker.id = '';
+  document.body.appendChild(m.modalBlocker);
+  m.content = m.modalBlocker.querySelector('.message-content');
+  m.content.innerHTML = msg;
+  m.button = m.modalBlocker.querySelector('button');
+  m.defaultButtonClickFn = e => { m.modalBlocker.parentElement.removeChild(m.modalBlocker); };
+  if (addDefaultButtonCloseAction) {
+    m.button.addEventListener('click', m.defaultButtonClickFn);
+  }
+  m.modalBlocker.classList.remove('hidden');
+  return m;
 }
 
 document.querySelectorAll('.box-message').forEach(box =>
@@ -201,12 +209,7 @@ document.querySelectorAll('.box-minimize, .box-restore').forEach(el =>
   el.addEventListener('click', e =>
   {
     let box = el.parentNode.parentNode;
-    if (box.classList.toggle('box-minimized')) {
-      moveBoxToBackground(box);
-    }
-    else {
-      moveBoxToForeground(box);
-    }
+    box.classList.toggle('box-minimized');
   });
 });
 
