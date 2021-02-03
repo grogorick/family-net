@@ -3,7 +3,7 @@ let tutorialStep = null;
 let tutorialSteps = [
   { m: '<p>Hallo!</p>Das scheint dein erster Besuch zu sein.<br />Wir starten mit einer kurzen Einführung, bevor du loslegen kannst.',
     after: () => tutorialWindow.modalBlocker.classList.remove('backdrop-blur') },
-  { m: 'Das Netz besteht aus Personen (<div style="display:inline-block; width:10pt; height:10pt; border-radius:5pt; background:' + settings.nodeColor + '"></div>), und Verbindungen zwischen Personen.<br />Es wird auf der gesamten Seite (dem weißen Hintergrund) angezeigt.' } ];
+  { m: 'Das Netz besteht aus Personen (<div class="tutorial-person"></div>), und Verbindungen (<div class="tutorial-connection"></div>) zwischen Personen.<br />Diese werden auf der gesamten Seite (dem weißen Hintergrund) angezeigt.' } ];
 if (!currentUserIsViewer) {
   tutorialSteps = tutorialSteps.concat([
   { m: 'Durch Doppelklicken kannst du neue Personen erstellen.<br />Mit einem einfachen Klick kannst du diese bearbeiten und verschieben.' } ]);

@@ -315,3 +315,45 @@ button:hover, .button:hover {
   height: 200pt;
   border-radius: 100pt;
 }
+
+.tutorial-person {
+  display: inline-block;
+  width:10pt;
+  height:10pt;
+  border-radius:5pt;
+  background: #78D384;
+}
+.tutorial-person.t-p-highlight {
+  background: #3BAA49 !important;
+}
+.tutorial-person.t-p-warning {
+  background: #D0D480 !important;
+}
+.tutorial-connection {
+  display: inline-block;
+  width: 20pt;
+  height: 3pt;
+  border-top: 2px solid #DDD;
+}
+.tutorial-connection.t-c-highlight {
+  border-top-color: #000 !important;
+}
+.tutorial-connection.t-c-warning {
+  border-top-color: #E6AD92 !important;
+}
+.tutorial-connection.t-c-arrow::after {
+	content: '\1F892';
+	display: inline-block;
+	float: right;
+	font-size: 150%;
+	line-height: 0;
+	color: #DDD;
+	margin-right: -1px;
+}
+.tutorial-connection.t-c-dashed {
+  border-top-style: dashed;
+}
+.tutorial-connection.t-c-dotted {
+  border-top-style: dotted;
+}
+

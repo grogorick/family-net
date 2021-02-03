@@ -639,6 +639,28 @@ html_start();
     <div>
       <h2 class="collapse-trigger<?=($_SESSION[TYPE] !== VIEWER_) ? ' collapsed' : ''?>">Ansehen</h2>
       <ul>
+        <li>Elemente des Netzes:
+          <ul>
+            <li>Personen
+              <dl>
+                <dd><div class="tutorial-person"></div> Normal</dd>
+                <dd><div class="tutorial-person t-p-highlight"></div> Ausgewählt</dd>
+                <dd><div class="tutorial-person t-p-warning"></div> Warnung (wenn die Details '???' enthalten)</dd>
+              </dl>
+            </li>
+            <li>Verbindungen
+              <dl>
+                <dd><div class="tutorial-connection t-c-arrow"></div> Eltern&mdash;Kind</dd>
+                <dd><div class="tutorial-connection t-c-dashed"></div> Verheiratet</dd>
+                <dd><div class="tutorial-connection t-c-dotted"></div> Geschieden/verwitwet</dd>
+                <br />
+                <dd><div class="tutorial-connection"></div> Normal</dd>
+                <dd><div class="tutorial-connection t-c-highlight"></div> Ausgewählt</dd>
+                <dd><div class="tutorial-connection t-c-warning"></div> Warnung (wenn die Details '???' enthalten)</dd>
+              </dl>
+            </li>
+          </ul>
+        </li>
         <li>Sichtbaren Ausschnitt ändern:
           <ul>
             <li>Auf dem Hintergrund klicken und halten und ziehen</li>
