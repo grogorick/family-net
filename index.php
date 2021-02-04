@@ -76,6 +76,7 @@ function prepare_json_for_storage($arr)
 
 
 define('ACCOUNTS_FILE', 'accounts.yml');
+define('LOGINS_FILE', 'logins.txt');
 
 define('USER', 'user'); define('USER_', 'u');
 define('PASSWORD', 'password'); define('PASSWORD_', 'p');
@@ -166,6 +167,7 @@ else if (isset($_POST[ACTION]) && $_POST[ACTION] === 'login') {
         save_accounts();
         $firstLogin = true;
       }
+      file_put_contents(LOGINS_FILE, date(DATE_RFC822) . ' | ' . $a[USER_] . PHP_EOL, FILE_APPEND | LOCK_EX);
       break;
     }
   }
