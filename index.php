@@ -247,52 +247,58 @@ if ((isset($_GET['accounts']) && $_SESSION[TYPE] === ADMIN_) || !$accounts) {
 			echo '<i>' . $admin_msg . '</i>';
 		}
 ?>
-    <ul>
+    <table style="border: none">
 <?php
     foreach ($accounts as $i => $a) {
 ?>
-      <li>
-        <?=$a[USER_]?>
+      <tr>
+        <td><?=$a[USER_]?></td>
+        <td>
 <?php
       $num_admins = count(array_filter($accounts, function($a) { return $a[TYPE_] === ADMIN_; }));
 			$editable = ($accounts[$i][TYPE_] !== ADMIN_ || $num_admins > 1) && $accounts[$i][USER_] !== $_SESSION[USER];
       if ($editable) {
 ?>
-        <form method="POST">
-          <input type="hidden" name="<?=ACTION?>" value="edit-type" />
-          <input type="hidden" name="<?=USER?>" value="<?=$i?>" />
-          <select name="<?=TYPE?>" onchange="this.form.submit()">
-          <option value="<?=ADMIN_?>" <?=$a[TYPE_] === ADMIN_ ? 'selected' : ''?>><?=ADMIN__?></option>
-            <option value="<?=NORMAL_?>" <?=$a[TYPE_] === NORMAL_ ? 'selected' : ''?>><?=NORMAL__?></option>
-            <option value="<?=VIEWER_?>" <?=$a[TYPE_] === VIEWER_ ? 'selected' : ''?>><?=VIEWER__?></option>
-          </select>
-        </form>
+          <form method="POST">
+            <input type="hidden" name="<?=ACTION?>" value="edit-type" />
+            <input type="hidden" name="<?=USER?>" value="<?=$i?>" />
+            <select name="<?=TYPE?>" onchange="this.form.submit()">
+            <option value="<?=ADMIN_?>" <?=$a[TYPE_] === ADMIN_ ? 'selected' : ''?>><?=ADMIN__?></option>
+              <option value="<?=NORMAL_?>" <?=$a[TYPE_] === NORMAL_ ? 'selected' : ''?>><?=NORMAL__?></option>
+              <option value="<?=VIEWER_?>" <?=$a[TYPE_] === VIEWER_ ? 'selected' : ''?>><?=VIEWER__?></option>
+            </select>
+          </form>
 <?php
       }
 			else {
 				echo ' (' . ADMIN__ . ')';
 			}
 ?>
-        <form method="POST">
-          <input type="hidden" name="<?=ACTION?>" value="edit-password" />
-          <input type="hidden" name="<?=USER?>" value="<?=$i?>" />
-      		<input type="text" name="<?=PASSWORD?>" placeholder="Neues Passwort" autocomplete="off" />
-          <input type="submit" style="display: none" />
-        </form>
+        </td>
+        <td>
+          <form method="POST">
+            <input type="hidden" name="<?=ACTION?>" value="edit-password" />
+            <input type="hidden" name="<?=USER?>" value="<?=$i?>" />
+            <input type="text" name="<?=PASSWORD?>" placeholder="Neues Passwort" autocomplete="off" />
+            <input type="submit" style="display: none" />
+          </form>
+        </td>
+        <td>
 <?php
 			if ($editable) {
 ?>
-        <form method="POST">
-          <input type="hidden" name="<?=ACTION?>" value="delete" />
-          <input type="hidden" name="<?=USER?>" value="<?=$i?>" />
-          <input type="submit" value="X" title="Löschen" onclick="return confirm('Sicher?')" />
-        </form>
-      </li>
+          <form method="POST">
+            <input type="hidden" name="<?=ACTION?>" value="delete" />
+            <input type="hidden" name="<?=USER?>" value="<?=$i?>" />
+            <input type="submit" value="X" title="Löschen" onclick="return confirm('Sicher?')" />
+          </form>
+        </td>
+      </tr>
 <?php
       }
     }
 ?>
-    </ul>
+    </table>
 <?php
   }
 ?>
