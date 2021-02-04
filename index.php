@@ -82,9 +82,9 @@ define('PASSWORD', 'password'); define('PASSWORD_', 'p');
 define('ANONYMOUS_USER', 'Anonym');
 
 define('TYPE', 'type'); define('TYPE_', 't');
-define('ADMIN_', 'a');
-define('NORMAL_', 'n');
-define('VIEWER_', 'v');
+define('ADMIN_', 'a'); define('ADMIN__', 'Admin');
+define('NORMAL_', 'n'); define('NORMAL__', 'Normal');
+define('VIEWER_', 'v'); define('VIEWER__', 'Betrachter');
 
 define('FIRST_LOGIN_', 'f');
 
@@ -193,6 +193,8 @@ if (!isset($_SESSION[USER])) {
   exit;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
 if ((isset($_GET['accounts']) && $_SESSION[TYPE] === ADMIN_) || !$accounts) {
   if (isset($_POST[ACTION])) {
     switch ($_POST[ACTION]) {
@@ -204,12 +206,28 @@ if ((isset($_GET['accounts']) && $_SESSION[TYPE] === ADMIN_) || !$accounts) {
           FIRST_LOGIN_ => true];
         save_accounts();
         init();
+				$admin_msg = 'Neuer Account erstellt.';
+      }
+      break;
+      case 'edit-type': {
+        $i = $_POST[USER];
+				$accounts[$i][TYPE_] = $_POST[TYPE];
+				save_accounts();
+				$admin_msg = 'Accounttyp geändert.';
+      }
+			break;
+      case 'edit-password': {
+        $i = $_POST[USER];
+				$accounts[$i][PASSWORD_] = password_hash($_POST[PASSWORD], PASSWORD_BCRYPT);
+				save_accounts();
+				$admin_msg = 'Passwort geändert.';
       }
       break;
       case 'delete': {
         $i = $_POST[USER];
         array_splice($accounts, $i, 1);
         save_accounts();
+				$admin_msg = 'Account gelöscht.';
       }
       break;
     }
@@ -224,20 +242,50 @@ if ((isset($_GET['accounts']) && $_SESSION[TYPE] === ADMIN_) || !$accounts) {
 ?>
     <a href="<?=$server_dir?>" style="float: right;" title="Zurück zum Netz">X</a>
     <hr style="clear: both;" />
+<?php
+		if (isset($admin_msg)) {
+			echo '<i>' . $admin_msg . '</i>';
+		}
+?>
     <ul>
 <?php
     foreach ($accounts as $i => $a) {
 ?>
       <li>
-        <?=$a[USER_] . ($a[TYPE_] === ADMIN_ ? ' (Admin)' : ($a[TYPE_] === VIEWER_ ? ' (Betrachter)' : ''))?>
+        <?=$a[USER_]?>
 <?php
       $num_admins = count(array_filter($accounts, function($a) { return $a[TYPE_] === ADMIN_; }));
-      if (($accounts[$i][TYPE_] !== ADMIN_ || $num_admins > 1) && $accounts[$i][USER_] !== $_SESSION[USER]) {
+			$editable = ($accounts[$i][TYPE_] !== ADMIN_ || $num_admins > 1) && $accounts[$i][USER_] !== $_SESSION[USER];
+      if ($editable) {
+?>
+        <form method="POST">
+          <input type="hidden" name="<?=ACTION?>" value="edit-type" />
+          <input type="hidden" name="<?=USER?>" value="<?=$i?>" />
+          <select name="<?=TYPE?>" onchange="this.form.submit()">
+          <option value="<?=ADMIN_?>" <?=$a[TYPE_] === ADMIN_ ? 'selected' : ''?>><?=ADMIN__?></option>
+            <option value="<?=NORMAL_?>" <?=$a[TYPE_] === NORMAL_ ? 'selected' : ''?>><?=NORMAL__?></option>
+            <option value="<?=VIEWER_?>" <?=$a[TYPE_] === VIEWER_ ? 'selected' : ''?>><?=VIEWER__?></option>
+          </select>
+        </form>
+<?php
+      }
+			else {
+				echo ' (' . ADMIN__ . ')';
+			}
+?>
+        <form method="POST">
+          <input type="hidden" name="<?=ACTION?>" value="edit-password" />
+          <input type="hidden" name="<?=USER?>" value="<?=$i?>" />
+      		<input type="text" name="<?=PASSWORD?>" placeholder="Neues Passwort" autocomplete="off" />
+          <input type="submit" style="display: none" />
+        </form>
+<?php
+			if ($editable) {
 ?>
         <form method="POST">
           <input type="hidden" name="<?=ACTION?>" value="delete" />
           <input type="hidden" name="<?=USER?>" value="<?=$i?>" />
-          <input type="submit" value="X" />
+          <input type="submit" value="X" title="Löschen" onclick="return confirm('Sicher?')" />
         </form>
       </li>
 <?php
@@ -254,12 +302,12 @@ if ((isset($_GET['accounts']) && $_SESSION[TYPE] === ADMIN_) || !$accounts) {
       <input type="text" name="<?=USER?>" placeholder="Name" autocomplete="off" autofocus />
       <input type="text" name="<?=PASSWORD?>" placeholder="Passwort" autocomplete="off" />
       <select name="<?=TYPE?>">
-        <option value="<?=ADMIN_?>">Admin</option>
+        <option value="<?=ADMIN_?>"><?=ADMIN__?></option>
 <?php
   if ($accounts) {
 ?>
-        <option value="<?=NORMAL_?>" selected>Normal</option>
-        <option value="<?=VIEWER_?>">Betrachter</option>
+        <option value="<?=NORMAL_?>" selected><?=NORMAL__?></option>
+        <option value="<?=VIEWER_?>"><?=VIEWER__?></option>
 <?php
   }
 ?>
