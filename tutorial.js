@@ -1,43 +1,53 @@
 let tutorialWindow = null;
-let tutorialStep = null;
+let tutorialStepIdx = 0;
 let tutorialSteps = [
-  { m: '<p>Hallo!</p>Das scheint dein erster Besuch zu sein.<br />Wir starten mit einer kurzen Einführung, bevor du loslegen kannst.',
-    after: () => tutorialWindow.modalBlocker.classList.remove('backdrop-blur') },
-  { m: 'Das Netz besteht aus Personen (<div class="tutorial-person"></div>), und Verbindungen (<div class="tutorial-connection"></div>) zwischen Personen.<br />Diese werden auf der gesamten Seite (dem weißen Hintergrund) angezeigt.' } ];
-if (!currentUserIsViewer) {
-  tutorialSteps = tutorialSteps.concat([
-  { m: 'Durch Doppelklicken kannst du neue Personen erstellen.<br />Mit einem einfachen Klick kannst du diese bearbeiten und verschieben.' } ]);
-}
+  { m: 'Hallo!<p>Das scheint dein erster Besuch zu sein.<br />Wir starten mit einer kurzen Einführung, bevor du loslegen kannst.</p>' },
+  { m: 'Das Netz besteht aus Personen (<div class="tutorial-person"></div>), und Verbindungen (<div class="tutorial-connection"></div>) zwischen Personen.<p>Diese können sich auf der gesamten Seite (dem weißen Hintergrund) und darüber hinaus befinden.</p>',
+    before: () => tutorialWindow.modalBlocker.classList.remove('backdrop-blur') } ];
+if (!currentUserIsViewer) { tutorialSteps = tutorialSteps.concat([
+  { m: 'Durch Doppelklicken auf den Hintergrund kannst du neue Personen erstellen.<br />Mit einem einfachen Klick kannst du diese bearbeiten und verschieben.' } ]); }
 tutorialSteps = tutorialSteps.concat([
-  { s: 420, el: '#person-form', m: 'Details einer Person ' + (currentUserIsViewer ? 'findest' : 'eintragen,<br />bzw. einer existierenden Person ändern,<br />kannst') + ' du hier unten rechts.',
+  { m: 'Details einer Person ' + (currentUserIsViewer ? 'findest' : 'eintragen,<br />bzw. einer existierenden Person ändern,<br />kannst') + ' du hier unten rechts.',
+    s: 420, el: '#person-form',
     before: (s) => { showForm(personMenuForm, 'opt-edit', false); },
     after: () => { hideForm(personMenuForm); } },
-  { s: 400, el: '#connection-form', m: 'Die Details für Verbindungen zwischen den Personen<br />findest du ebenfalls dort.',
+  { m: 'Die Details für Verbindungen zwischen den Personen<br />findest du ebenfalls dort.',
+    s: 400, el: '#connection-form',
     before: (s) => { showForm(connectionMenuForm, 'opt-edit', false); },
     after: () => { hideForm(connectionMenuForm); } } ]);
-if (!currentUserIsViewer) {
-  tutorialSteps = tutorialSteps.concat([
-  { s: 80, el: '#start-edit', m: 'Bevor du das Netz ändern kannst, musst du den Bearbeitungsmodus starten.' },
-  { s: 80, el: '#start-edit', m: 'Und anschließend wieder beenden, wenn du fertig bist.',
+if (!currentUserIsViewer) { tutorialSteps = tutorialSteps.concat([
+  { m: 'Bevor du das Netz ändern kannst, musst du den Bearbeitungsmodus starten.<br />Das geht nur, wenn gerade kein anderer das Netz bearbeitet.',
+    s: 80, el: '#start-edit' },
+  { m: 'Vergiss nicht den Bearbeitungsmodus zu beenden, wenn du fertig bist.',
+    s: 80, el: '#start-edit',
     before: (s) => { document.querySelector(s.el).innerHTML = 'Fertig'; },
-    after: (s) => { document.querySelector(s.el).innerHTML = 'Bearbeiten'; } } ]);
-}
+    after: (s) => { document.querySelector(s.el).innerHTML = 'Bearbeiten'; } } ]); }
 tutorialSteps = tutorialSteps.concat([
-  { s: 80, el: '#log', m: 'Oben rechts findest du den Verlauf aller Änderungen am Netz.' + (currentUserIsViewer ? '' : '<br />Hier kannst du deine Änderungen rückgängig machen,<br />solange nach dir kein anderer das Netz geändert hat.') },
-  { s: 80, el: '#help', m: 'Gleich daneben findest du jederzeit eine Anleitung<br />mit weiteren Details zu allen wichtigen Funktionen.' },
-  { s: 150, el: '#account a:last-child', m: 'Wenn du fertig bist, halte den Mauscursor über deinen Namen,<br />um die Abmelden-Schaltfläche anzuzeigen.',
+  { m: 'Oben rechts findest du den Verlauf aller Änderungen am Netz.' + (currentUserIsViewer ? '' : '<p>Deine eigenen Änderungen kannst du hier rückgängig machen,<br />solange nach dir kein anderer das Netz geändert hat.</p>'),
+    s: 80, el: '#log' },
+  { m: 'Gleich daneben findest du jederzeit eine Anleitung<br />mit weiteren Details zu allen wichtigen Funktionen.<p>Dort kannst du auch diese Anleitung noch einmal starten.</p>',
+    s: 80, el: '#help' },
+  { m: 'Wenn du fertig bist, halte den Mauscursor über deinen Namen,<br />um die Abmelden-Schaltfläche anzuzeigen.',
+    s: 150, el: '#account a:last-child',
     before: (s) => { document.querySelector(s.el).style.display = 'inline-block'; },
     after: (s) => { document.querySelector(s.el).style.display = ''; } },
   { m: 'Das war\'s auch schon. Viel Spaß.' }
 ]);
 
+document.getElementById('restart-tutorial').addEventListener('click', e =>
+{
+  document.getElementById('help').classList.toggle('box-minimized');
+  tutorialStepIdx = 1;
+  showTutorial();
+});
 if (firstLogin) {
   showTutorial();
 }
 
 function showTutorial()
 {
-  tutorialStep = tutorialSteps.shift();
+  let tutorialStep = tutorialSteps[tutorialStepIdx];
+  tutorialStepIdx = (tutorialStepIdx + 1) % tutorialSteps.length;
   if (tutorialWindow === null) {
     tutorialWindow = showMessage(tutorialStep.m, false);
   }
@@ -57,7 +67,7 @@ function showTutorial()
     if ('after' in tutorialStep) {
       tutorialStep.after(tutorialStep);
     }
-    if (tutorialSteps.length === 0) {
+    if (tutorialStepIdx === 0) {
       tutorialWindow.defaultButtonClickFn(null);
       tutorialWindow = null;
       tutorialStep = null;

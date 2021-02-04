@@ -685,6 +685,7 @@ html_start();
     $boxPos = 'unten rechts';
     $modKeys = '<i>Shift/Strg</i>'; ?>
     <div>
+      <button id="restart-tutorial">(Die Anleitung noch einmal ansehen)</button>
       <h2 class="collapse-trigger<?=($_SESSION[TYPE] !== VIEWER_) ? ' collapsed' : ''?>">Ansehen</h2>
       <ul>
         <li>Elemente des Netzes:

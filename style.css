@@ -307,7 +307,7 @@ button:hover, .button:hover {
 .tutorial-highlight {
   display: block;
   position: fixed;
-  box-shadow: 0 0 100pt #48f;
+  box-shadow: 0 0 100pt #61B1B5;
   transform: translate(-50%, -50%);
   left: 50%;
   top: 50%;
@@ -357,3 +357,8 @@ button:hover, .button:hover {
   border-top-style: dotted;
 }
 
+#restart-tutorial {
+  background: white !important;
+  padding-left: 0;
+  cursor: pointer;
+}
