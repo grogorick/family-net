@@ -821,7 +821,7 @@ html_start();
     <h2 class="opt opt-edit"><?=($_SESSION[EDITING] ? 'Person bearbeiten' : 'Personendetails')?></h2>
     <div class="box-row">
       <label for="person-form-name">Name: </label>
-      <input id="person-form-name" type="text" placeholder="Vorname(n), Nachname(n)" <?=($_SESSION[EDITING] ? '' : 'disabled')?> />
+      <input id="person-form-name" type="text" autocomplete="off" placeholder="Vorname(n), Nachname(n)" <?=($_SESSION[EDITING] ? '' : 'disabled')?> />
     </div><div class="box-row">
       <label for="person-form-birth-day">Geburtstag: </label>
       <input id="person-form-birth-day" type="text" autocomplete="off" placeholder="tt" <?=($_SESSION[EDITING] ? '' : 'disabled')?> />
@@ -848,7 +848,7 @@ html_start();
     <i id="connection-form-persons" class="opt opt-edit"></i>
     <div class="box-row">
       <label for="connection-form-relation">Art: </label>
-      <input id="connection-form-relation" list="connection-form-relation-suggestions" <?=($_SESSION[EDITING] ? '' : 'disabled')?>>
+      <input id="connection-form-relation" list="connection-form-relation-suggestions" autocomplete="off" <?=($_SESSION[EDITING] ? '' : 'disabled')?>>
       <datalist id="connection-form-relation-suggestions">
         <option value="Kind">
         <option value="adoptiert">
