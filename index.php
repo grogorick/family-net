@@ -763,37 +763,37 @@ html_start();
 
   <div id="person-form" class="box box-padding hidden">
     <h2 class="opt opt-new">Neue Person</h2>
-    <h2 class="opt opt-edit">Person bearbeiten</h2>
+    <h2 class="opt opt-edit"><?=($_SESSION[EDITING] ? 'Person bearbeiten' : 'Personendetails')?></h2>
     <div class="box-row">
       <label for="person-form-name">Name: </label>
-      <input id="person-form-name" type="text" placeholder="Vorname(n), Nachname(n)" <?=(!$_SESSION[EDITING] ? 'disabled' : '')?> />
+      <input id="person-form-name" type="text" placeholder="Vorname(n), Nachname(n)" <?=($_SESSION[EDITING] ? '' : 'disabled')?> />
     </div><div class="box-row">
       <label for="person-form-birth-day">Geburtstag: </label>
-      <input id="person-form-birth-day" type="text" autocomplete="off" placeholder="tt" <?=(!$_SESSION[EDITING] ? 'disabled' : '')?> />
-      <input id="person-form-birth-month" type="text" autocomplete="off" placeholder="mm" <?=(!$_SESSION[EDITING] ? 'disabled' : '')?> />
-      <input id="person-form-birth-year" type="text" autocomplete="off" placeholder="yyyy" <?=(!$_SESSION[EDITING] ? 'disabled' : '')?> />
+      <input id="person-form-birth-day" type="text" autocomplete="off" placeholder="tt" <?=($_SESSION[EDITING] ? '' : 'disabled')?> />
+      <input id="person-form-birth-month" type="text" autocomplete="off" placeholder="mm" <?=($_SESSION[EDITING] ? '' : 'disabled')?> />
+      <input id="person-form-birth-year" type="text" autocomplete="off" placeholder="yyyy" <?=($_SESSION[EDITING] ? '' : 'disabled')?> />
     </div><div class="box-row">
       <label for="person-form-death-day">Todestag: </label>
-      <input id="person-form-death-day" type="text" autocomplete="off" placeholder="tt" <?=(!$_SESSION[EDITING] ? 'disabled' : '')?> />
-      <input id="person-form-death-month" type="text" autocomplete="off" placeholder="mm" <?=(!$_SESSION[EDITING] ? 'disabled' : '')?> />
-      <input id="person-form-death-year" type="text" autocomplete="off" placeholder="yyyy" <?=(!$_SESSION[EDITING] ? 'disabled' : '')?> />
+      <input id="person-form-death-day" type="text" autocomplete="off" placeholder="tt" <?=($_SESSION[EDITING] ? '' : 'disabled')?> />
+      <input id="person-form-death-month" type="text" autocomplete="off" placeholder="mm" <?=($_SESSION[EDITING] ? '' : 'disabled')?> />
+      <input id="person-form-death-year" type="text" autocomplete="off" placeholder="yyyy" <?=($_SESSION[EDITING] ? '' : 'disabled')?> />
     </div><div class="box-row">
       <label for="person-form-note">Notiz: </label>
-      <textarea id="person-form-note" rows="3" <?=(!$_SESSION[EDITING] ? 'disabled' : '')?>></textarea>
+      <textarea id="person-form-note" rows="3" <?=($_SESSION[EDITING] ? '' : 'disabled')?>></textarea>
     </div>
     <button id="person-form-add" class="button-border opt opt-new">Hinzufügen</button>
     <button id="person-form-edit" class="button-border opt opt-edit">Speichern</button>
     <button id="person-form-delete" class="button-border opt opt-edit">Entfernen</button>
-    <button id="person-form-cancel" class="button-border">Abbrechen</button>
+    <button id="person-form-cancel" class="button-border"><?=($_SESSION[EDITING] ? 'Abbrechen' : 'Schließen')?></button>
   </div>
 
   <div id="connection-form" class="box box-padding hidden">
     <h2 class="opt opt-new opt-new-child">Neue Verbindung</h2>
-    <h2 class="opt opt-edit">Verbindung bearbeiten</h2>
+    <h2 class="opt opt-edit"><?=($_SESSION[EDITING] ? 'Verbindung bearbeiten' : 'Verbindungsdetails')?></h2>
     <i id="connection-form-persons" class="opt opt-edit"></i>
     <div class="box-row">
       <label for="connection-form-relation">Art: </label>
-      <input id="connection-form-relation" list="connection-form-relation-suggestions" <?=(!$_SESSION[EDITING] ? 'disabled' : '')?>>
+      <input id="connection-form-relation" list="connection-form-relation-suggestions" <?=($_SESSION[EDITING] ? '' : 'disabled')?>>
       <datalist id="connection-form-relation-suggestions">
         <option value="Kind">
         <option value="adoptiert">
@@ -804,13 +804,13 @@ html_start();
     </div>
     <div class="box-row">
       <label for="connection-form-desc">Info: </label>
-      <textarea id="connection-form-desc" rows="3" <?=(!$_SESSION[EDITING] ? 'disabled' : '')?>></textarea>
+      <textarea id="connection-form-desc" rows="3" <?=($_SESSION[EDITING] ? '' : 'disabled')?>></textarea>
     </div>
     <button id="connection-form-add" class="button-border opt opt-new">Verbinden</button>
     <button id="connection-form-add-child" class="button-border opt opt-new-child">Verbinden</button>
     <button id="connection-form-edit" class="button-border opt opt-edit">Speichern</button>
     <button id="connection-form-delete" class="button-border opt opt-edit">Entfernen</button>
-    <button id="connection-form-cancel" class="button-border">Abbrechen</button>
+    <button id="connection-form-cancel" class="button-border"><?=($_SESSION[EDITING] ? 'Abbrechen' : 'Schließen')?></button>
   </div>
 
   <div id="message-template" class="modal-blocker backdrop-blur message hidden">
