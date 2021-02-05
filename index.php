@@ -80,7 +80,6 @@ define('LOGINS_FILE', 'logins.txt');
 
 define('USER', 'user'); define('USER_', 'u');
 define('PASSWORD', 'password'); define('PASSWORD_', 'p');
-define('ANONYMOUS_USER', 'Anonym');
 
 define('TYPE', 'type'); define('TYPE_', 't');
 define('ADMIN_', 'a'); define('ADMIN__', 'Admin');
@@ -90,6 +89,7 @@ define('VIEWER_', 'v'); define('VIEWER__', 'Betrachter');
 define('FIRST_LOGIN_', 'f');
 
 define('ACTION', 'action');
+define('ADMIN_ACTION', 'admin-action');
 define('EDITING', 'editing');
 
 define('CURRENT_EDITOR_FILE', 'current_editor.yml');
@@ -125,11 +125,10 @@ function save_accounts()
   file_put_contents(ACCOUNTS_FILE, $file_content, LOCK_EX);
 }
 
-function init()
+function init($init)
 {
   global $accounts;
   global $server_dir;
-  $init = $_SESSION[USER] == ANONYMOUS_USER;
   if ($init) {
     $_SESSION[USER] = $accounts[0][USER_];
   }
@@ -148,15 +147,7 @@ function init()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-if (!$accounts) {
-  $_SESSION[USER] = ANONYMOUS_USER;
-  $_SESSION[TYPE] = ADMIN_;
-  $_SESSION[EDITING] = false;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
-else if (isset($_POST[ACTION]) && $_POST[ACTION] === 'login') {
+if (isset($_POST[ACTION]) && $_POST[ACTION] === 'login') {
   foreach ($accounts as &$a) {
     if ($a[USER_] === $_POST[USER] && password_verify($_POST[PASSWORD], $a[PASSWORD_])) {
       $_SESSION[USER] = $a[USER_];
@@ -181,7 +172,7 @@ else if (isset($_GET['logout'])) {
   header('Location: ' . $server_dir);
 }
 
-if (!isset($_SESSION[USER])) {
+if (!isset($_SESSION[USER]) && $accounts) {
   html_min_start();
 ?>
     <form method="POST">
@@ -197,137 +188,6 @@ if (!isset($_SESSION[USER])) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-if ((isset($_GET['accounts']) && $_SESSION[TYPE] === ADMIN_) || !$accounts) {
-  if (isset($_POST[ACTION])) {
-    switch ($_POST[ACTION]) {
-      case 'new': {
-        $accounts[] = [
-          USER_ => trim($_POST[USER]),
-          PASSWORD_ => password_hash($_POST[PASSWORD], PASSWORD_BCRYPT),
-          TYPE_ => $_POST[TYPE],
-          FIRST_LOGIN_ => true];
-        save_accounts();
-        init();
-				$admin_msg = 'Neuer Account erstellt.';
-      }
-      break;
-      case 'edit-type': {
-        $i = $_POST[USER];
-				$accounts[$i][TYPE_] = $_POST[TYPE];
-				save_accounts();
-				$admin_msg = 'Accounttyp geändert.';
-      }
-			break;
-      case 'edit-password': {
-        $i = $_POST[USER];
-				$accounts[$i][PASSWORD_] = password_hash($_POST[PASSWORD], PASSWORD_BCRYPT);
-				save_accounts();
-				$admin_msg = 'Passwort geändert.';
-      }
-      break;
-      case 'delete': {
-        $i = $_POST[USER];
-        array_splice($accounts, $i, 1);
-        save_accounts();
-				$admin_msg = 'Account gelöscht.';
-      }
-      break;
-    }
-  }
-
-  html_min_start();
-
-  if (!$accounts) {
-    echo '<i>Erstelle einen Account, um zu starten.</i>';
-  }
-  else {
-?>
-    <a href="<?=$server_dir?>" style="float: right;" title="Zurück zum Netz">X</a>
-    <hr style="clear: both;" />
-<?php
-		if (isset($admin_msg)) {
-			echo '<i>' . $admin_msg . '</i>';
-		}
-?>
-    <table style="border: none">
-<?php
-    foreach ($accounts as $i => $a) {
-?>
-      <tr>
-        <td><?=$a[USER_]?></td>
-        <td>
-<?php
-      $num_admins = count(array_filter($accounts, function($a) { return $a[TYPE_] === ADMIN_; }));
-			$editable = ($accounts[$i][TYPE_] !== ADMIN_ || $num_admins > 1) && $accounts[$i][USER_] !== $_SESSION[USER];
-      if ($editable) {
-?>
-          <form method="POST">
-            <input type="hidden" name="<?=ACTION?>" value="edit-type" />
-            <input type="hidden" name="<?=USER?>" value="<?=$i?>" />
-            <select name="<?=TYPE?>" onchange="this.form.submit()">
-            <option value="<?=ADMIN_?>" <?=$a[TYPE_] === ADMIN_ ? 'selected' : ''?>><?=ADMIN__?></option>
-              <option value="<?=NORMAL_?>" <?=$a[TYPE_] === NORMAL_ ? 'selected' : ''?>><?=NORMAL__?></option>
-              <option value="<?=VIEWER_?>" <?=$a[TYPE_] === VIEWER_ ? 'selected' : ''?>><?=VIEWER__?></option>
-            </select>
-          </form>
-<?php
-      }
-			else {
-				echo ' (' . ADMIN__ . ')';
-			}
-?>
-        </td>
-        <td>
-          <form method="POST">
-            <input type="hidden" name="<?=ACTION?>" value="edit-password" />
-            <input type="hidden" name="<?=USER?>" value="<?=$i?>" />
-            <input type="text" name="<?=PASSWORD?>" placeholder="Neues Passwort" autocomplete="off" />
-            <input type="submit" style="display: none" />
-          </form>
-        </td>
-        <td>
-<?php
-			if ($editable) {
-?>
-          <form method="POST">
-            <input type="hidden" name="<?=ACTION?>" value="delete" />
-            <input type="hidden" name="<?=USER?>" value="<?=$i?>" />
-            <input type="submit" value="X" title="Löschen" onclick="return confirm('Sicher?')" />
-          </form>
-        </td>
-      </tr>
-<?php
-      }
-    }
-?>
-    </table>
-<?php
-  }
-?>
-    <hr />
-    <form method="POST">
-      <input type="hidden" name="<?=ACTION?>" value="new" />
-      <input type="text" name="<?=USER?>" placeholder="Name" autocomplete="off" autofocus />
-      <input type="text" name="<?=PASSWORD?>" placeholder="Passwort" autocomplete="off" />
-      <select name="<?=TYPE?>">
-        <option value="<?=ADMIN_?>"><?=ADMIN__?></option>
-<?php
-  if ($accounts) {
-?>
-        <option value="<?=NORMAL_?>" selected><?=NORMAL__?></option>
-        <option value="<?=VIEWER_?>"><?=VIEWER__?></option>
-<?php
-  }
-?>
-      </select>
-      <input type="submit" value="Account hinzufügen" />
-    </form>
-<?php
-  html_min_end();
-  exit;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
 function startEditing()
 {
   $ret = false;
@@ -508,6 +368,44 @@ function delete_data($what, $t)
   }
 }
 
+if (($_SESSION[TYPE] === ADMIN_ || !$accounts) && isset($_POST[ADMIN_ACTION])) {
+  switch ($_POST[ADMIN_ACTION]) {
+    // admin
+    case 'new': {
+      $accounts[] = [
+        USER_ => trim($_POST[USER]),
+        PASSWORD_ => password_hash($_POST[PASSWORD], PASSWORD_BCRYPT),
+        TYPE_ => $_POST[TYPE],
+        FIRST_LOGIN_ => true];
+      save_accounts();
+      init();
+      $admin_msg = 'Neuer Account erstellt.';
+    }
+    break;
+    case 'edit-type': {
+      $i = $_POST[USER];
+      $accounts[$i][TYPE_] = $_POST[TYPE];
+      save_accounts();
+      $admin_msg = 'Accounttyp geändert.';
+    }
+    break;
+    case 'edit-password': {
+      $i = $_POST[USER];
+      $accounts[$i][PASSWORD_] = password_hash($_POST[PASSWORD], PASSWORD_BCRYPT);
+      save_accounts();
+      $admin_msg = 'Passwort geändert.';
+    }
+    break;
+    case 'delete': {
+      $i = $_POST[USER];
+      array_splice($accounts, $i, 1);
+      save_accounts();
+      $admin_msg = 'Account gelöscht.';
+    }
+    break;
+  }
+}
+
 if (isset($_GET[ACTION])) {
   header('Content-Type: text/plain; charset=utf-8');
   $t = time();
@@ -543,6 +441,7 @@ if (isset($_GET[ACTION])) {
     startEditing();
 
     switch ($_GET[ACTION]) {
+      // log
       case 'reset':
       {
         $hash = $_GET['hash'];
@@ -556,6 +455,7 @@ if (isset($_GET[ACTION])) {
         exit;
       }
 
+      // settings
       case 'moveCamera':
       {
         $settings[CAMERA] = $d;
@@ -563,6 +463,7 @@ if (isset($_GET[ACTION])) {
         exit;
       }
 
+      // data
       case 'addPerson':
       {
         $d['t'] = $t;
@@ -660,20 +561,119 @@ html_start();
 
   <div id="modal-blocker-graph" class="modal-blocker backdrop-blur hidden"></div>
 
-  <a id="log-restore-selected-item" class="box button hidden">Das Netz auf diesen Zustand zurücksetzen</a>
-
   <div id="account" class="box">
     <span id="account-name"><?=$_SESSION[USER]?></span><!--
     <?php if (!$_SESSION[EDITING]) { ?>
     --><a href="<?=$server_dir?>?start-edit" class="button" id="start-edit">Bearbeiten</a><div class="button hidden"></div><!--
     <?php } else { ?>
     --><a href="<?=$server_dir?>?stop-edit" class="button">Fertig<span id="stop-edit-timer"></span></a><!--
-    <?php } if ($_SESSION[TYPE] === ADMIN_) { ?>
-    --><a href="<?=$server_dir?>?accounts" class="button">Accounts</a><!--
     <?php } ?>
     --><a href="<?=$server_dir?>?logout" class="button">Abmelden</a>
   </div>
+<?php
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+if ($_SESSION[TYPE] === ADMIN_ || !$accounts) {
+?>
+  <div id="admin" class="box box-padding<?=isset($_POST[ADMIN_ACTION]) ? '' : ' box-minimized'?>">
+    <div class="box-minimize-buttons">
+      <button class="box-restore">A</button>
+      <button class="box-minimize">&mdash;</button>
+    </div>
+<?php
+  if (!$accounts) {
+    echo '<i>Erstelle einen Account, um zu starten.</i>';
+  }
+  else {
+		if (isset($admin_msg)) {
+			echo '<i>' . $admin_msg . '</i><hr />';
+		}
+?>
+    <div>
+      <table>
+<?php
+    foreach ($accounts as $i => $a) {
+?>
+        <tr>
+          <td><?=$a[USER_]?></td>
+          <td>
+<?php
+      $num_admins = count(array_filter($accounts, function($a) { return $a[TYPE_] === ADMIN_; }));
+			$editable = ($accounts[$i][TYPE_] !== ADMIN_ || $num_admins > 1) && $accounts[$i][USER_] !== $_SESSION[USER];
+      if ($editable) {
+?>
+            <form method="POST">
+              <input type="hidden" name="<?=ADMIN_ACTION?>" value="edit-type" />
+              <input type="hidden" name="<?=USER?>" value="<?=$i?>" />
+              <select name="<?=TYPE?>" onchange="this.form.submit()">
+              <option value="<?=ADMIN_?>" <?=$a[TYPE_] === ADMIN_ ? 'selected' : ''?>><?=ADMIN__?></option>
+                <option value="<?=NORMAL_?>" <?=$a[TYPE_] === NORMAL_ ? 'selected' : ''?>><?=NORMAL__?></option>
+                <option value="<?=VIEWER_?>" <?=$a[TYPE_] === VIEWER_ ? 'selected' : ''?>><?=VIEWER__?></option>
+              </select>
+            </form>
+<?php
+      }
+			else {
+				echo ' (' . ADMIN__ . ')';
+			}
+?>
+          </td>
+          <td>
+            <form method="POST">
+              <input type="hidden" name="<?=ADMIN_ACTION?>" value="edit-password" />
+              <input type="hidden" name="<?=USER?>" value="<?=$i?>" />
+              <input type="text" name="<?=PASSWORD?>" placeholder="Neues Passwort" autocomplete="off" />
+              <input type="submit" style="display: none" />
+            </form>
+          </td>
+          <td>
+<?php
+			if ($editable) {
+?>
+            <form method="POST">
+              <input type="hidden" name="<?=ADMIN_ACTION?>" value="delete" />
+              <input type="hidden" name="<?=USER?>" value="<?=$i?>" />
+              <input type="submit" class="button button-border-full" value="X" title="Löschen" onclick="return confirm('Sicher?')" />
+            </form>
+<?php
+      }
+?>
+          </td>
+        </tr>
+<?php
+    }
+?>
+      </table>
+<?php
+  }
+?>
+      <hr />
+      <form method="POST">
+        <input type="hidden" name="<?=ADMIN_ACTION?>" value="new" />
+        <input type="text" name="<?=USER?>" placeholder="Name" autocomplete="off" autofocus />
+        <input type="text" name="<?=PASSWORD?>" placeholder="Passwort" autocomplete="off" />
+        <select name="<?=TYPE?>">
+          <option value="<?=ADMIN_?>"><?=ADMIN__?></option>
+<?php
+  if ($accounts) {
+?>
+          <option value="<?=NORMAL_?>" selected><?=NORMAL__?></option>
+          <option value="<?=VIEWER_?>"><?=VIEWER__?></option>
+<?php
+  }
+?>
+        </select>
+        <input type="submit" class="button button-border-full" value="Account hinzufügen" />
+      </form>
+    </div>
+  </div>
+<?php
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+?>
   <div id="log" class="box box-padding box-minimized">
     <div class="box-minimize-buttons">
       <button class="box-restore">&olarr;</button>
@@ -684,6 +684,8 @@ html_start();
       <ul id="log-list"></ul>
     </div>
   </div>
+
+  <a id="log-restore-selected-item" class="box button hidden">Das Netz auf diesen Zustand zurücksetzen</a>
 
   <div id="help" class="box box-padding box-minimized">
     <div class="box-minimize-buttons">

@@ -3,7 +3,7 @@ html, body, #graph {
   height: 100%;
   margin: 0;
 }
-body, input, button {
+body, input:not([type="submit"]), select, textarea, button {
   font-family: 'Josefin Sans', 'Trebuchet MS', sans-serif;
   color: #000;
 }
@@ -94,13 +94,15 @@ body {
   display: inline-block;
 }
 
-.box input, .box textarea {
+.box input:not([type="submit"]), .box select, .box textarea {
   width: 150pt;
   border: 1px solid #aaa;
   border-radius: 3pt;
   padding: 3pt;
 }
-.box input:hover, .box input:focus, .box textarea:hover, .box textarea:focus {
+.box input:not([type="submit"]):hover, .box input:not([type="submit"]):focus,
+.box select:hover, .box select:focus,
+.box textarea:hover, .box textarea:focus {
   border-color: #555;
   outline: none;
 }
@@ -133,7 +135,10 @@ button:hover, .button:hover {
   margin-top: 10pt;
   border-top: 1px solid #eee;
 }
-.button-border:hover {
+.button-border-full {
+  border: 1px solid #eee;
+}
+.button-border:hover, .button-border-full:hover {
   border-top: 1px solid #ddd;
 }
 
@@ -302,6 +307,17 @@ button:hover, .button:hover {
 #connection-form-persons {
   display: block;
   margin-bottom: 10pt;
+}
+
+#admin.box {
+  bottom: initial;
+  top: 40pt;
+  right: initial;
+  left: 10pt;
+  font-size: 85%;
+}
+#admin.box hr {
+  margin: 10pt 0;
 }
 
 .tutorial-highlight {
