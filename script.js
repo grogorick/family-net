@@ -3,11 +3,13 @@ const settings = {
   nodeColor: '#78D384',
   nodeColorWarning: '#D0D480',
   nodeColorHighlight: '#3BAA49',
+  nodeColorPreview: '#ddd',
 
   edgeSize: .25,
   edgeColor: '#DDD',
   edgeColorWarning: '#E6AD92',
   edgeColorHighlight: '#000',
+  edgeColorPreview: '#ddd',
 
   gridStep: 20,
   saveCameraTimeout: 5000,
@@ -109,6 +111,9 @@ const bounds = {
   sizeMax: 5,
   weightMax: 1};
 s.settings('bounds', bounds);
+
+let PERSON_PREVIEW = 'person-preview';
+let CONNECTION_PREVIEW = 'connection-preview';
 
 let data = {
   settings: { camera: { x: 0, y: 0, z: 0 }},
@@ -236,7 +241,7 @@ function checkPersonsConnected(p1_t, p2_t)
 
 function getGraphPositionFromEvent(e)
 {
-  let r = e.data.renderer;
+  let r = s.renderers[0];
   let c = s.camera;
   let factor = Math.max((bounds.maxX - bounds.minX) / r.width, (bounds.maxY - bounds.minY) / r.height);
   return {
@@ -261,12 +266,12 @@ function getPersonDisplayFullName(d_n)
 
 function getNodeColorFromPerson(p)
 {
-  return [p.n, p.o].some(v => v.includes('???')) ? settings.nodeColorWarning : '';
+  return p.t === PERSON_PREVIEW ? settings.nodeColorPreview : ([p.n, p.o].some(v => v.includes('???')) ? settings.nodeColorWarning : '');
 }
 
 function getEdgeColorFromConnection(c)
 {
-  return c.d.includes('???') ? settings.edgeColorWarning : '';
+  return c.t === CONNECTION_PREVIEW ? settings.edgeColorPreview : (c.d.includes('???') ? settings.edgeColorWarning : '');
 }
 
 function getConnectionRelationSettings(r)
@@ -410,7 +415,9 @@ function loadData(previewHash = null)
   }
   xhttp.send();
 }
-loadData();
+if (!firstLogin) {
+  loadData();
+}
 
 
 // log history
@@ -810,12 +817,18 @@ let personMenuEdit = document.getElementById('person-form-edit');
 let personMenuDelete = document.getElementById('person-form-delete');
 let personMenuCancel = document.getElementById('person-form-cancel');
 
-let newPersonPosition = null;
 function startNewPerson(e)
 {
   console.log('startNewPerson');
-  newPersonPosition = getGraphPositionFromEvent(e);
+  let newPersonPosition = getGraphPositionFromEvent(e);
   alignToGrid(newPersonPosition);
+  addPerson({
+    t: PERSON_PREVIEW,
+    x: newPersonPosition.x,
+    y: newPersonPosition.y,
+    n: '',
+    o: ''},
+    false, false, true, true);
   personMenuName.value = '';
   personMenuBirthDay.value = '';
   personMenuBirthMonth.value = '';
@@ -877,9 +890,13 @@ personMenuAdd.addEventListener('click', e =>
   if (currentUserCanEdit()) {
     console.log('click person-form-add');
     hideForm(personMenuForm);
+    let personPreview = s.graph.nodes(PERSON_PREVIEW);
+    let x = personPreview.x;
+    let y = personPreview.y;
+    deletePerson(PERSON_PREVIEW, false, false, true, false);
     addPerson({
-        x: newPersonPosition.x,
-        y: newPersonPosition.y,
+        x: x,
+        y: y,
         n: personMenuName.value.trim(),
         b: personMenuBirthDay.getAttribute('data-value'),
         d: personMenuDeathDay.getAttribute('data-value'),
@@ -929,6 +946,9 @@ personMenuDelete.addEventListener('click', e =>
 personMenuCancel.addEventListener('click', e =>
 {
   console.log('click person-form-cancel');
+  if (s.graph.nodes(PERSON_PREVIEW)) {
+    deletePerson(PERSON_PREVIEW, false, false, true, true);
+  }
   hideForm(personMenuForm);
 });
 
@@ -1061,6 +1081,13 @@ let connectionMenuCancel = document.getElementById('connection-form-cancel');
 
 function startNewConnection()
 {
+  addConnection({
+      t: CONNECTION_PREVIEW,
+      p1: activeState.nodes()[0].id,
+      p2: activeState.nodes()[1].id,
+      r: '',
+      d: ''},
+    false, false, true, true);
   connectionMenuPersons.innerHTML = '';
   connectionMenuRelation.value = '';
   connectionMenuDesc.value = '';
@@ -1113,6 +1140,7 @@ connectionMenuAdd.addEventListener('click', e =>
   if (currentUserCanEdit()) {
     console.log('click connection-form-add');
     hideForm(connectionMenuForm);
+    deleteConnection(CONNECTION_PREVIEW, false, false, true, false);
     let n = activeState.nodes();
     addConnection({
         p1: n[0].id,
@@ -1185,6 +1213,9 @@ connectionMenuDelete.addEventListener('click', e =>
 connectionMenuCancel.addEventListener('click', e =>
 {
   console.log('click connection-form-cancel');
+  if (s.graph.edges(CONNECTION_PREVIEW)) {
+    deleteConnection(CONNECTION_PREVIEW, false, false, true, true);
+  }
   hideForm(connectionMenuForm);
 });
 
