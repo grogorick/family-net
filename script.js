@@ -1096,6 +1096,14 @@ function startNewConnection()
 
 function startNewChildConnection()
 {
+  let c = activeState.edges()[0];
+  addConnection({
+      t: CONNECTION_PREVIEW,
+      p1: createChildConnectionNodeId(c.source, c.target),
+      p2: activeState.nodes()[0].id,
+      r: '',
+      d: ''},
+    false, false, true, true);
   connectionMenuPersons.innerHTML = '';
   connectionMenuRelation.value = '';
   connectionMenuDesc.value = '';
@@ -1162,6 +1170,7 @@ connectionMenuAddChild.addEventListener('click', e =>
   if (currentUserCanEdit()) {
     console.log('click connection-form-add-child');
     hideForm(connectionMenuForm);
+    deleteConnection(CONNECTION_PREVIEW, false, false, true, false);
     let c = activeState.edges()[0];
     let p = activeState.nodes()[0];
     let p1 = s.graph.nodes(c.source);
