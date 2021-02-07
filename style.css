@@ -235,7 +235,7 @@ button:hover, .button:hover {
 #help.box dd {
   margin-left: 20pt;
 }
-#help.box .help-button {
+.help-button {
   display: inline-block;
   padding: 3pt 5pt;
   margin: 0 3pt;

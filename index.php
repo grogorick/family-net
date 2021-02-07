@@ -566,9 +566,9 @@ html_start();
     <?php if (!$_SESSION[EDITING]) { ?>
     --><a href="<?=$server_dir?>?start-edit" class="button" id="start-edit">Bearbeiten</a><div class="button hidden"></div><!--
     <?php } else { ?>
-    --><a href="<?=$server_dir?>?stop-edit" class="button">Fertig<span id="stop-edit-timer"></span></a><!--
+    --><a href="<?=$server_dir?>?stop-edit" class="button" id="stop-edit">Fertig<span id="stop-edit-timer"></span></a><!--
     <?php } ?>
-    --><a href="<?=$server_dir?>?logout" class="button">Abmelden</a>
+    --><a href="<?=$server_dir?>?logout" class="button" id="logout">Abmelden</a>
   </div>
 <?php
 
@@ -887,6 +887,8 @@ if ($_SESSION[TYPE] === ADMIN_ || !$accounts) {
     let editingTimeout = <?=$_SESSION[EDITING] ?: '0'?>;
     let editingTimeoutDuration = <?=CURRENT_EDITOR_TIMEOUT?>;
     let firstLogin = <?=$firstLogin ? 'true' : 'false'?>;
+    let modKeys = '<?=$modKeys?>';
+    let boxPos = '<?=$boxPos?>';
   </script>
   <script src="utils.js"></script>
   <script src="script.js"></script>

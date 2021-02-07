@@ -834,17 +834,22 @@ function startNewPerson(e)
     n: '',
     o: ''},
     false, false, true, true);
+  clearPersonMenu();
+  updateDateValue(personMenuBirthDay, personMenuBirthMonth, personMenuBirthYear);
+  updateDateValue(personMenuDeathDay, personMenuDeathMonth, personMenuDeathYear);
+  showForm(personMenuForm, 'opt-new');
+}
+
+function clearPersonMenu()
+{
   personMenuName.value = '';
   personMenuBirthDay.value = '';
   personMenuBirthMonth.value = '';
   personMenuBirthYear.value = '';
-  updateDateValue(personMenuBirthDay, personMenuBirthMonth, personMenuBirthYear);
   personMenuDeathDay.value = '';
   personMenuDeathMonth.value = '';
   personMenuDeathYear.value = '';
-  updateDateValue(personMenuDeathDay, personMenuDeathMonth, personMenuDeathYear);
   personMenuNote.value = '';
-  showForm(personMenuForm, 'opt-new');
 }
 
 function showPersonInfo(t)
@@ -1093,9 +1098,7 @@ function startNewConnection()
       r: '',
       d: ''},
     false, false, true, true);
-  connectionMenuPersons.innerHTML = '';
-  connectionMenuRelation.value = '';
-  connectionMenuDesc.value = '';
+  clearConnectionMenu();
   showForm(connectionMenuForm, 'opt-new');
 }
 
@@ -1109,10 +1112,15 @@ function startNewChildConnection()
       r: '',
       d: ''},
     false, false, true, true);
+  clearConnectionMenu();
+  showForm(connectionMenuForm, 'opt-new-child');
+}
+
+function clearConnectionMenu()
+{
   connectionMenuPersons.innerHTML = '';
   connectionMenuRelation.value = '';
   connectionMenuDesc.value = '';
-  showForm(connectionMenuForm, 'opt-new-child');
 }
 
 function showConnectionInfo(t)
