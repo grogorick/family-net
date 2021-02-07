@@ -271,7 +271,7 @@ function getPersonDisplayFullName(d_n)
 
 function getNodeColorFromPerson(p)
 {
-  return p.t === PERSON_PREVIEW ? settings.nodeColorPreview : ([p.n, p.o].some(v => v.includes('???')) ? settings.nodeColorWarning : '');
+  return 'color' in p ? p.color : (p.t === PERSON_PREVIEW ? settings.nodeColorPreview : ([p.n, p.o].some(v => v.includes('???')) ? settings.nodeColorWarning : ''));
 }
 
 function getEdgeColorFromConnection(c)

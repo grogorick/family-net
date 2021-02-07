@@ -332,10 +332,16 @@ button:hover, .button:hover {
   border-radius: 100pt;
 }
 
+#tutorial.message .message-content .old {
+  color: #aaa;
+  display: inline;
+}
+
 .tutorial-person {
   display: inline-block;
   width:10pt;
   height:10pt;
+  vertical-align: top;
   border-radius:5pt;
   background: #78D384;
 }
