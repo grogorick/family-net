@@ -59,40 +59,41 @@ if (!currentUserIsViewer) { tutorialSteps = tutorialSteps.concat([
     after: () => {
       deletePerson('pm1', false, false, true, false);
       deletePerson('pm2', false, false, true, false);
-      deletePerson('pm3', false, false, true, true);
-    }},
-
-  { m: 'Mit einem einfachen Klick auf eine Person, kannst du ihre Details anzeigen bzw. bearbeiten.',
-    before: () => tutorialHighlight(tutorialSet.H4, 50),
-    keepHighlights: true } ]); }
+      deletePerson('pm3', false, false, true, true); } } ]); }
 
 tutorialSteps = tutorialSteps.concat([
-  { m: '<div class="old">Mit einem einfachen Klick auf eine Person, kannst du ihre Details anzeigen bzw. bearbeiten.</div><p>Die Details findest du dann hier unten rechts.</p>',
-    before: () => { showForm(personMenuForm, 'opt-edit', false); tutorialHighlight('#person-form', 420); },
-    after: () => { hideForm(personMenuForm); } },
+  { m: 'Mit einem einfachen Klick auf eine Person, kannst du ihre Details anzeigen' + (currentUserIsViewer ? '.' : ' bzw. bearbeiten.'),
+    before: () => tutorialHighlight(tutorialSet.H1, 50),
+    keepHighlights: true },
 
+  { m: '<div class="old">Mit einem einfachen Klick auf eine Person, kannst du ihre Details anzeigen' + (currentUserIsViewer ? '.' : ' bzw. bearbeiten.') + '</div><p>Die Details findest du dann hier unten rechts.</p>',
+    before: () => { showForm(personMenuForm, 'opt-edit', false); tutorialHighlight('#person-form', 420); },
+    after: () => { hideForm(personMenuForm); } } ]);
+
+if (!currentUserIsViewer) { tutorialSteps = tutorialSteps.concat([
   { m: 'Halte die Strg-Taste gedrückt und klicke auf eine Person, um sie auszuwählen.',
     before: () => {
-      activeState.addNodes('p2');
+      activeState.addNodes('p2'); s.refresh();
       tutorialHighlight(tutorialSet.H2, 50); },
     keepHighlights: true },
 
   { m: '<div class="old">Halte die Strg-Taste gedrückt und klicke auf eine Person, um sie auszuwählen.</div><p>Wähle danach eine zweite Person aus</p>',
     before: () => {
-      activeState.addNodes('p3');
+      activeState.addNodes('p3'); s.refresh();
       tutorialHighlight(tutorialSet.H4, 50); } },
 
   { m: '<div class="old">Halte die Strg-Taste gedrückt und klicke auf eine Person, um sie auszuwählen.</div><p><span class="old">Wähle eine zweite Person aus,</span> um die beiden zu verbinden.</p>',
     before: () => {
       addConnection({ t: 'c23', p1: 'p2', p2: 'p3', r: '', d: '' }, false, false, true, true);
       tutorialHighlight(tutorialSet.H24, 50); },
-    after: () => activeState.dropNodes(),
+    after: () => { activeState.dropNodes(); s. refresh(); } } ]); }
+
+tutorialSteps = tutorialSteps.concat([
+  { m: 'Auch Details von Verbindungen kannst du mit einem einfachen Klick anzeigen' + (currentUserIsViewer ? '.' : ' bzw. bearbeiten.'),
+    before: () => tutorialHighlight(tutorialSet.H12, 50),
     keepHighlights: true },
 
-  { m: 'Auch Details von Verbindungen kannst du mit einem einfachen Klick anzeigen bzw. bearbeiten.',
-    keepHighlights: true },
-
-  { m: '<div class="old">Auch von Verbindungen kannst du die Details mit einem einfachen Klick anzeigen bzw. bearbeiten.</div><p>Die Details findest du ebenfalls unten rechts.</p>',
+  { m: '<div class="old">Auch von Verbindungen kannst du die Details mit einem einfachen Klick anzeigen' + (currentUserIsViewer ? '.' : ' bzw. bearbeiten.') + '</div><p>Die Details findest du ebenfalls unten rechts.</p>',
     before: () => { showForm(connectionMenuForm, 'opt-edit', false); tutorialHighlight('#connection-form', 400); },
     after: () => { hideForm(connectionMenuForm); } } ]);
 
