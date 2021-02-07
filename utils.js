@@ -187,9 +187,10 @@ function showMessage(msg, addDefaultButtonCloseAction = true)
   m.modalBlocker = template.cloneNode(true);
   m.modalBlocker.id = '';
   document.body.appendChild(m.modalBlocker);
-  m.content = m.modalBlocker.querySelector('.message-content');
+  m.box = m.modalBlocker.querySelector('.box');
+  m.content = m.box.querySelector('.message-content');
   m.content.innerHTML = msg;
-  m.button = m.modalBlocker.querySelector('button');
+  m.button = m.box.querySelector('button');
   m.defaultButtonClickFn = e => { m.modalBlocker.parentElement.removeChild(m.modalBlocker); };
   if (addDefaultButtonCloseAction) {
     m.button.addEventListener('click', m.defaultButtonClickFn);

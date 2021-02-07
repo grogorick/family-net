@@ -239,15 +239,20 @@ function checkPersonsConnected(p1_t, p2_t)
     (compareTs(c.p1, p2_t) && compareTs(c.p2, p1_t)));
 }
 
-function getGraphPositionFromEvent(e)
+function getGraphPositionFromScreenPosition(x, y)
 {
   let r = s.renderers[0];
   let c = s.camera;
   let factor = Math.max((bounds.maxX - bounds.minX) / r.width, (bounds.maxY - bounds.minY) / r.height);
   return {
-    x: c.x * factor + e.data.captor.x * factor * c.ratio,
-    y: c.y * factor + e.data.captor.y * factor * c.ratio
+    x: c.x * factor + x * factor * c.ratio,
+    y: c.y * factor + y * factor * c.ratio
   };
+}
+
+function getGraphPositionFromEvent(e)
+{
+  return getGraphPositionFromScreenPosition(e.data.captor.x, e.data.captor.y);
 }
 
 function getPersonRufname(d_n)
@@ -1333,8 +1338,8 @@ s.bind('hovers', hoverPersons);
 s.bind('clickEdge', selectConnection);
 
 let cdcStage = clickDoubleClick(
-  e => { if (!e.data.captor.isDragging && !multipleKeyPressed(e)) { deselectAll(e); } },
-  e => { deselectAll(e); if (currentUserCanEdit()) { startNewPerson(e); } });
+  e => { console.log(['click', e]); if (!e.data.captor.isDragging && !multipleKeyPressed(e)) { deselectAll(e); } },
+  e => {console.log(['doubleClick', e]);  deselectAll(e); if (currentUserCanEdit()) { startNewPerson(e); } });
 
 s.bind('clickStage', cdcStage.click.bind(cdcStage));
 s.bind('doubleClickStage', cdcStage.doubleClick.bind(cdcStage));
