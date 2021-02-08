@@ -1,4 +1,4 @@
-let tutorialHightlightColor = '#61B1B5';
+let tutorialHighlightColor = '#61B1B5';
 let tutorialSet = null;
 let tutorialWindow = null;
 let tutorialStepIdx = 0;
@@ -141,7 +141,7 @@ tutorialSteps = tutorialSteps.concat([
     after: () => loadData() }
 ]);
 
-document.getElementById('restart-tutorial').addEventListener('click', e =>
+document.getElementById('restart-tutorial').addEventListener('click', () =>
 {
   document.getElementById('help').classList.toggle('box-minimized');
   showTutorial();
@@ -155,7 +155,36 @@ function showTutorial()
   let tutorialStep = tutorialSteps[tutorialStepIdx];
   tutorialStepIdx = (tutorialStepIdx + 1) % tutorialSteps.length;
   if (tutorialWindow === null) {
-    tutorialWindow = showMessage(tutorialStep.m, false);
+    tutorialWindow = showMessage(tutorialStep.m, [
+      { label: 'Abbrechen',
+        fn: () =>
+        {
+          removeTutorialHighlights();
+          tutorialSteps[tutorialSteps.length - 1].after();
+          tutorialStepIdx = 0;
+          tutorialWindow.dismiss();
+          tutorialWindow = null;
+          tutorialStep = null;
+        }},
+      { label: 'Weiter',
+        fn: () =>
+        {
+          if (!('keepHighlights' in tutorialStep)) {
+            removeTutorialHighlights();
+          }
+          if ('after' in tutorialStep) {
+            tutorialStep.after(tutorialStep);
+          }
+          if (tutorialStepIdx === 0) {
+            tutorialWindow.dismiss();
+            tutorialWindow = null;
+            tutorialStep = null;
+          }
+          else {
+            tutorialWindow.modalBlocker.classList.add('hidden');
+            setTimeout(showTutorial, 200);
+          }
+        }}]);
     tutorialWindow.modalBlocker.id = 'tutorial';
   }
   else {
@@ -165,26 +194,6 @@ function showTutorial()
   if ('before' in tutorialStep) {
     tutorialStep.before(tutorialStep);
   }
-  let fn = e =>
-  {
-    tutorialWindow.button.removeEventListener('click', fn);
-    if (!('keepHighlights' in tutorialStep)) {
-      removeTutorialHighlights();
-    }
-    if ('after' in tutorialStep) {
-      tutorialStep.after(tutorialStep);
-    }
-    if (tutorialStepIdx === 0) {
-      tutorialWindow.defaultButtonClickFn(null);
-      tutorialWindow = null;
-      tutorialStep = null;
-    }
-    else {
-      tutorialWindow.modalBlocker.classList.add('hidden');
-      setTimeout(showTutorial, 200);
-    }
-  };
-  tutorialWindow.button.addEventListener('click', fn);
 }
 
 function tutorialHighlight(el, sizePt, opacity = 'FF')
@@ -223,7 +232,7 @@ function tutorialHighlight(el, sizePt, opacity = 'FF')
   div.style.width = sizePt + 'pt';
   div.style.height = sizePt + 'pt';
   div.style.borderRadius = (sizePt / 2) + 'pt';
-  div.style.boxShadow = '0 0 ' + (sizePt / 2) + 'pt ' + tutorialHightlightColor + opacity;
+  div.style.boxShadow = '0 0 ' + (sizePt / 2) + 'pt ' + tutorialHighlightColor + opacity;
   let messageTemplate = document.getElementById('message-template');
   document.body.insertBefore(div, messageTemplate);
   return div;

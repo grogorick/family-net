@@ -180,7 +180,8 @@ modalBlocker.addEventListener('click', e =>
   }
 });
 
-function showMessage(msg, addDefaultButtonCloseAction = true)
+let DISMISS_MESSAGE = 'dismiss-message';
+function showMessage(msg, buttons = [{ label: 'OK', fn: DISMISS_MESSAGE }])
 {
   let template = document.getElementById('message-template');
   let m = {};
@@ -190,11 +191,23 @@ function showMessage(msg, addDefaultButtonCloseAction = true)
   m.box = m.modalBlocker.querySelector('.box');
   m.content = m.box.querySelector('.message-content');
   m.content.innerHTML = msg;
-  m.button = m.box.querySelector('button');
-  m.defaultButtonClickFn = e => { m.modalBlocker.parentElement.removeChild(m.modalBlocker); };
-  if (addDefaultButtonCloseAction) {
-    m.button.addEventListener('click', m.defaultButtonClickFn);
-  }
+  m.dismiss = e => { m.modalBlocker.parentElement.removeChild(m.modalBlocker); };
+  let buttonTemplate = m.box.querySelector('button');
+  m.box.removeChild(buttonTemplate);
+  console.log(buttons);
+  buttons.forEach(b => {
+    console.log(b);
+    let button = buttonTemplate.cloneNode(true);
+    button.innerHTML = b.label;
+    if (b.fn === DISMISS_MESSAGE) {
+      button.addEventListener('click', m.dismiss);
+    }
+    else if (typeof b.fn === 'function') {
+      button.addEventListener('click', b.fn);
+    }
+    m.box.appendChild(button);
+    m['button_' + b.label] = button;
+  });
   m.modalBlocker.classList.remove('hidden');
   return m;
 }

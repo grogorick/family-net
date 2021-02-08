@@ -165,9 +165,10 @@ button:hover, .button:hover {
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
+  text-align: right;
 }
-.message .box button {
-  float: right;
+.message .box .message-content {
+  text-align: initial;
 }
 
 #account.box {

@@ -875,7 +875,7 @@ if ($_SESSION[TYPE] === ADMIN_ || !$accounts) {
   <div id="message-template" class="modal-blocker backdrop-blur message hidden">
     <div class="box box-padding">
       <div class="message-content"></div>
-      <button class="button-border">OK</button>
+      <button class="button-border"></button>
     </div>
   </div>
 
