@@ -125,23 +125,20 @@ function save_accounts()
   file_put_contents(ACCOUNTS_FILE, $file_content, LOCK_EX);
 }
 
-function init($init)
+function init()
 {
   global $accounts;
   global $server_dir;
-  if ($init) {
-    $_SESSION[USER] = $accounts[0][USER_];
-  }
   if (!file_exists(SETTINGS_FILE)) {
     save_settings();
   }
-  if (!file_exists(STORAGE_DIR)) {
+  if (!file_exists(STORAGE_DIR) || !file_exists(STORAGE_DIR . '/' . STORAGE_FILE) || !file_exists(STORAGE_DIR . '/.git')) {
     exec('init.sh ' .
       '"' . STORAGE_DIR . '" 2>&1', $output, $ret);
-    save_data('init');
-  }
-  if ($init) {
-    header('Location: ' . $server_dir);
+	  $_SESSION[USER] = $accounts[0][USER_];
+	  save_data('init');
+	  unset($_SESSION[USER]);
+	  header('Location: ' . $server_dir);
   }
 }
 
@@ -154,8 +151,6 @@ if (isset($_POST[ACTION]) && $_POST[ACTION] === 'login') {
       $_SESSION[TYPE] = $a[TYPE_];
       $_SESSION[EDITING] = false;
       if (array_key_exists(FIRST_LOGIN_, $a)) {
-        unset($a[FIRST_LOGIN_]);
-        save_accounts();
         $firstLogin = true;
       }
       file_put_contents(LOGINS_FILE, date(DATE_RFC822) . ' | ' . $a[USER_] . PHP_EOL, FILE_APPEND | LOCK_EX);
@@ -427,6 +422,20 @@ if (isset($_GET[ACTION])) {
           '"log":' . prepare_json_for_storage(get_log()) . ',' .
           '"currentHash":"' . get_current_log_hash() . '"' .
         '}';
+      exit;
+    }
+
+    case 'tutorial-completed':
+    {
+      foreach ($accounts as &$a) {
+        if ($a[USER_] === $_SESSION[USER]) {
+          if (array_key_exists(FIRST_LOGIN_, $a)) {
+            unset($a[FIRST_LOGIN_]);
+            save_accounts();
+          }
+          break;
+        }
+      }
       exit;
     }
 

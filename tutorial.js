@@ -1,7 +1,9 @@
 let tutorialHighlightColor = '#61B1B5';
 let tutorialSet = null;
-let tutorialWindow = null;
 let tutorialStepIdx = 0;
+let tutorialStep = null;
+let tutorialWindow = null;
+
 let tutorialSteps = [
   { m: firstLogin
       ? '<p>Hallo!</p><p>Das scheint dein erster Besuch zu sein.<br />Wir starten mit einer kurzen Einführung, bevor du loslegen kannst.</p>'
@@ -156,6 +158,10 @@ tutorialSteps = tutorialSteps.concat([
     delayNextStep: true },
 
   { m: '<p>Das war\'s auch schon. Viel Spaß.</p>',
+    before: () => {
+      let xhttp = new XMLHttpRequest();
+      xhttp.open('GET', '?action=tutorial-completed', true);
+      xhttp.send(); },
     after: () => loadData() }
 ]);
 
@@ -168,7 +174,6 @@ if (firstLogin) {
   showTutorial();
 }
 
-let tutorialStep = null;
 function showTutorial()
 {
   tutorialStep = tutorialSteps[tutorialStepIdx];
@@ -188,7 +193,6 @@ function showTutorial()
       {
         if (!('keepHighlights' in tutorialStep && tutorialStep.keepHighlights)) {
           removeTutorialHighlights();
-          console.log(tutorialStep);
         }
         if ('after' in tutorialStep) {
           tutorialStep.after(tutorialStep);

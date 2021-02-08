@@ -139,7 +139,7 @@ if (startEdit) {
   let checkOtherEditor = () =>
   {
     console.log('check other editor');
-    var xhttp = new XMLHttpRequest();
+    let xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function()
     {
       if (this.readyState === 4 && this.status === 200) {
@@ -402,7 +402,7 @@ function loadData(previewHash = null)
   }
 
   console.log('load data from server ' + previewHash);
-  var xhttp = new XMLHttpRequest();
+  let xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function()
   {
     if (this.readyState === 4 && this.status === 200) {
