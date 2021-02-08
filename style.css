@@ -128,7 +128,7 @@ button, .button {
   text-decoration: none;
   background: transparent;
 }
-button:hover, .button:hover {
+button:not(:disabled):hover, .button:not(:disabled):hover {
   background: radial-gradient(circle, #fcfcfc 50%, #f9f9f9 100%) !important;
 }
 .button-border {
@@ -138,7 +138,7 @@ button:hover, .button:hover {
 .button-border-full {
   border: 1px solid #eee;
 }
-.button-border:hover, .button-border-full:hover {
+.button-border:not(:disabled):hover, .button-border-full:not(:disabled):hover {
   border-top: 1px solid #ddd;
 }
 
@@ -321,11 +321,23 @@ button:hover, .button:hover {
   margin: 10pt 0;
 }
 
+@keyframes tutorial-highlight-blink {
+  0%   { box-shadow: 0 0 var(--box-shadow-size) var(--box-shadow-color); }
+  40%  { box-shadow: 0 0 var(--box-shadow-size) #fff; }
+  80%  { box-shadow: 0 0 var(--box-shadow-size) var(--box-shadow-color); }
+  100% { box-shadow: 0 0 var(--box-shadow-size) var(--box-shadow-color); }
+}
 .tutorial-highlight {
   display: block;
   position: fixed;
-  box-shadow: 0 0 100pt #61B1B5;
   transform: translate(-50%, -50%);
+  --box-shadow-size: 100pt;
+  --box-shadow-color: #61B1B5;
+  box-shadow: 0 0 var(--box-shadow-size) var(--box-shadow-color);
+  animation-name: tutorial-highlight-blink;
+  animation-delay: 1s;
+  animation-duration: 400ms;
+  animation-iteration-count: 2;
   left: 50%;
   top: 50%;
   width: 200pt;
@@ -335,7 +347,9 @@ button:hover, .button:hover {
 
 #tutorial.message .message-content .old {
   color: #aaa;
-  display: inline;
+}
+#tutorial.message .message-content .invisible {
+  visibility: hidden;
 }
 
 .tutorial-person {

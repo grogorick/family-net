@@ -4,8 +4,8 @@ let tutorialWindow = null;
 let tutorialStepIdx = 0;
 let tutorialSteps = [
   { m: firstLogin
-      ? 'Hallo!<p>Das scheint dein erster Besuch zu sein.<br />Wir starten mit einer kurzen Einführung, bevor du loslegen kannst.</p>'
-      : 'Alles klar, gehen wir die Einführung noch einmal durch.',
+      ? '<p>Hallo!</p><p>Das scheint dein erster Besuch zu sein.<br />Wir starten mit einer kurzen Einführung, bevor du loslegen kannst.</p>'
+      : '<p>Alles klar, gehen wir die Einführung noch einmal durch.</p>',
     before: () => {
       let rw = s.renderers[0].width / 2;
       let rh = s.renderers[0].height / 4;
@@ -25,31 +25,34 @@ let tutorialSteps = [
         H4:   {                            x: rw + 150 + 60 + 'px',            y:  rh - 15 + 'px' }
       };
       s.graph.clear(); s.refresh(); },
-    after: () => { tutorialWindow.modalBlocker.classList.remove('backdrop-blur'); } },
+    after: () => { tutorialWindow.modalBlocker.classList.remove('backdrop-blur'); },
+    delayNextStep: true },
 
-  { m: 'Das Netz besteht aus Personen (<div class="tutorial-person"></div>)',
+  { m: '<p>Das Netz besteht aus Personen (<span class="tutorial-person"></span>)<span class="invisible">, und Verbindungen (<span class="tutorial-connection"></span>) zwischen Personen.</span></p><p class="invisible">Diese können sich auf der gesamten Seite (dem weißen Hintergrund) und darüber hinaus befinden.</p>',
     before: () => {
       addPerson({ t: 'p1', x: tutorialSet.P1.x, y: tutorialSet.P1.y, n: 'Person A', o: '' }, false, false, true, false);
       addPerson({ t: 'p2', x: tutorialSet.P2.x, y: tutorialSet.P2.y, n: 'Person B', o: '' }, false, false, true, false);
       addConnection({ t: 'c12', p1: 'p1', p2: 'p2', r: '', d: '' }, false, false, true, true);
       tutorialHighlight(tutorialSet.H1, 50); } },
 
-  { m: '<div class="old">Das Netz besteht aus Personen (<div class="tutorial-person"></div>),</div> und Verbindungen (<div class="tutorial-connection"></div>) zwischen Personen.',
+  { m: '<p><span class="old">Das Netz besteht aus Personen (<span class="tutorial-person"></span>),</span> und Verbindungen (<span class="tutorial-connection"></span>) zwischen Personen.</p><p class="invisible">Diese können sich auf der gesamten Seite (dem weißen Hintergrund) und darüber hinaus befinden.</p>',
     before: () => tutorialHighlight(tutorialSet.H12, 50) },
 
-  { m: '<div class="old">Das Netz besteht aus Personen (<div class="tutorial-person"></div>), und Verbindungen (<div class="tutorial-connection"></div>) zwischen Personen.</div><p>Diese können sich auf der gesamten Seite (dem weißen Hintergrund) und darüber hinaus befinden.</p>' } ];
+  { m: '<p class="old">Das Netz besteht aus Personen (<span class="tutorial-person"></span>), und Verbindungen (<span class="tutorial-connection"></span>) zwischen Personen.</p><p>Diese können sich auf der gesamten Seite (dem weißen Hintergrund) und darüber hinaus befinden.</p>',
+    delayNextStep: true } ];
 
 if (!currentUserIsViewer) { tutorialSteps = tutorialSteps.concat([
-  { m: 'Durch Doppelklicken auf den Hintergrund',
+  { m: '<p>Durch Doppelklicken auf den Hintergrund <span class="invisible">erstellst du eine neue Person.</span></p>',
     before: () => {
       tutorialHighlight(tutorialSet.H3, 70, '88');
       tutorialHighlight(tutorialSet.H3, 50, '88'); },
     keepHighlights: true },
 
-  { m: '<div class="old">Durch Doppelklicken auf den Hintergrund</div> erstellst du eine neue Person.',
-    before: () => addPerson({ t: 'p3', x: tutorialSet.P3.x, y: tutorialSet.P3.y, n: 'Neue Person', o: '' }, false, false, true, true) },
+  { m: '</p><span class="old">Durch Doppelklicken auf den Hintergrund</span> erstellst du eine neue Person.</p>',
+    before: () => addPerson({ t: 'p3', x: tutorialSet.P3.x, y: tutorialSet.P3.y, n: 'Neue Person', o: '' }, false, false, true, true),
+    delayNextStep: true },
 
-  { m: 'Während du die ' + modKeys + '-Taste drückst, kannst du Personen mit der Maus verschieben.',
+  { m: '<p>Während du die ' + modKeys + '-Taste drückst, kannst du Personen mit der Maus verschieben.</p>',
     before: () => {
       let n = s.graph.nodes('p3'); n.x = tutorialSet.P4.x; n.y = tutorialSet.P4.y;
       addPerson({ t: 'pm1', x: tutorialSet.P3.x, y: tutorialSet.P3.y, n: '', o: '', color: '#eee' }, false, false, true, false);
@@ -59,59 +62,64 @@ if (!currentUserIsViewer) { tutorialSteps = tutorialSteps.concat([
     after: () => {
       deletePerson('pm1', false, false, true, false);
       deletePerson('pm2', false, false, true, false);
-      deletePerson('pm3', false, false, true, true); } } ]); }
+      deletePerson('pm3', false, false, true, true); },
+    delayNextStep: true } ]); }
 
 tutorialSteps = tutorialSteps.concat([
-  { m: 'Mit einem einfachen Klick auf eine Person, kannst du ihre Details anzeigen' + (currentUserIsViewer ? '.' : ' bzw. bearbeiten.'),
+  { m: '<p>Mit einem einfachen Klick auf eine Person, kannst du ihre Details anzeigen' + (currentUserIsViewer ? '.' : ' bzw. bearbeiten.') + '</p><p class="invisible">Die Details findest du dann hier ' + boxPos + '.</p>',
     before: () => tutorialHighlight(tutorialSet.H1, 50),
     keepHighlights: true },
 
-  { m: '<div class="old">Mit einem einfachen Klick auf eine Person, kannst du ihre Details anzeigen' + (currentUserIsViewer ? '.' : ' bzw. bearbeiten.') + '</div><p>Die Details findest du dann hier ' + boxPos + '.</p>',
+  { m: '<p class="old">Mit einem einfachen Klick auf eine Person, kannst du ihre Details anzeigen' + (currentUserIsViewer ? '.' : ' bzw. bearbeiten.') + '</p><p>Die Details findest du dann hier ' + boxPos + '.</p>',
     before: () => {
       personMenuDelete.classList.add('hidden');
       personMenuEdit.classList.add('hidden');
       clearPersonMenu();
       showForm(personMenuForm, 'opt-edit', false);
       tutorialHighlight('#person-form', 420); },
-    after: () => hideForm(personMenuForm) } ]);
+    after: () => hideForm(personMenuForm),
+    delayNextStep: true } ]);
 
 if (!currentUserIsViewer) { tutorialSteps = tutorialSteps.concat([
-  { m: 'Halte die ' + modKeys + '-Taste gedrückt und klicke auf eine Person, um sie auszuwählen.',
+  { m: '<p>Halte die ' + modKeys + '-Taste gedrückt und klicke auf eine Person, um sie auszuwählen.</p><p class="invisible">Wähle danach eine zweite Person aus, um die beiden zu verbinden.</p>',
     before: () => {
       activeState.addNodes('p2'); s.refresh();
       tutorialHighlight(tutorialSet.H2, 50); },
     keepHighlights: true },
 
-  { m: '<div class="old">Halte die ' + modKeys + '-Taste gedrückt und klicke auf eine Person, um sie auszuwählen.</div><p>Wähle danach eine zweite Person aus</p>',
+  { m: '<p class="old">Halte die ' + modKeys + '-Taste gedrückt und klicke auf eine Person, um sie auszuwählen.</p><p>Wähle danach eine zweite Person aus<span class="invisible">, um die beiden zu verbinden.</span></p>',
     before: () => {
       activeState.addNodes('p3'); s.refresh();
       tutorialHighlight(tutorialSet.H4, 50); } },
 
-  { m: '<div class="old">Halte die ' + modKeys + '-Taste gedrückt und klicke auf eine Person, um sie auszuwählen.</div><p><span class="old">Wähle eine zweite Person aus,</span> um die beiden zu verbinden.</p>',
+  { m: '<p class="old">Halte die ' + modKeys + '-Taste gedrückt und klicke auf eine Person, um sie auszuwählen.</p><p><span class="old">Wähle danach eine zweite Person aus,</span> um die beiden zu verbinden.</p>',
     before: () => {
       addConnection({ t: 'c23', p1: 'p2', p2: 'p3', r: '', d: '' }, false, false, true, true);
       tutorialHighlight(tutorialSet.H24, 50); },
-    after: () => { activeState.dropNodes(); s. refresh(); } } ]); }
+    after: () => { activeState.dropNodes(); s. refresh(); },
+    delayNextStep: true } ]); }
 
 tutorialSteps = tutorialSteps.concat([
-  { m: 'Auch Details von Verbindungen kannst du mit einem einfachen Klick anzeigen' + (currentUserIsViewer ? '.' : ' bzw. bearbeiten.'),
+  { m: '<p>Auch Details von Verbindungen kannst du mit einem einfachen Klick anzeigen' + (currentUserIsViewer ? '.' : ' bzw. bearbeiten.') + '</p><p class="invisible">Die Details findest du ebenfalls ' + boxPos + '.</p>',
     before: () => tutorialHighlight(tutorialSet.H12, 50),
     keepHighlights: true },
 
-  { m: '<div class="old">Auch von Verbindungen kannst du die Details mit einem einfachen Klick anzeigen' + (currentUserIsViewer ? '.' : ' bzw. bearbeiten.') + '</div><p>Die Details findest du ebenfalls ' + boxPos + '.</p>',
+  { m: '<p class="old">Auch Details von Verbindungen kannst du mit einem einfachen Klick anzeigen' + (currentUserIsViewer ? '.' : ' bzw. bearbeiten.') + '</p><p>Die Details findest du ebenfalls ' + boxPos + '.</p>',
     before: () => {
       connectionMenuDelete.classList.add('hidden');
       connectionMenuEdit.classList.add('hidden');
       clearConnectionMenu();
       showForm(connectionMenuForm, 'opt-edit', false);
       tutorialHighlight('#connection-form', 400); },
-    after: () => hideForm(connectionMenuForm) } ]);
+    after: () => hideForm(connectionMenuForm),
+    delayNextStep: true } ]);
 
 if (!currentUserIsViewer) { tutorialSteps = tutorialSteps.concat([
-  { m: 'Bevor du das Netz verändern kannst, musst du den Bearbeitungsmodus starten.<br />Das geht nur, wenn gerade kein anderer das Netz bearbeitet.',
-    before: () => tutorialHighlight('#start-edit, #stop-edit', 80) },
+  { m: '<p>Bevor du das Netz verändern kannst, musst du den Bearbeitungsmodus starten.</p><p>Das geht nur, wenn gerade kein anderer das Netz bearbeitet.</p>',
+    before: () => tutorialHighlight('#start-edit, #stop-edit', 80),
+    delayNextStep: true },
 
-  { m: 'Vergiss nicht den Bearbeitungsmodus zu beenden, wenn du fertig bist.<br />Sonst blockierst du die Bearbeitung für alle anderen.',
+  { m: '<p>Vergiss nicht den Bearbeitungsmodus zu beenden, wenn du fertig bist,<br />sonst blockierst du die Bearbeitung für alle anderen.</p>',
     before: () => {
       let btn = document.querySelector('#start-edit');
       if (btn) {
@@ -122,22 +130,32 @@ if (!currentUserIsViewer) { tutorialSteps = tutorialSteps.concat([
       let btn = document.querySelector('#start-edit');
       if (btn) {
         btn.innerHTML = 'Bearbeiten';
-      } } } ]); }
+      } },
+    delayNextStep: true } ]); }
 
 tutorialSteps = tutorialSteps.concat([
-  { m: 'Oben rechts findest du den Verlauf aller Änderungen am Netz.' + (currentUserIsViewer ? '' : '<p>Deine eigenen Änderungen kannst du hier rückgängig machen,<br />solange nach dir kein anderer das Netz geändert hat.</p>'),
-    before: () => tutorialHighlight('#log', 80) },
+  { m: '<p>Oben rechts findest du den Verlauf aller Änderungen am Netz.</p>' + (currentUserIsViewer ? '' : '<p class="invisible">Deine eigenen Änderungen kannst du hier rückgängig machen,<br />solange nach dir kein anderer das Netz geändert hat.</p>'),
+    before: () => tutorialHighlight('#log', 80),
+    keepHighlights: !currentUserIsViewer,
+    delayNextStep: true } ]);
 
-  { m: 'Gleich daneben findest du jederzeit eine Anleitung<br />mit weiteren Details zu allen wichtigen Funktionen.<p>Dort kannst du auch diese Anleitung noch einmal starten.</p>',
-    before: () => tutorialHighlight('#help', 80) },
+if (!currentUserIsViewer) { tutorialSteps = tutorialSteps.concat([
+  { m: '<p class="old">Oben rechts findest du den Verlauf aller Änderungen am Netz.</p>' + (currentUserIsViewer ? '' : '<p>Deine eigenen Änderungen kannst du hier rückgängig machen,<br />solange nach dir kein anderer das Netz geändert hat.</p>'),
+    delayNextStep: true } ]); }
 
-  { m: 'Wenn du fertig bist, halte den Mauscursor über deinen Namen,<br />um die Abmelden-Schaltfläche anzuzeigen.',
+tutorialSteps = tutorialSteps.concat([
+  { m: '<p>Gleich daneben findest du jederzeit eine Anleitung<br />mit weiteren Details zu allen wichtigen Funktionen.</p><p>Dort kannst du auch diese Anleitung noch einmal starten.</p>',
+    before: () => tutorialHighlight('#help', 80),
+    delayNextStep: true },
+
+  { m: '<p>Wenn du fertig bist, halte den Mauscursor über deinen Namen,<br />um die Abmelden-Schaltfläche anzuzeigen.</p>',
     before: () => {
       document.querySelector('#logout').style.display = 'inline-block';
       tutorialHighlight('#logout', 150); },
-    after: () => document.querySelector('#logout').style.display = '' },
+    after: () => document.querySelector('#logout').style.display = '',
+    delayNextStep: true },
 
-  { m: 'Das war\'s auch schon. Viel Spaß.',
+  { m: '<p>Das war\'s auch schon. Viel Spaß.</p>',
     after: () => loadData() }
 ]);
 
@@ -150,41 +168,46 @@ if (firstLogin) {
   showTutorial();
 }
 
+let tutorialStep = null;
 function showTutorial()
 {
-  let tutorialStep = tutorialSteps[tutorialStepIdx];
+  tutorialStep = tutorialSteps[tutorialStepIdx];
   tutorialStepIdx = (tutorialStepIdx + 1) % tutorialSteps.length;
   if (tutorialWindow === null) {
-    tutorialWindow = showMessage(tutorialStep.m, [
-      { label: 'Abbrechen',
-        fn: () =>
-        {
+    tutorialWindow = showMessage(tutorialStep.m, {
+      'Abbrechen': () =>
+      {
+        removeTutorialHighlights();
+        tutorialSteps[tutorialSteps.length - 1].after();
+        tutorialStepIdx = 0;
+        tutorialWindow.dismiss();
+        tutorialWindow = null;
+        tutorialStep = null;
+      },
+      'Weiter': () =>
+      {
+        if (!('keepHighlights' in tutorialStep && tutorialStep.keepHighlights)) {
           removeTutorialHighlights();
-          tutorialSteps[tutorialSteps.length - 1].after();
-          tutorialStepIdx = 0;
+          console.log(tutorialStep);
+        }
+        if ('after' in tutorialStep) {
+          tutorialStep.after(tutorialStep);
+        }
+        if (tutorialStepIdx === 0) {
           tutorialWindow.dismiss();
           tutorialWindow = null;
           tutorialStep = null;
-        }},
-      { label: 'Weiter',
-        fn: () =>
-        {
-          if (!('keepHighlights' in tutorialStep)) {
-            removeTutorialHighlights();
-          }
-          if ('after' in tutorialStep) {
-            tutorialStep.after(tutorialStep);
-          }
-          if (tutorialStepIdx === 0) {
-            tutorialWindow.dismiss();
-            tutorialWindow = null;
-            tutorialStep = null;
-          }
-          else {
+        }
+        else {
+          if ('delayNextStep' in tutorialStep) {
             tutorialWindow.modalBlocker.classList.add('hidden');
             setTimeout(showTutorial, 200);
           }
-        }}]);
+          else {
+            showTutorial();
+          }
+        }
+      }});
     tutorialWindow.modalBlocker.id = 'tutorial';
   }
   else {
@@ -194,6 +217,8 @@ function showTutorial()
   if ('before' in tutorialStep) {
     tutorialStep.before(tutorialStep);
   }
+  tutorialWindow.button_Weiter.disabled = true;
+  setTimeout(() => { if (tutorialWindow) { tutorialWindow.button_Weiter.disabled = false; } }, 2000);
 }
 
 function tutorialHighlight(el, sizePt, opacity = 'FF')
@@ -232,7 +257,8 @@ function tutorialHighlight(el, sizePt, opacity = 'FF')
   div.style.width = sizePt + 'pt';
   div.style.height = sizePt + 'pt';
   div.style.borderRadius = (sizePt / 2) + 'pt';
-  div.style.boxShadow = '0 0 ' + (sizePt / 2) + 'pt ' + tutorialHighlightColor + opacity;
+  div.style.setProperty('--box-shadow-color', tutorialHighlightColor + opacity);
+  div.style.setProperty('--box-shadow-size', sizePt / 2 + 'pt');
   let messageTemplate = document.getElementById('message-template');
   document.body.insertBefore(div, messageTemplate);
   return div;

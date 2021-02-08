@@ -564,9 +564,9 @@ html_start();
   <div id="account" class="box">
     <span id="account-name"><?=$_SESSION[USER]?></span><!--
     <?php if (!$_SESSION[EDITING]) { ?>
-    --><a href="<?=$server_dir?>?start-edit" class="button" id="start-edit">Bearbeiten</a><div class="button hidden"></div><!--
+    --><a href="<?=$server_dir?>?start-edit" class="button" id="start-edit" title="Bearbeitungsmodus starten">Bearbeiten</a><div class="button hidden"></div><!--
     <?php } else { ?>
-    --><a href="<?=$server_dir?>?stop-edit" class="button" id="stop-edit">Fertig<span id="stop-edit-timer"></span></a><!--
+    --><a href="<?=$server_dir?>?stop-edit" class="button" id="stop-edit" title="Bearbeitungsmodus beenden">Fertig<span id="stop-edit-timer"></span></a><!--
     <?php } ?>
     --><a href="<?=$server_dir?>?logout" class="button" id="logout">Abmelden</a>
   </div>
@@ -676,7 +676,7 @@ if ($_SESSION[TYPE] === ADMIN_ || !$accounts) {
 ?>
   <div id="log" class="box box-padding box-minimized">
     <div class="box-minimize-buttons">
-      <button class="box-restore">&olarr;</button>
+      <button class="box-restore" title="Änderungsverlauf">&olarr;</button>
       <button class="box-minimize">&mdash;</button>
     </div>
     <div>
@@ -689,7 +689,7 @@ if ($_SESSION[TYPE] === ADMIN_ || !$accounts) {
 
   <div id="help" class="box box-padding box-minimized">
     <div class="box-minimize-buttons">
-      <button class="box-restore">?</button>
+      <button class="box-restore" title="Hilfe">?</button>
       <button class="box-minimize">&mdash;</button>
     </div><?php
     $boxPos = 'unten rechts';

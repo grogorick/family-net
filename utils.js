@@ -181,7 +181,7 @@ modalBlocker.addEventListener('click', e =>
 });
 
 let DISMISS_MESSAGE = 'dismiss-message';
-function showMessage(msg, buttons = [{ label: 'OK', fn: DISMISS_MESSAGE }])
+function showMessage(msg, buttons = { 'OK': DISMISS_MESSAGE })
 {
   let template = document.getElementById('message-template');
   let m = {};
@@ -194,20 +194,18 @@ function showMessage(msg, buttons = [{ label: 'OK', fn: DISMISS_MESSAGE }])
   m.dismiss = e => { m.modalBlocker.parentElement.removeChild(m.modalBlocker); };
   let buttonTemplate = m.box.querySelector('button');
   m.box.removeChild(buttonTemplate);
-  console.log(buttons);
-  buttons.forEach(b => {
-    console.log(b);
+  for (b in buttons) {
     let button = buttonTemplate.cloneNode(true);
-    button.innerHTML = b.label;
-    if (b.fn === DISMISS_MESSAGE) {
+    button.innerHTML = b;
+    if (buttons[b] === DISMISS_MESSAGE) {
       button.addEventListener('click', m.dismiss);
     }
-    else if (typeof b.fn === 'function') {
-      button.addEventListener('click', b.fn);
+    else if (typeof buttons[b] === 'function') {
+      button.addEventListener('click', buttons[b]);
     }
     m.box.appendChild(button);
-    m['button_' + b.label] = button;
-  });
+    m['button_' + b] = button;
+  }
   m.modalBlocker.classList.remove('hidden');
   return m;
 }
