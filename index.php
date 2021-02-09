@@ -746,7 +746,7 @@ if ($_SESSION[TYPE] === ADMIN_ || !$accounts) {
             <li>Das Detailfenster wird <?=$boxPos?> angezeigt</li>
           </ul>
         </li>
-        <li>Direkte Verwandte einer Person hervorheben:
+        <li>Stammbaum einer Person hervorheben:
           <ul>
             <li><i>Doppelklick</i> auf die gewünschte Person</li>
             <li>In direkter Linie verwandte Personen werden markiert</li>
@@ -834,7 +834,7 @@ if ($_SESSION[TYPE] === ADMIN_ || !$accounts) {
     <h2 class="opt opt-edit"><?=($_SESSION[EDITING] ? 'Person bearbeiten' : 'Personendetails')?></h2>
     <div class="box-row">
       <label for="person-form-name">Name: </label>
-      <input id="person-form-name" type="text" autocomplete="off" placeholder="Vorname(n), Nachname(n)" <?=($_SESSION[EDITING] ? '' : 'disabled')?> />
+      <input id="person-form-name" type="text" autocomplete="off" placeholder="(Spitzname) Vorname/n, Nachname/n" <?=($_SESSION[EDITING] ? '' : 'disabled')?> />
     </div><div class="box-row">
       <label for="person-form-birth-day">Geburtstag: </label>
       <input id="person-form-birth-day" type="text" autocomplete="off" placeholder="tt" <?=($_SESSION[EDITING] ? '' : 'disabled')?> />

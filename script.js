@@ -257,16 +257,19 @@ function getGraphPositionFromEvent(e)
 
 function getPersonRufname(d_n)
 {
-  let n = d_n.match(/[*]\s*([^ ,-?]+)(,|-|\s|$)/);
+  let n = d_n.match(/\(([^ ,-?()]+)\)/);
   if (!n) {
-    n = d_n.match(/^([^ ,-?]+)(,|-|\s|$)/);
+    n = d_n.match(/[*]\s*([^ ,-?()]+)(,|-|\s|$)/);
+    if (!n) {
+      n = d_n.match(/^([^ ,-?()]+)(,|-|\s|$)/);
+    }
   }
   return n ? n[1] : '';
 }
 
 function getPersonDisplayFullName(d_n)
 {
-  return d_n.replaceAll(/[,*?]/g, '').replaceAll(/  +/g, ' ');
+  return d_n.replaceAll(/[,*?]|\([^()]*\)/g, '').replaceAll(/  +/g, ' ');
 }
 
 function getNodeColorFromPerson(p)
