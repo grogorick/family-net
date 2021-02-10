@@ -12,6 +12,8 @@ let tutorialSteps = [
       let rw = s.renderers[0].width / 2;
       let rh = s.renderers[0].height / 4;
       tutorialSet = {
+        P0:   getGraphPositionFromScreenPosition(- rw - 100,                      -rh),
+        H0:   {                            x: - 100 + 300 + 'px',              y:  rh + 'px' },
         P1:   getGraphPositionFromScreenPosition(- 50,                            -rh),
         H1:   {                            x: rw - 50 + 'px',                  y:  rh + 'px' },
         H12:  {                            x: rw + 'px',                       y:  rh + 'px' },
@@ -30,18 +32,33 @@ let tutorialSteps = [
     after: () => { tutorialWindow.modalBlocker.classList.remove('backdrop-blur'); },
     delayNextStep: true },
 
-  { m: '<p>Das Netz besteht aus Personen (<span class="tutorial-person"></span>)<span class="invisible">, und Verbindungen (<span class="tutorial-connection"></span>) zwischen Personen.</span></p><p class="invisible">Diese können sich auf der gesamten Seite (dem weißen Hintergrund) und darüber hinaus befinden.</p>',
+  { m: '<p>Das Netz besteht aus Personen (<span class="tutorial-person"></span>)<span class="invisible">, und Verbindungen (<span class="tutorial-connection"></span>) zwischen Personen.</span></p><p class="invisible">Diese können sich auf der gesamten Seite befinden (dem weißen Hintergrund) und darüber hinaus.</p>',
     before: () => {
       addPerson({ t: 'p1', x: tutorialSet.P1.x, y: tutorialSet.P1.y, n: 'Person A', o: '' }, false, false, true, false);
       addPerson({ t: 'p2', x: tutorialSet.P2.x, y: tutorialSet.P2.y, n: 'Person B', o: '' }, false, false, true, false);
       addConnection({ t: 'c12', p1: 'p1', p2: 'p2', r: '', d: '' }, false, false, true, true);
       tutorialHighlight(tutorialSet.H1, 50); } },
 
-  { m: '<p><span class="old">Das Netz besteht aus Personen (<span class="tutorial-person"></span>),</span> und Verbindungen (<span class="tutorial-connection"></span>) zwischen Personen.</p><p class="invisible">Diese können sich auf der gesamten Seite (dem weißen Hintergrund) und darüber hinaus befinden.</p>',
+  { m: '<p><span class="old">Das Netz besteht aus Personen (<span class="tutorial-person"></span>),</span> und Verbindungen (<span class="tutorial-connection"></span>) zwischen Personen.</p><p class="invisible">Diese können sich auf der gesamten Seite befinden (dem weißen Hintergrund) und darüber hinaus.</p>',
     before: () => tutorialHighlight(tutorialSet.H12, 50) },
 
-  { m: '<p class="old">Das Netz besteht aus Personen (<span class="tutorial-person"></span>), und Verbindungen (<span class="tutorial-connection"></span>) zwischen Personen.</p><p>Diese können sich auf der gesamten Seite (dem weißen Hintergrund) und darüber hinaus befinden.</p>',
-    delayNextStep: true } ];
+  { m: '<p class="old">Das Netz besteht aus Personen (<span class="tutorial-person"></span>), und Verbindungen (<span class="tutorial-connection"></span>) zwischen Personen.</p><p>Diese können sich auf der gesamten Seite befinden (dem weißen Hintergrund)<span class="invisible"> und darüber hinaus.</span></p>' },
+
+  { m: '<p class="old">Das Netz besteht aus Personen (<span class="tutorial-person"></span>), und Verbindungen (<span class="tutorial-connection"></span>) zwischen Personen.</p><p><span class="old">Diese können sich auf der gesamten Seite befinden (dem weißen Hintergrund)</span> und darüber hinaus.</p>',
+    before: () => {
+      addPerson({ t: 'p0', x: tutorialSet.P0.x, y: tutorialSet.P0.y, n: 'Person C', o: '' }, false, false, true, true);
+      let tmpX = s.camera.x;
+      let tmpY = s.camera.y;
+      let tmpRatio = s.camera.ratio;
+      let newX = getGraphPositionFromScreenPosition(-s.renderers[0].width / 2 - 100 + (300 / tmpRatio), 0).x - getGraphPositionFromScreenPosition(-s.renderers[0].width / 2 - 100, 0).x;
+      sigma.misc.animation.camera(s.camera, { x: -newX, y: tmpY, ratio: tmpRatio }, { duration: 1000, onComplete: () => {
+          tutorialHighlight(tutorialSet.H0, 50);
+          setTimeout(() => {
+            removeTutorialHighlights();
+            sigma.misc.animation.camera(s.camera, { x: tmpX, y: tmpY, ratio: tmpRatio }, { duration: 1000, onComplete: () =>
+                deletePerson('p0', false, false, true, true) }); }, 2000); } }); },
+    delayNextStep: true,
+    buttonTimeout: 5000 } ];
 
 if (!currentUserIsViewer) { tutorialSteps = tutorialSteps.concat([
   { m: '<p>Durch Doppelklicken auf den Hintergrund <span class="invisible">erstellst du eine neue Person.</span></p>',
@@ -139,7 +156,7 @@ tutorialSteps = tutorialSteps.concat([
   { m: '<p>Oben rechts findest du den Verlauf aller Änderungen am Netz.</p>' + (currentUserIsViewer ? '' : '<p class="invisible">Deine eigenen Änderungen kannst du hier rückgängig machen,<br />solange nach dir kein anderer das Netz geändert hat.</p>'),
     before: () => tutorialHighlight('#log', 80),
     keepHighlights: !currentUserIsViewer,
-    delayNextStep: true } ]);
+    delayNextStep: currentUserIsViewer } ]);
 
 if (!currentUserIsViewer) { tutorialSteps = tutorialSteps.concat([
   { m: '<p class="old">Oben rechts findest du den Verlauf aller Änderungen am Netz.</p>' + (currentUserIsViewer ? '' : '<p>Deine eigenen Änderungen kannst du hier rückgängig machen,<br />solange nach dir kein anderer das Netz geändert hat.</p>'),
@@ -150,7 +167,7 @@ tutorialSteps = tutorialSteps.concat([
     before: () => tutorialHighlight('#help', 80),
     delayNextStep: true },
 
-  { m: '<p>Wenn du fertig bist, halte den Mauscursor über deinen Namen,<br />um die Abmelden-Schaltfläche anzuzeigen.</p>',
+  { m: '<p>Wenn du fertig bist, halte den Mauscursor über deinen Namen,<br />um die Schaltfläche <span class="help-button">Abmelden</span> anzuzeigen.</p>',
     before: () => {
       document.querySelector('#logout').style.display = 'inline-block';
       tutorialHighlight('#logout', 150); },
@@ -159,10 +176,14 @@ tutorialSteps = tutorialSteps.concat([
 
   { m: '<p>Das war\'s auch schon. Viel Spaß.</p>',
     before: () => {
+      tutorialWindow.button_Abbrechen.classList.add('hidden');
+      tutorialWindow.button_Weiter.setAttribute('data-innerHTML', tutorialWindow.button_Weiter.innerHTML);
+      tutorialWindow.button_Weiter.innerHTML = 'OK';
       let xhttp = new XMLHttpRequest();
       xhttp.open('GET', '?action=tutorial-completed', true);
       xhttp.send(); },
-    after: () => loadData() }
+    after: () => loadData(),
+    buttonTimeout: 10 }
 ]);
 
 document.getElementById('restart-tutorial').addEventListener('click', () =>
@@ -205,7 +226,7 @@ function showTutorial()
         else {
           if ('delayNextStep' in tutorialStep) {
             tutorialWindow.modalBlocker.classList.add('hidden');
-            setTimeout(showTutorial, 200);
+            setTimeout(showTutorial, tutorialStep.delayNextStep === true ? 200 : tutorialStep.delayNextStep);
           }
           else {
             showTutorial();
@@ -222,7 +243,7 @@ function showTutorial()
     tutorialStep.before(tutorialStep);
   }
   tutorialWindow.button_Weiter.disabled = true;
-  setTimeout(() => { if (tutorialWindow) { tutorialWindow.button_Weiter.disabled = false; } }, 2000);
+  setTimeout(() => { if (tutorialWindow) { tutorialWindow.button_Weiter.disabled = false; } }, 'buttonTimeout' in tutorialStep ? tutorialStep.buttonTimeout : 2000);
 }
 
 function tutorialHighlight(el, sizePt, opacity = 'FF')
