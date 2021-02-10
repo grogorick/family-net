@@ -676,6 +676,11 @@ if ($_SESSION[TYPE] === ADMIN_ || !$accounts) {
         <input type="submit" class="button button-border-full" value="Account hinzufügen" />
       </form>
     </div>
+    <hr />
+    <h2 class="collapse-trigger collapsed">Logins</h2>
+    <div class="login-log">
+      <?=implode('<br />', array_reverse(explode(PHP_EOL, file_get_contents(LOGINS_FILE))));?>
+    </div>
   </div>
 <?php
 }

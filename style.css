@@ -321,6 +321,11 @@ button:not(:disabled):hover, .button:not(:disabled):hover {
   margin: 10pt 0;
 }
 
+#admin.box .login-log {
+  max-height: 10vh;
+  overflow-y: auto;
+}
+
 @keyframes tutorial-highlight-blink {
   0%   { box-shadow: 0 0 var(--box-shadow-size) var(--box-shadow-color); }
   40%  { box-shadow: 0 0 var(--box-shadow-size) #fff; }
