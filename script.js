@@ -308,6 +308,15 @@ function getDataChildConnections(c)
 {
   return getDataPersonConnections(createChildConnectionNodeId(c.p1, c.p2));
 }
+function getParentConnectionFromChildConnectionNode(t)
+{
+  let p_ts = getParentsFromChildConnectionNode(t);
+  let p1_cs = getDataPersonConnections(p_ts[0]);
+  let c_t = p1_cs.filter((c) => c.p1 == p_ts[1] || c.p2 == p_ts[1]);
+  if (c_t.length === 1)
+    return c_t[0];
+  return null;
+}
 function getParentsFromChildConnectionNode(t)
 {
   return t.split('-');
@@ -740,6 +749,7 @@ function selectDirectRelatives(e)
       if (c.p2 == p_t && getConnectionRelationSettings(c.r).level === 'v') {
         activeState.addEdges(c.t);
         if (isChildConnectionNode(c.p1)) {
+          activeState.addEdges(getParentConnectionFromChildConnectionNode(c.p1).t);
           getParentsFromChildConnectionNode(c.p1).forEach(recurseUp);
         }
         else {
