@@ -186,7 +186,7 @@ button:not(:disabled):hover, .button:not(:disabled):hover {
 #account.box a {
   text-decoration: none;
 }
-#account:not(:hover) a:not(:first-of-type) {
+#account a#logout {
   display: none;
 }
 

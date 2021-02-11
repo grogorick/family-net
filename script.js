@@ -1393,5 +1393,19 @@ dragListener.bind('drop', e =>
   }
 });
 
+let logoutLink = document.querySelector('#account a#logout');
+let hideLogoutLinkTimeout = null;
+document.querySelector('#account').addEventListener('mouseenter', () =>
+{
+  if (hideLogoutLinkTimeout !== null) {
+    clearTimeout(hideLogoutLinkTimeout);
+  }
+  logoutLink.style.display = 'initial';
+});
+document.querySelector('#account').addEventListener('mouseleave', () =>
+{
+  hideLogoutLinkTimeout = setTimeout(() => logoutLink.style.display = '', 3000);
+});
+
 
 setTimeout(s.refresh.bind(s), 1000);
