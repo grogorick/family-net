@@ -684,7 +684,11 @@ if ($_SESSION[TYPE] === ADMIN_ || !$accounts) {
     <hr />
     <h2 class="collapse-trigger">Logins</h2>
     <div class="login-log">
-      <?=implode('<br />', array_reverse(preg_split('/' . PHP_EOL . '/', file_get_contents(LOGINS_FILE), 0, PREG_SPLIT_NO_EMPTY)));?>
+      <table>
+        <tr><td>
+      <?=implode('</td></tr><tr><td>', array_reverse(preg_split('/' . PHP_EOL . '/', str_replace(' | ', '</td><td>', file_get_contents(LOGINS_FILE)), 0, PREG_SPLIT_NO_EMPTY)));?>
+        </td></tr>
+      </table>
     </div>
   </div>
 <?php
