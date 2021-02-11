@@ -16,12 +16,12 @@ const settings = {
   checkOtherEditorInterval: 10000,
 
   relations: {
-    _default: { lineType: 'line', level: null },
+    _default: { lineType: 'dotted', level: null },
     Kind: { lineType: 'arrow', level: 'v' },
-    adoptiert: { lineType: 'arrow', level: 'v' },
-    verheiratet: { lineType: 'dashed', level: 'h' },
-    geschieden: { lineType: 'dotted', level: 'h' },
-    verwitwet: { lineType: 'dotted', level: 'h' } }
+    adoptiert: { lineType: 'dashedarrow', level: 'v' },
+    verheiratet: { lineType: 'line', level: 'h' },
+    geschieden: { lineType: 'dashed', level: 'h' },
+    verwitwet: { lineType: 'dashed', level: 'h' } }
 };
 
 let s = new sigma({

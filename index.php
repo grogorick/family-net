@@ -564,6 +564,8 @@ html_start();
   <script src="linkurious/edgeLabels/sigma.canvas.edges.labels.curve.js"></script>
   <script src="linkurious/edgeLabels/sigma.canvas.edges.labels.curvedArrow.js"></script>
   <script src="linkurious/edgeLabels/settings.js"></script>
+  <script src="edges.dashedarrow.js"></script>
+  <script src="edgehovers.dashedarrow.js"></script>
 </head>
 <body>
   <div id="graph"></div>
@@ -724,8 +726,9 @@ if ($_SESSION[TYPE] === ADMIN_ || !$accounts) {
             <li>Verbindungen
               <dl>
                 <dd><div class="tutorial-connection t-c-arrow"></div> Eltern&mdash;Kind</dd>
-                <dd><div class="tutorial-connection t-c-dashed"></div> Verheiratet</dd>
-                <dd><div class="tutorial-connection t-c-dotted"></div> Geschieden/verwitwet</dd>
+                <dd><div class="tutorial-connection"></div> Verheiratet</dd>
+                <dd><div class="tutorial-connection t-c-dashed"></div> Geschieden/verwitwet</dd>
+                <dd><div class="tutorial-connection t-c-dotted"></div> Andere</dd>
                 <br />
                 <dd><div class="tutorial-connection"></div> Normal</dd>
                 <dd><div class="tutorial-connection t-c-highlight"></div> Ausgewählt</dd>
