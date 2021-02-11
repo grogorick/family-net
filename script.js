@@ -862,7 +862,7 @@ function startNewPerson(e)
   clearPersonMenu();
   updateDateValue(personMenuBirthDay, personMenuBirthMonth, personMenuBirthYear);
   updateDateValue(personMenuDeathDay, personMenuDeathMonth, personMenuDeathYear);
-  showForm(personMenuForm, 'opt-new');
+  showForm(personMenuForm, 'opt-new', true);
 }
 
 function clearPersonMenu()
@@ -917,7 +917,7 @@ function showPersonInfo(t)
     personMenuDeathYear.disabled = true;
     personMenuNote.disabled = true;
   }
-  showForm(personMenuForm, 'opt-edit');
+  showForm(personMenuForm, 'opt-edit', false);
 }
 
 personMenuAdd.addEventListener('click', e =>
@@ -1125,7 +1125,7 @@ function startNewConnection()
       d: ''},
     false, false, true, true);
   clearConnectionMenu();
-  showForm(connectionMenuForm, 'opt-new');
+  showForm(connectionMenuForm, 'opt-new', true);
 }
 
 function startNewChildConnection()
@@ -1139,7 +1139,7 @@ function startNewChildConnection()
       d: ''},
     false, false, true, true);
   clearConnectionMenu();
-  showForm(connectionMenuForm, 'opt-new-child');
+  showForm(connectionMenuForm, 'opt-new-child', true);
 }
 
 function clearConnectionMenu()
@@ -1179,7 +1179,7 @@ function showConnectionInfo(t)
     connectionMenuRelation.disabled = true;
     connectionMenuDesc.disabled = true;
   }
-  showForm(connectionMenuForm, 'opt-edit');
+  showForm(connectionMenuForm, 'opt-edit', false);
 }
 
 connectionMenuAdd.addEventListener('click', e =>

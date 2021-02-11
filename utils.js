@@ -138,7 +138,7 @@ function toServerDataGraph(action, d, cb = { toServer: null, toData: null, toGra
 
 let modalBlocker = document.getElementById('modal-blocker-graph');
 let boxWithModalBlocker = null;
-function showForm(f, opt = null, autofocus = true)
+function showForm(f, opt, autofocus)
 {
   modalBlocker.classList.remove('hidden');
   boxWithModalBlocker = f;
