@@ -780,9 +780,17 @@ if ($_SESSION[TYPE] === ADMIN_ || !$accounts) {
             <li>Daten der Person im Eingabefenster (<?=$boxPos?>) eintragen:
               <dl>
                 <dt><i>Name</i></dt>
-                <dd>Vorname(n) und Nachname(n) mit einem Komma trennen.<br />
-                    Der erste Vorname wird als Rufname im Netz angezeigt.<br />
-                    Ein Sternchen (*) markiert andere Vornamen als Rufname.
+                <dd>
+                  Vorname(n) und Nachname(n) mit einem Komma trennen.<br />
+                  Rufname mit einem * kennzeichnen, sonst der erste Vorname.<br />
+                  Spitzname in Klammern angegeben.
+                  <p>
+                    Bsp.:<br />
+                    &ndash; Maximilian Fritz Mustermann<br />
+                    &ndash; Maximilian *Fritz Mustermann<br />
+                    &ndash; (Maxi) Maximilian Fritz Mustermann<br />
+                    &ndash; (Maxi) Maximilian *Fritz Mustermann
+                  </p>
                 </dd>
               </dl>
             </li>
