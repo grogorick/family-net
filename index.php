@@ -156,7 +156,6 @@ if (isset($_POST[ACTION]) && $_POST[ACTION] === 'login') {
       if (array_key_exists(FIRST_LOGIN_, $a)) {
         $firstLogin = true;
       }
-      file_put_contents(LOGINS_FILE, date(DATE_RFC822) . ' | ' . $a[USER_] . PHP_EOL, FILE_APPEND | LOCK_EX);
       break;
     }
   }
@@ -182,6 +181,12 @@ if (!isset($_SESSION[USER]) && $accounts) {
 <?php
   html_min_end();
   exit;
+}
+
+$login_date = time();
+if (!isset($_SESSION['last-login']) || $login_date > ($_SESSION['last-login'] + 12/*hours*/ * 60/*min*/ * 60/*sec*/)) {
+  $_SESSION['last-login'] = $login_date;
+  file_put_contents(LOGINS_FILE, date(DATE_RFC822, $login_date) . ' | ' . $_SESSION[USER] . PHP_EOL, FILE_APPEND | LOCK_EX);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
