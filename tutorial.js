@@ -6,7 +6,7 @@ let tutorialWindow = null;
 
 let tutorialSteps = [
   { m: firstLogin
-      ? '<p>Hallo!</p><p>Das scheint dein erster Besuch zu sein.<br />Wir starten mit einer kurzen Einführung, bevor du loslegen kannst.</p>'
+      ? '<p>Hallo!</p><p>Das scheint dein erster Besuch zu sein.<br />Wir starten mit einer kurzen Einführung, bevor du loslegen kannst.</p><p>Wenn du erstmal nur einen Blick reinwerfen willst, kannst du dir<br />die Einleitung auch bei deinem nächsten Besuch ansehen.</p>'
       : '<p>Alles klar, gehen wir die Einführung noch einmal durch.</p>',
     before: () => {
       let rw = s.renderers[0].width / 2;
@@ -26,10 +26,16 @@ let tutorialSteps = [
         H3_2: {                            x: rw + 150 + 40 + 'px',            y:  rh - 15 + 'px' },
         H24:  {                            x: rw + (50 + 150 + 60) / 2 + 'px', y:  rh - 15 / 2 + 'px' },
         P4:   getGraphPositionFromScreenPosition(+ 150 + 60,                      -rh - 15),
-        H4:   {                            x: rw + 150 + 60 + 'px',            y:  rh - 15 + 'px' }
-      };
-      s.graph.clear(); s.refresh(); },
-    after: () => { tutorialWindow.modalBlocker.classList.remove('backdrop-blur'); },
+        H4:   {                            x: rw + 150 + 60 + 'px',            y:  rh - 15 + 'px' } };
+      s.graph.clear(); s.refresh();
+      tutorialWindow.button_Abbrechen.setAttribute('data-innerHTML', tutorialWindow.button_Abbrechen.innerHTML);
+      tutorialWindow.button_Abbrechen.innerHTML = 'Später ansehen';
+      tutorialWindow.button_Weiter.setAttribute('data-innerHTML', tutorialWindow.button_Weiter.innerHTML);
+      tutorialWindow.button_Weiter.innerHTML = 'Los geht\'s'; },
+    after: () => {
+      tutorialWindow.button_Abbrechen.innerHTML = tutorialWindow.button_Abbrechen.getAttribute('data-innerHTML');
+      tutorialWindow.button_Weiter.innerHTML = tutorialWindow.button_Weiter.getAttribute('data-innerHTML');
+      tutorialWindow.modalBlocker.classList.remove('backdrop-blur'); },
     delayNextStep: true },
 
   { m: '<p>Das Netz besteht aus Personen (<span class="tutorial-person"></span>)<span class="invisible">, und Verbindungen (<span class="tutorial-connection"></span>) zwischen Personen.</span></p><p class="invisible">Diese können sich auf der gesamten Seite befinden (dem weißen Hintergrund) und darüber hinaus.</p>',
@@ -177,7 +183,6 @@ tutorialSteps = tutorialSteps.concat([
   { m: '<p>Das war\'s auch schon. Viel Spaß.</p>',
     before: () => {
       tutorialWindow.button_Abbrechen.classList.add('hidden');
-      tutorialWindow.button_Weiter.setAttribute('data-innerHTML', tutorialWindow.button_Weiter.innerHTML);
       tutorialWindow.button_Weiter.innerHTML = 'OK';
       let xhttp = new XMLHttpRequest();
       xhttp.open('GET', '?action=tutorial-completed', true);
