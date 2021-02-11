@@ -30,7 +30,7 @@
         outerBorderSize = node.active ?
           settings('nodeActiveOuterBorderSize') || settings('nodeOuterBorderSize') :
           settings('nodeOuterBorderSize'),
-        alignment = settings('labelAlignment'),
+        alignment = node.labelAlignment || settings('labelAlignment'),
         fontSize = (settings('labelSize') === 'fixed') ?
           settings('defaultLabelSize') :
           settings('labelSizeRatio') * size,
@@ -138,7 +138,7 @@
           labelOffsetX = - size - borderSize - outerBorderSize - 3;
           break;
         case 'top':
-          labelOffsetY = - size - 2 * fontSize / 3;
+          labelOffsetY = - size / 2 - (lines.length * 3) * fontSize / 3;
           break;
         case 'constrained':
           labelWidth = sigma.utils.canvas.getTextWidth(node.label);
@@ -287,10 +287,7 @@
         lineFull = true;
 
       for (var i = 0; i < words.length; ++i) {
-        if (words[i] === '\n') {
-          lineFull = true;
-        }
-        else if (lineFull) {
+        if (lineFull) {
           if (words[i].length > maxLineLength) {
             var parts = splitWord(words[i], maxLineLength);
             for (var j = 0; j < parts.length; ++j) {

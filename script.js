@@ -366,10 +366,13 @@ function moveChildConnectionNodes(nodes)
 
 // load from file
 // ------------------------------------
+let nodeCenterY = 0;
 function applyLoadedData(loadedData, addLogItems)
 {
   data = loadedData;
   console.log(data);
+  data.graph.persons.forEach(p => nodeCenterY += p.y);
+  nodeCenterY /= data.graph.persons.length;
   moveCamera({
       x: parseFloat(data.settings.camera.x),
       y: parseFloat(data.settings.camera.y),
@@ -1008,7 +1011,8 @@ function addPerson(p, toData, toServer, toGraph, refreshGraph, doneCallback = nu
             y: p.y,
             label: getPersonRufname(p.n),
             size: settings.nodeSize,
-            color: getNodeColorFromPerson(p) });
+            color: getNodeColorFromPerson(p),
+            labelAlignment: (p.y < nodeCenterY) ? 'top' : 'bottom' });
         },
       refreshGraph: refreshGraph,
       doneCallback: doneCallback

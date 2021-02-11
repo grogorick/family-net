@@ -1,6 +1,9 @@
 <?php
 //phpinfo();
 
+define('V', 4);
+define('V_', '?v=' . V);
+
 $server_dir = substr($_SERVER["PHP_SELF"], 0, 1 + strrpos($_SERVER["PHP_SELF"], '/'));
 
 function html_start()
@@ -545,27 +548,27 @@ if (isset($_GET[ACTION])) {
 
 html_start();
 ?>
-  <link rel="stylesheet" type="text/css" href="style.css" />
-  <script src="linkurious/sigma.min.js"></script>
-  <script src="linkurious/renderer/sigma.canvas.nodes.def.js"></script>
-  <script src="linkurious/renderer/sigma.canvas.labels.def.js"></script>
-  <script src="linkurious/renderer/sigma.canvas.hovers.def.js"></script>
-  <script src="linkurious/renderer/sigma.canvas.edges.def.js"></script>
-  <script src="linkurious/renderer/sigma.canvas.edges.arrow.js"></script>
-  <script src="linkurious/renderer/sigma.canvas.edges.dashed.js"></script>
-  <script src="linkurious/renderer/sigma.canvas.edges.dotted.js"></script>
-  <script src="linkurious/renderer/sigma.canvas.edgehovers.def.js"></script>
-  <script src="linkurious/renderer/sigma.canvas.edgehovers.arrow.js"></script>
-  <script src="linkurious/renderer/sigma.canvas.edgehovers.dashed.js"></script>
-  <script src="linkurious/renderer/sigma.canvas.edgehovers.dotted.js"></script>
-  <script src="linkurious/activeState/sigma.plugins.activeState.js"></script>
-  <script src="linkurious/dragNodes/sigma.plugins.dragNodes.js"></script>
-  <script src="linkurious/edgeLabels/sigma.canvas.edges.labels.def.js"></script>
-  <script src="linkurious/edgeLabels/sigma.canvas.edges.labels.curve.js"></script>
-  <script src="linkurious/edgeLabels/sigma.canvas.edges.labels.curvedArrow.js"></script>
-  <script src="linkurious/edgeLabels/settings.js"></script>
-  <script src="edges.dashedarrow.js"></script>
-  <script src="edgehovers.dashedarrow.js"></script>
+  <link rel="stylesheet" type="text/css" href="style.css<?=V_?>" />
+  <script src="linkurious/sigma.min.js<?=V_?>"></script>
+  <script src="linkurious/renderer/sigma.canvas.nodes.def.js<?=V_?>"></script>
+  <script src="linkurious/renderer/sigma.canvas.labels.def.js<?=V_?>"></script>
+  <script src="linkurious/renderer/sigma.canvas.hovers.def.js<?=V_?>"></script>
+  <script src="linkurious/renderer/sigma.canvas.edges.def.js<?=V_?>"></script>
+  <script src="linkurious/renderer/sigma.canvas.edges.arrow.js<?=V_?>"></script>
+  <script src="linkurious/renderer/sigma.canvas.edges.dashed.js<?=V_?>"></script>
+  <script src="linkurious/renderer/sigma.canvas.edges.dotted.js<?=V_?>"></script>
+  <script src="linkurious/renderer/sigma.canvas.edgehovers.def.js<?=V_?>"></script>
+  <script src="linkurious/renderer/sigma.canvas.edgehovers.arrow.js<?=V_?>"></script>
+  <script src="linkurious/renderer/sigma.canvas.edgehovers.dashed.js<?=V_?>"></script>
+  <script src="linkurious/renderer/sigma.canvas.edgehovers.dotted.js<?=V_?>"></script>
+  <script src="linkurious/activeState/sigma.plugins.activeState.js<?=V_?>"></script>
+  <script src="linkurious/dragNodes/sigma.plugins.dragNodes.js<?=V_?>"></script>
+  <script src="linkurious/edgeLabels/sigma.canvas.edges.labels.def.js<?=V_?>"></script>
+  <script src="linkurious/edgeLabels/sigma.canvas.edges.labels.curve.js<?=V_?>"></script>
+  <script src="linkurious/edgeLabels/sigma.canvas.edges.labels.curvedArrow.js<?=V_?>"></script>
+  <script src="linkurious/edgeLabels/settings.js<?=V_?>"></script>
+  <script src="edges.dashedarrow.js<?=V_?>"></script>
+  <script src="edgehovers.dashedarrow.js<?=V_?>"></script>
 </head>
 <body>
   <div id="graph"></div>
@@ -907,8 +910,8 @@ if ($_SESSION[TYPE] === ADMIN_ || !$accounts) {
     let modKeys = '<?=$modKeys?>';
     let boxPos = '<?=$boxPos?>';
   </script>
-  <script src="utils.js"></script>
-  <script src="script.js"></script>
-  <script src="tutorial.js"></script>
+  <script src="utils.js<?=V_?>"></script>
+  <script src="script.js<?=V_?>"></script>
+  <script src="tutorial.js<?=V_?>"></script>
 </body>
 </html>

@@ -29,7 +29,7 @@
         labelOffsetX,
         labelOffsetY,
         shouldRender = true,
-        alignment = settings('labelAlignment');
+        alignment = node.labelAlignment || settings('labelAlignment');
 
     if (size <= settings('labelThreshold'))
       return;
@@ -69,6 +69,8 @@
     labelOffsetY = fontSize / 3;
     context.textAlign = "center";
 
+    var lines = getLines(node.label, maxLineLength);
+
     switch (alignment) {
       case 'bottom':
         labelOffsetY = + size + 4 * fontSize / 3;
@@ -80,7 +82,7 @@
         labelOffsetX = - size - borderSize - 3;
         break;
       case 'top':
-        labelOffsetY = - size - 2 * fontSize / 3;
+        labelOffsetY = - size / 2 - (lines.length * 3) * fontSize / 3;
         break;
       case 'constrained':
         labelWidth = sigma.utils.canvas.getTextWidth(context,
@@ -107,8 +109,7 @@
     }
 
     if (shouldRender) {
-      var lines = getLines(node.label, maxLineLength),
-        baseX = node[prefix + 'x'] + labelOffsetX,
+      var baseX = node[prefix + 'x'] + labelOffsetX,
         baseY = Math.round(node[prefix + 'y'] + labelOffsetY);
 
       for (var i = 0; i < lines.length; ++i) {
@@ -125,7 +126,7 @@
   */
   function getLines(text, maxLineLength) {
     if (maxLineLength <= 1) {
-      return [text];
+      return text.split('\n');
     }
 
     var words = text.split(' '),
