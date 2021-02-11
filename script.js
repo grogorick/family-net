@@ -272,6 +272,15 @@ function getPersonDisplayFullName(d_n)
   return d_n.replaceAll(/[,*?]|\([^()]*\)/g, '').replaceAll(/  +/g, ' ');
 }
 
+function getPersonDisplayString(p)
+{
+  let b = p.b.split('-');
+  b = b.length ? b[0] : '';
+  let d = p.d.split('-');
+  d = d.length ? d[0] : '';
+  return getPersonDisplayFullName(p.n) + ((b || d) ? ' \n ' + b + ' — ' + d : '');
+}
+
 function getNodeColorFromPerson(p)
 {
   return 'color' in p ? p.color : (p.t === PERSON_PREVIEW ? settings.nodeColorPreview : ([p.n, p.o].some(v => v.includes('???')) ? settings.nodeColorWarning : ''));
@@ -1084,7 +1093,7 @@ function movePersons(e, toData, toServer, toGraph, refreshGraph, alignNodesToGri
 function hoverPersons(e)
 {
   // console.log(e);
-  e.data.enter.nodes.forEach(n => n.label = getPersonDisplayFullName(getDataPerson(n.id).n));
+  e.data.enter.nodes.forEach(n => n.label = getPersonDisplayString(getDataPerson(n.id)));
   e.data.leave.nodes.forEach(n => n.label = getPersonRufname(getDataPerson(n.id).n));
   s.refresh();
 }

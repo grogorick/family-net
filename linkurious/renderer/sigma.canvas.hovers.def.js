@@ -276,7 +276,7 @@
       }
 
       if (maxLineLength <= 1) {
-        return [text];
+        return text.split('\n');
       }
 
       var words = text.split(' '),
@@ -287,7 +287,10 @@
         lineFull = true;
 
       for (var i = 0; i < words.length; ++i) {
-        if (lineFull) {
+        if (words[i] === '\n') {
+          lineFull = true;
+        }
+        else if (lineFull) {
           if (words[i].length > maxLineLength) {
             var parts = splitWord(words[i], maxLineLength);
             for (var j = 0; j < parts.length; ++j) {
