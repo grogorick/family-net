@@ -682,9 +682,9 @@ if ($_SESSION[TYPE] === ADMIN_ || !$accounts) {
       </form>
     </div>
     <hr />
-    <h2 class="collapse-trigger collapsed">Logins</h2>
+    <h2 class="collapse-trigger">Logins</h2>
     <div class="login-log">
-      <?=implode('<br />', array_reverse(explode(PHP_EOL, file_get_contents(LOGINS_FILE))));?>
+      <?=implode('<br />', array_reverse(preg_split('/' . PHP_EOL . '/', file_get_contents(LOGINS_FILE), 0, PREG_SPLIT_NO_EMPTY)));?>
     </div>
   </div>
 <?php
