@@ -159,7 +159,7 @@ function showForm(f, opt, autofocus)
       firstInput.focus();
     }
     else {
-      let cancelButton = f.querySelector('button[id$="cancel"]').focus();
+      f.querySelector('button[id$="cancel"]').focus();
     }
   }
 }
@@ -222,6 +222,20 @@ document.querySelectorAll('.box-minimize, .box-restore').forEach(el =>
   {
     let box = el.parentNode.parentNode;
     box.classList.toggle('box-minimized');
+  });
+});
+
+document.querySelectorAll('.hidden-toggle').forEach(el =>
+{
+  el.addEventListener('click', e =>
+  {
+    let targetSelector = el.getAttribute('data-hidden-toggle-target');
+    if (targetSelector) {
+      let target = document.querySelector(targetSelector);
+      if (target) {
+        target.classList.toggle('hidden');
+      }
+    }
   });
 });
 

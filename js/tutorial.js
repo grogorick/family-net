@@ -13,7 +13,6 @@ let tutorialSteps = [
       let rh = s.renderers[0].height / 4;
       tutorialSet = {
         P0:   getGraphPositionFromScreenPosition(- rw - 100,                      -rh),
-        H0:   {                            x: - 100 + 300 + 'px',              y:  rh + 'px' },
         P1:   getGraphPositionFromScreenPosition(- 50,                            -rh),
         H1:   {                            x: rw - 50 + 'px',                  y:  rh + 'px' },
         H12:  {                            x: rw + 'px',                       y:  rh + 'px' },
@@ -58,9 +57,7 @@ let tutorialSteps = [
       let tmpRatio = s.camera.ratio;
       let newX = getGraphPositionFromScreenPosition(-s.renderers[0].width / 2 - 100 + (300 / tmpRatio), 0).x - getGraphPositionFromScreenPosition(-s.renderers[0].width / 2 - 100, 0).x;
       sigma.misc.animation.camera(s.camera, { x: -newX, y: tmpY, ratio: tmpRatio }, { duration: 1000, onComplete: () => {
-          tutorialHighlight(tutorialSet.H0, 50);
           setTimeout(() => {
-            removeTutorialHighlights();
             sigma.misc.animation.camera(s.camera, { x: tmpX, y: tmpY, ratio: tmpRatio }, { duration: 1000, onComplete: () =>
                 deletePerson('p0', false, false, true, true) }); }, 2000); } }); },
     delayNextStep: true,
@@ -171,13 +168,6 @@ if (!currentUserIsViewer) { tutorialSteps = tutorialSteps.concat([
 tutorialSteps = tutorialSteps.concat([
   { m: '<p>Gleich daneben findest du jederzeit eine Anleitung<br />mit weiteren Details zu allen wichtigen Funktionen.</p><p>Dort kannst du auch diese Anleitung noch einmal starten.</p>',
     before: () => tutorialHighlight('#help', 80),
-    delayNextStep: true },
-
-  { m: '<p>Wenn du fertig bist, halte den Mauscursor über deinen Namen,<br />um die Schaltfläche <span class="help-button">Abmelden</span> anzuzeigen.</p>',
-    before: () => {
-      document.querySelector('#logout').style.display = 'inline-block';
-      tutorialHighlight('#logout', 150); },
-    after: () => document.querySelector('#logout').style.display = '',
     delayNextStep: true },
 
   { m: '<p>Das war\'s auch schon. Viel Spaß.</p>',

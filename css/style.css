@@ -1,10 +1,27 @@
 @import url('https://fonts.googleapis.com/css?family=Josefin+Sans:300');
+
+@media only screen and (max-width: 767px) {
+.desktop-only {
+  display: none;
+}
+}
+@media only screen and (min-width: 768px) {
+.mobile-only {
+  display: none !important;
+}
+}
+
 html, body, #graph {
-  height: 100%;
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
   margin: 0;
 }
 body, input:not([type="submit"]), select, textarea, button {
   font-family: 'Josefin Sans', 'Trebuchet MS', sans-serif;
+  line-height: 1.5;
   color: #000;
 }
 body {
@@ -24,8 +41,15 @@ body {
   background: #ddd;
 }
 
+@media only screen and (min-width: 768px) {
 .hidden {
   display: none !important;
+}
+}
+@media only screen and (max-width: 767px) {
+.hidden:not(.mobile-inverse-hidden), .mobile-inverse-hidden:not(.hidden) {
+  display: none !important;
+}
 }
 
 #graph, .modal-blocker {
@@ -47,17 +71,37 @@ body {
 .box {
   display: block;
   position: fixed;
-  right: 10pt;
-  bottom: 10pt;
-  background: white;
   box-shadow: 2px 1px 5px #0006;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  top: 0;
+  backdrop-filter: blur(2pt);
+  background: #fffc;
+}
+@media only screen and (min-width: 768px) {
+.box {
+  right: initial;
+  bottom: initial;
+  left: initial;
+  top: initial;
+  max-height: calc(100vh - 50pt);
+  backdrop-filter: none;
+  background: white;
 }
 .box:hover {
   z-index: 1;
 }
+}
 
 .box.box-padding:not(.box-minimized) {
   padding: 20pt;
+}
+
+@media only screen and (max-width: 767px) {
+.box-minimized {
+  display: none;
+}
 }
 
 .box-minimized > *:not(.box-minimize-buttons),
@@ -70,6 +114,7 @@ body {
 }
 .box:not(.box-minimized) .box-minimize-buttons {
   margin-top: -20pt;
+  margin-left: -20pt;
   margin-right: -20pt;
 }
 
@@ -171,34 +216,48 @@ button:not(:disabled):hover, .button:not(:disabled):hover {
   text-align: initial;
 }
 
+#mobile-menu-toggle {
+  right: initial;
+  bottom: initial;
+}
+
+#account.box {
+  font-size: 120%;
+}
+#account.box > * {
+  display: block;
+}
+#account.box #account-name {
+  padding: 5pt 20pt;
+}
+#account.box a {
+  text-decoration: none;
+}
+#account.box > hr {
+  border: 0;
+  border-top: 1px solid #ddd;
+}
+@media only screen and (min-width: 768px) {
 #account.box {
   bottom: initial;
   top: 10pt;
   right: initial;
   left: 10pt;
   font-size: 85%;
+  backdrop-filter: none;
+  background: #fff;
 }
-#account.box #account-name {
-  margin: 0 20pt;
-  padding: 5pt 20pt;
+#account.box > * {
   display: inline-block;
 }
-#account.box a {
-  text-decoration: none;
-}
-#account a#logout {
-  display: none;
 }
 
+@media only screen and (min-width: 768px) {
 #help.box {
-  bottom: initial;
   top: 10pt;
   right: 60pt;
   white-space: nowrap;
 }
-#help.box:not(.box-minimized) {
-  height: 30%;
-  min-width: 300pt;
 }
 #help.box h2 {
   border-bottom: 1px solid #eee;
@@ -209,7 +268,7 @@ button:not(:disabled):hover, .button:not(:disabled):hover {
 #help.box > div:nth-child(2) {
   margin: 0 -20pt 0 0;
   padding: 0 20pt 0 0;
-  height: 100%;
+  max-height: 70vh;
   overflow-y: scroll;
 }
 #help.box > div > ul {
@@ -243,16 +302,18 @@ button:not(:disabled):hover, .button:not(:disabled):hover {
   box-shadow: 1pt 1pt 3pt #00000022;
 }
 
+@media only screen and (min-width: 768px) {
 #log.box {
-  bottom: initial;
+  right: 10pt;
   top: 40pt;
+}
 }
 #log.box ul {
   list-style-type: none;
   padding-left: 0;
   padding-top: 5pt;
   margin: 0 -20pt;
-  height: 30vh;
+  max-height: 70vh;
   overflow-y: scroll;
 }
 #log.box li {
@@ -295,27 +356,31 @@ button:not(:disabled):hover, .button:not(:disabled):hover {
 }
 
 #log-restore-selected-item {
-  right: initial;
-  bottom: initial;
   left: 50%;
   top: 10pt;
   background: white;
 }
 
+@media only screen and (min-width: 768px) {
 #person-form.box, #connection-form.box {
+  right: 10pt;
+  bottom: 10pt;
   width: 280pt;
+}
 }
 #connection-form-persons {
   display: block;
   margin-bottom: 10pt;
 }
 
+@media only screen and (min-width: 768px) {
 #admin.box {
-  bottom: initial;
   top: 40pt;
-  right: initial;
   left: 10pt;
-  font-size: 85%;
+}
+}
+#admin.box > .box-minimize-buttons {
+  text-align: left;
 }
 #admin.box hr {
   margin: 10pt 0;
@@ -324,6 +389,9 @@ button:not(:disabled):hover, .button:not(:disabled):hover {
 #admin.box .login-log {
   max-height: 10vh;
   overflow-y: auto;
+}
+#admin.box .login-log td:not(:first-child) {
+  padding-left: 10pt;
 }
 
 @keyframes tutorial-highlight-blink {

@@ -1,5 +1,5 @@
 const settings = {
-  nodeSize: 5,
+  nodeSize: isMobile ? 3 : 5,
   nodeColor: '#78D384',
   nodeColorWarning: '#D0D480',
   nodeColorHighlight: '#3BAA49',
@@ -68,8 +68,8 @@ let s = new sigma({
     labelHoverShadow: true,
     labelHoverShadowColor: '#ddd',
     labelSize: 'proportional',
-    labelSizeRatio: 1.5,
-    labelThreshold: 5,
+    labelSizeRatio: isMobile ? 1.5 : 1.7,
+    labelThreshold: isMobile ? 3 : 5,
 
     // connection
     edgeColor: 'default',
@@ -128,7 +128,7 @@ function currentUserCanEdit()
 
 function durationToString(duration)
 {
-  return (duration >= 60) ? Math.floor(duration / 60) + 'm' : ((duration % 60) + 's')
+  return (duration >= 60) ? Math.floor(duration / 60) + 'min' : ((duration % 60) + 's')
 }
 
 let startEdit = document.getElementById('start-edit');
@@ -136,35 +136,38 @@ if (startEdit) {
   if (currentUserIsViewer) {
     startEdit.classList.add('hidden');
   }
-  let checkOtherEditor = () =>
-  {
-    console.log('check other editor');
-    let xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function()
+  else {
+    let otherEditorDiv = document.getElementById('other-editor');
+    let checkOtherEditor = () =>
     {
-      if (this.readyState === 4 && this.status === 200) {
-        let otherEditor = JSON.parse(this.responseText);
-        if (otherEditor !== false) {
-          if (!currentUserIsViewer) {
-            startEdit.classList.add('hidden');
+      console.log('check other editor');
+      let xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function()
+      {
+        if (this.readyState === 4 && this.status === 200) {
+          let otherEditor = JSON.parse(this.responseText);
+          if (otherEditor !== false) {
+            if (!currentUserIsViewer) {
+              startEdit.classList.add('hidden');
+            }
+            let otherEditorTimeout = otherEditor[0] + editingTimeoutDuration - Math.floor(new Date().getTime() / 1000);
+            otherEditorDiv.innerHTML = '(' + otherEditor[1] + ' bearbeitet gerade - ' + durationToString(otherEditorTimeout) + ')';
+            otherEditorDiv.classList.remove('hidden');
           }
-          let otherEditorTimeout = otherEditor[0] + editingTimeoutDuration - Math.floor(new Date().getTime() / 1000);
-          startEdit.nextElementSibling.innerHTML = '(' + otherEditor[1] + ' bearbeitet gerade - ' + durationToString(otherEditorTimeout) + ')';
-          startEdit.nextElementSibling.classList.remove('hidden');
-        }
-        else {
-          startEdit.nextElementSibling.classList.add('hidden');
-          if (!currentUserIsViewer) {
-            startEdit.classList.remove('hidden');
+          else {
+            otherEditorDiv.classList.add('hidden');
+            if (!currentUserIsViewer) {
+              startEdit.classList.remove('hidden');
+            }
           }
         }
-      }
+      };
+      xhttp.open('GET', '?action=get-editor', true);
+      xhttp.send();
     };
-    xhttp.open('GET', '?action=get-editor', true);
-    xhttp.send();
-  };
-  setInterval(checkOtherEditor, settings.checkOtherEditorInterval);
-  checkOtherEditor();
+    setInterval(checkOtherEditor, settings.checkOtherEditorInterval);
+    checkOtherEditor();
+  }
 }
 
 let stopEditTimer = document.getElementById('stop-edit-timer');
@@ -619,9 +622,9 @@ function cameraMoved(e)
   {
     saveCameraTimeout = null;
     moveCamera({
-        x: s.renderers[0].camera.x,
-        y: s.renderers[0].camera.y,
-        z: s.renderers[0].camera.ratio
+        x: s.camera.x,
+        y: s.camera.y,
+        z: s.camera.ratio
       },
       true, true, false, false);
   },
@@ -634,9 +637,9 @@ function moveCamera(xyz, toData, toServer, toGraph, refreshGraph)
       toServer: toServer,
       toData: !toData ? null : () => { data.settings.camera = xyz; },
       toGraph: !toGraph ? null : () => {
-        s.renderers[0].camera.x = xyz.x;
-        s.renderers[0].camera.y = xyz.y;
-        s.renderers[0].camera.ratio = xyz.z; },
+        s.camera.x = xyz.x;
+        s.camera.y = xyz.y;
+        s.camera.ratio = xyz.z; },
       refreshGraph: refreshGraph
     });
   if (toServer) {
@@ -1387,6 +1390,7 @@ s.bind('coordinatesUpdated', e =>
     return;
   }
   skipClickNodeAfterDropOrCoordinatesUpdated = true;
+  s.camera.angle = 0;
   if (currentUserCanEdit()) {
     cameraMoved(e);
   }
@@ -1416,19 +1420,6 @@ dragListener.bind('drop', e =>
   }
 });
 
-let logoutLink = document.querySelector('#account a#logout');
-let hideLogoutLinkTimeout = null;
-document.querySelector('#account').addEventListener('mouseenter', () =>
-{
-  if (hideLogoutLinkTimeout !== null) {
-    clearTimeout(hideLogoutLinkTimeout);
-  }
-  logoutLink.style.display = 'initial';
-});
-document.querySelector('#account').addEventListener('mouseleave', () =>
-{
-  hideLogoutLinkTimeout = setTimeout(() => logoutLink.style.display = '', 3000);
-});
-
+window.addEventListener('resize', () => window.location.reload());
 
 setTimeout(s.refresh.bind(s), 1000);

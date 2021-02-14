@@ -1,10 +1,11 @@
 <?php
 //phpinfo();
 
-define('V', 4);
+// browser cache fix for scripts and styles
+define('V', 5);
 define('V_', '?v=' . V);
 
-$server_dir = substr($_SERVER["PHP_SELF"], 0, 1 + strrpos($_SERVER["PHP_SELF"], '/'));
+$server_url = substr($_SERVER["PHP_SELF"], 0, 1 + strrpos($_SERVER["PHP_SELF"], '/'));
 
 function html_start()
 {
@@ -19,40 +20,6 @@ header('Content-Type:text/html');
   <title>Familiennetz</title>
   <meta name="description" content="private website" />
   <link rel="icon" type="image/png" href="favicon.png" />
-<?php
-}
-
-function html_min_start()
-{
-  html_start();
-?>
-  <style type="text/css">
-    html, body {
-      height: 100%;
-    }
-    body {
-      margin: 0;
-      display: flex;
-    }
-    body > div {
-      margin: auto;
-    }
-    form {
-      display: inline-block;
-    }
-  </style>
-</head>
-<body>
-  <div>
-<?php
-}
-
-function html_min_end()
-{
-?>
-  </div>
-</body>
-</html>
 <?php
 }
 
@@ -77,9 +44,10 @@ function prepare_json_for_storage($arr)
   ], json_encode($arr));
 }
 
+define('RUNTIME_DIR', 'runtime');
 
-define('ACCOUNTS_FILE', 'accounts.yml');
-define('LOGINS_FILE', 'logins.txt');
+define('ACCOUNTS_FILE', RUNTIME_DIR . '/accounts.yml');
+define('LOGINS_FILE', RUNTIME_DIR . '/logins.txt');
 
 define('USER', 'user'); define('USER_', 'u');
 define('PASSWORD', 'password'); define('PASSWORD_', 'p');
@@ -95,10 +63,10 @@ define('ACTION', 'action');
 define('ADMIN_ACTION', 'admin-action');
 define('EDITING', 'editing');
 
-define('CURRENT_EDITOR_FILE', 'current_editor.yml');
+define('CURRENT_EDITOR_FILE', RUNTIME_DIR . '/current_editor.yml');
 define('CURRENT_EDITOR_TIMEOUT', 10 * 60);
 
-define('SETTINGS_FILE', 'settings.yml');
+define('SETTINGS_FILE', RUNTIME_DIR . '/settings.yml');
 define('CAMERA', 'camera');
 
 define('STORAGE_DIR', 'storage');
@@ -111,6 +79,15 @@ define('CD_STORAGE_DIR', 'cd ' . STORAGE_DIR . '; ');
 $accounts = []; $firstLogin = false;
 $settings = [ CAMERA => [ 'x' => 0, 'y' => 0, 'z' => 1] ];
 $data = [ PERSONS => [], CONNECTIONS => [] ];
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+if (!file_exists(RUNTIME_DIR)) {
+  mkdir(RUNTIME_DIR);
+}
+if (!file_exists(STORAGE_DIR)) {
+  mkdir(STORAGE_DIR);
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -131,17 +108,17 @@ function save_accounts()
 function init()
 {
   global $accounts;
-  global $server_dir;
+  global $server_url;
   if (!file_exists(SETTINGS_FILE)) {
     save_settings();
   }
-  if (!file_exists(STORAGE_DIR) || !file_exists(STORAGE_DIR . '/' . STORAGE_FILE) || !file_exists(STORAGE_DIR . '/.git')) {
-    exec('init.sh ' .
+  if (!file_exists(STORAGE_DIR . '/' . STORAGE_FILE) || !file_exists(STORAGE_DIR . '/.git')) {
+    exec('sh/init.sh ' .
       '"' . STORAGE_DIR . '" 2>&1', $output, $ret);
 	  $_SESSION[USER] = $accounts[0][USER_];
 	  save_data('init');
 	  unset($_SESSION[USER]);
-	  header('Location: ' . $server_dir);
+	  header('Location: ' . $server_url);
   }
 }
 
@@ -166,27 +143,60 @@ else if (isset($_GET['logout'])) {
     stopEditing();
   }
   session_unset();
-  header('Location: ' . $server_dir);
+  header('Location: ' . $server_url);
 }
 
 if (!isset($_SESSION[USER]) && $accounts) {
-  html_min_start();
+  html_start();
 ?>
+  <style type="text/css">
+    html, body {
+      height: 100%;
+    }
+    body {
+      margin: 0;
+      display: flex;
+    }
+    body > div {
+      margin: auto;
+    }
+    form {
+      display: inline-block;
+    }
+    input {
+      border: 1px solid #aaa;
+      border-radius: 3pt;
+      padding: 3pt;
+    }
+    @media only screen and (max-width: 767px) {
+      input {
+        margin: 10pt 0;
+        display: block;
+        font-size: 120%;
+        width: 70vw;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div>
     <form method="POST">
       <input type="hidden" name="<?=ACTION?>" value="login" />
       <input name="<?=USER?>" type="text" placeholder="Name" autofocus />
       <input name="<?=PASSWORD?>" type="password" placeholder="Passwort" />
-      <input type="submit" value="Weiter" />
+      <input type="submit" value="Anmelden" />
     </form>
+  </div>
+</body>
+</html>
 <?php
-  html_min_end();
   exit;
 }
 
 $login_date = time();
 if (!isset($_SESSION['last-login']) || $login_date > ($_SESSION['last-login'] + 12/*hours*/ * 60/*min*/ * 60/*sec*/)) {
   $_SESSION['last-login'] = $login_date;
-  file_put_contents(LOGINS_FILE, date(DATE_RFC822, $login_date) . ' | ' . $_SESSION[USER] . PHP_EOL, FILE_APPEND | LOCK_EX);
+  file_put_contents(LOGINS_FILE, date(DATE_RFC2822, $login_date) . ' | ' . $_SESSION[USER] . PHP_EOL, FILE_APPEND | LOCK_EX);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -264,13 +274,13 @@ if (isset($_GET['start-edit'])) {
   if ($_SESSION[TYPE] !== VIEWER_) {
     startEditing();
   }
-  header('Location: ' . $server_dir);
+  header('Location: ' . $server_url);
   exit;
 }
 
 else if (isset($_GET['stop-edit'])) {
   stopEditing();
-  header('Location: ' . $server_dir);
+  header('Location: ' . $server_url);
   exit;
 }
 
@@ -340,7 +350,7 @@ function save_data($git_commit)
   global $data;
   $file_content = prepare_json_for_storage($data);
   file_put_contents(STORAGE_DIR . '/' . STORAGE_FILE, $file_content, LOCK_EX);
-  exec('update.sh ' .
+  exec('sh/update.sh ' .
     '"' . STORAGE_DIR . '" ' .
     '"' . STORAGE_FILE . '" ' .
     '"' . $_SESSION[USER] . '" ' .
@@ -468,7 +478,7 @@ if (isset($_GET[ACTION])) {
           exec(CD_STORAGE_DIR . 'git tag reset-to-' . $hash . '-by-' . preg_replace('/\\s/', '_', $_SESSION[USER]) . '-at-' . $t . ';');
           exec(CD_STORAGE_DIR . 'git reset --hard ' . $hash);
         }
-        header('Location: ' . $server_dir);
+        header('Location: ' . $server_url);
         exit;
       }
 
@@ -553,41 +563,50 @@ if (isset($_GET[ACTION])) {
 
 html_start();
 ?>
-  <link rel="stylesheet" type="text/css" href="style.css<?=V_?>" />
-  <script src="linkurious/sigma.min.js<?=V_?>"></script>
-  <script src="linkurious/renderer/sigma.canvas.nodes.def.js<?=V_?>"></script>
-  <script src="linkurious/renderer/sigma.canvas.labels.def.js<?=V_?>"></script>
-  <script src="linkurious/renderer/sigma.canvas.hovers.def.js<?=V_?>"></script>
-  <script src="linkurious/renderer/sigma.canvas.edges.def.js<?=V_?>"></script>
-  <script src="linkurious/renderer/sigma.canvas.edges.arrow.js<?=V_?>"></script>
-  <script src="linkurious/renderer/sigma.canvas.edges.dashed.js<?=V_?>"></script>
-  <script src="linkurious/renderer/sigma.canvas.edges.dotted.js<?=V_?>"></script>
-  <script src="linkurious/renderer/sigma.canvas.edgehovers.def.js<?=V_?>"></script>
-  <script src="linkurious/renderer/sigma.canvas.edgehovers.arrow.js<?=V_?>"></script>
-  <script src="linkurious/renderer/sigma.canvas.edgehovers.dashed.js<?=V_?>"></script>
-  <script src="linkurious/renderer/sigma.canvas.edgehovers.dotted.js<?=V_?>"></script>
-  <script src="linkurious/activeState/sigma.plugins.activeState.js<?=V_?>"></script>
-  <script src="linkurious/dragNodes/sigma.plugins.dragNodes.js<?=V_?>"></script>
-  <script src="linkurious/edgeLabels/sigma.canvas.edges.labels.def.js<?=V_?>"></script>
-  <script src="linkurious/edgeLabels/sigma.canvas.edges.labels.curve.js<?=V_?>"></script>
-  <script src="linkurious/edgeLabels/sigma.canvas.edges.labels.curvedArrow.js<?=V_?>"></script>
-  <script src="linkurious/edgeLabels/settings.js<?=V_?>"></script>
-  <script src="edges.dashedarrow.js<?=V_?>"></script>
-  <script src="edgehovers.dashedarrow.js<?=V_?>"></script>
+  <link rel="stylesheet" type="text/css" href="css/style.css<?=V_?>" />
+  <script src="js/linkurious/sigma.min.js<?=V_?>"></script>
+  <script src="js/linkurious/renderer/sigma.canvas.nodes.def.js<?=V_?>"></script>
+  <script src="js/linkurious/renderer/sigma.canvas.labels.def.js<?=V_?>"></script>
+  <script src="js/linkurious/renderer/sigma.canvas.hovers.def.js<?=V_?>"></script>
+  <script src="js/linkurious/renderer/sigma.canvas.edges.def.js<?=V_?>"></script>
+  <script src="js/linkurious/renderer/sigma.canvas.edges.arrow.js<?=V_?>"></script>
+  <script src="js/linkurious/renderer/sigma.canvas.edges.dashed.js<?=V_?>"></script>
+  <script src="js/linkurious/renderer/sigma.canvas.edges.dotted.js<?=V_?>"></script>
+  <script src="js/linkurious/renderer/sigma.canvas.edgehovers.def.js<?=V_?>"></script>
+  <script src="js/linkurious/renderer/sigma.canvas.edgehovers.arrow.js<?=V_?>"></script>
+  <script src="js/linkurious/renderer/sigma.canvas.edgehovers.dashed.js<?=V_?>"></script>
+  <script src="js/linkurious/renderer/sigma.canvas.edgehovers.dotted.js<?=V_?>"></script>
+  <script src="js/linkurious/activeState/sigma.plugins.activeState.js<?=V_?>"></script>
+  <script src="js/linkurious/dragNodes/sigma.plugins.dragNodes.js<?=V_?>"></script>
+  <script src="js/linkurious/edgeLabels/sigma.canvas.edges.labels.def.js<?=V_?>"></script>
+  <script src="js/linkurious/edgeLabels/sigma.canvas.edges.labels.curve.js<?=V_?>"></script>
+  <script src="js/linkurious/edgeLabels/sigma.canvas.edges.labels.curvedArrow.js<?=V_?>"></script>
+  <script src="js/linkurious/edgeLabels/settings.js<?=V_?>"></script>
+  <script src="js/edges.dashedarrow.js<?=V_?>"></script>
+  <script src="js/edgehovers.dashedarrow.js<?=V_?>"></script>
 </head>
 <body>
   <div id="graph"></div>
 
   <div id="modal-blocker-graph" class="modal-blocker backdrop-blur hidden"></div>
 
-  <div id="account" class="box">
-    <span id="account-name"><?=$_SESSION[USER]?></span><!--
+  <div id="mobile-menu-toggle" class="box button hidden-toggle mobile-only" data-hidden-toggle-target="#account">&#9776;</div>
+
+  <div id="account" class="box mobile-inverse-hidden">
+    <div class="button mobile-only hidden-toggle" data-hidden-toggle-target="#account">X</div><!--
+    --><span id="account-name"><?=$_SESSION[USER]?></span><!--
+    --><hr class="mobile-only" /><!--
     <?php if (!$_SESSION[EDITING]) { ?>
-    --><a href="<?=$server_dir?>?start-edit" class="button" id="start-edit" title="Bearbeitungsmodus starten">Bearbeiten</a><div class="button hidden"></div><!--
+    --><a href="<?=$server_url?>?start-edit" class="button" id="start-edit" title="Bearbeitungsmodus starten">Bearbeiten</a><!--
+    --><div id="other-editor" class="button hidden"></div><!--
     <?php } else { ?>
-    --><a href="<?=$server_dir?>?stop-edit" class="button" id="stop-edit" title="Bearbeitungsmodus beenden">Fertig<span id="stop-edit-timer"></span></a><!--
+    --><a href="<?=$server_url?>?stop-edit" class="button" id="stop-edit" title="Bearbeitungsmodus beenden">Fertig<span id="stop-edit-timer"></span></a><!--
     <?php } ?>
-    --><a href="<?=$server_dir?>?logout" class="button" id="logout">Abmelden</a>
+    --><div id="mobile-log" class="button mobile-only">Änderungsverlauf</div><!--
+    --><div id="mobile-help" class="button mobile-only">Hilfe</div><!--
+    --><hr class="mobile-only" /><!--
+    --><div id="mobile-admin" class="button mobile-only">Admin</div><!--
+    --><a href="<?=$server_url?>?logout" class="button" id="logout">Abmelden</a>
   </div>
 <?php
 
@@ -597,7 +616,7 @@ if ($_SESSION[TYPE] === ADMIN_ || !$accounts) {
 ?>
   <div id="admin" class="box box-padding<?=isset($_POST[ADMIN_ACTION]) ? '' : ' box-minimized'?>">
     <div class="box-minimize-buttons">
-      <button class="box-restore">A</button>
+      <button class="box-restore desktop-only">A</button>
       <button class="box-minimize">&mdash;</button>
     </div>
 <?php
@@ -691,7 +710,28 @@ if ($_SESSION[TYPE] === ADMIN_ || !$accounts) {
     <div class="login-log">
       <table>
         <tr><td>
-      <?=implode('</td></tr><tr><td>', array_reverse(preg_split('/' . PHP_EOL . '/', str_replace(' | ', '</td><td>', file_get_contents(LOGINS_FILE)), 0, PREG_SPLIT_NO_EMPTY)));?>
+<?php
+  $today = substr(date(DATE_RFC2822), 0, 16);
+  $yesterday = substr(date(DATE_RFC2822, time() - 24 * 60 * 60), 0, 16);
+  echo implode(
+    '</td></tr><tr><td>',
+    array_reverse(
+      array_map(
+        function($line) use ($today, $yesterday) {
+          return implode('</td><td>',
+            array_map(
+              function($part) use ($today, $yesterday)
+              {
+                $date = substr($part, 0, 16);
+                return ($date === $today ? 'heute' : ($date === $yesterday ? 'gestern' : $date)) . '</td><td>' . substr($part, 16); },
+              explode(' | ', $line)));
+        },
+        preg_split(
+          '/' . PHP_EOL . '/',
+          file_get_contents(LOGINS_FILE),
+          0,
+          PREG_SPLIT_NO_EMPTY))));
+?>
         </td></tr>
       </table>
     </div>
@@ -704,7 +744,7 @@ if ($_SESSION[TYPE] === ADMIN_ || !$accounts) {
 ?>
   <div id="log" class="box box-padding box-minimized">
     <div class="box-minimize-buttons">
-      <button class="box-restore" title="Änderungsverlauf">&olarr;</button>
+      <button class="box-restore desktop-only" title="Änderungsverlauf">&olarr;</button>
       <button class="box-minimize">&mdash;</button>
     </div>
     <div>
@@ -717,7 +757,7 @@ if ($_SESSION[TYPE] === ADMIN_ || !$accounts) {
 
   <div id="help" class="box box-padding box-minimized">
     <div class="box-minimize-buttons">
-      <button class="box-restore" title="Hilfe">?</button>
+      <button class="box-restore desktop-only" title="Hilfe">?</button>
       <button class="box-minimize">&mdash;</button>
     </div><?php
     $boxPos = 'unten rechts';
@@ -927,8 +967,9 @@ if ($_SESSION[TYPE] === ADMIN_ || !$accounts) {
     let modKeys = '<?=$modKeys?>';
     let boxPos = '<?=$boxPos?>';
   </script>
-  <script src="utils.js<?=V_?>"></script>
-  <script src="script.js<?=V_?>"></script>
-  <script src="tutorial.js<?=V_?>"></script>
+  <script src="js/mobile.js<?=V_?>"></script>
+  <script src="js/utils.js<?=V_?>"></script>
+  <script src="js/script.js<?=V_?>"></script>
+  <script src="js/tutorial.js<?=V_?>"></script>
 </body>
 </html>
