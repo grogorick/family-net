@@ -499,11 +499,10 @@ function addLogItem(l, prepend, itemRestorable)
   let li = document.createElement('li');
   if (prepend) {
     data.currentHash = hash;
-    logListUL.childNodes.forEach(li =>
+    logListUL.querySelectorAll('.log-item-master').forEach(li =>
     {
-      li.classList.remove('selected');
+      li.classList.remove('log-item-master');
     });
-    li.classList.add('selected');
     logListUL.prepend(li);
   }
   else {
@@ -540,15 +539,15 @@ function addLogItem(l, prepend, itemRestorable)
   li.addEventListener('mouseenter', e =>
   {
     console.log('enter li');
-    if (li.classList.contains('selected')) {
-      console.log('cancel peview - already selected');
+    if (li.classList.contains('log-item-preview')) {
+      console.log('cancel hover preview - already selected');
       return;
     }
     let previewLogPC = logPC;
     let previewLogTs = logTs;
     let prevLi = li;
     while ((prevLi = prevLi.previousElementSibling) != null) {
-      if (prevLi.classList.contains('selected')) {
+      if (prevLi.classList.contains('log-item-preview')) {
         prevLi = li.previousElementSibling;
         previewLogPC = prevLi.getAttribute('data-log-pc');
         previewLogTs = prevLi.getAttribute('data-log-ts').split(',');
@@ -577,10 +576,11 @@ function addLogItem(l, prepend, itemRestorable)
   });
   li.addEventListener('click', e =>
   {
+    console.log('log click');
     if (li === logItemSelectedPreview) {
+      console.log('cancel restore log item - already restored');
       return;
     }
-    console.log('log click');
     logItemSelectedPreview.classList.remove('log-item-preview');
     logItemSelectedPreview = li;
     logItemSelectedPreview.classList.add('log-item-preview');
@@ -617,6 +617,7 @@ function addLogItemFromServerResponse(responseStr)
 let saveCameraTimeout = null;
 function cameraMoved(e)
 {
+  // console.log('camera moved');
   if (saveCameraTimeout) {
     clearTimeout(saveCameraTimeout);
   }
@@ -1393,7 +1394,7 @@ s.bind('coordinatesUpdated', e =>
   }
   skipClickNodeAfterDropOrCoordinatesUpdated = true;
   s.camera.angle = 0;
-  if (currentUserCanEdit()) {
+  if (currentUserCanEdit() && (logItemSelectedPreview === logItemSelectedMaster)) {
     cameraMoved(e);
   }
 });
