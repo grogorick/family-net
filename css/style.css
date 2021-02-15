@@ -1,14 +1,10 @@
 @import url('https://fonts.googleapis.com/css?family=Josefin+Sans:300');
 
-@media only screen and (max-width: 767px) {
-.desktop-only {
-  display: none;
-}
-}
-@media only screen and (min-width: 768px) {
-.mobile-only {
+.mobile-client .desktop-only {
   display: none !important;
 }
+.desktop-client .mobile-only {
+  display: none !important;
 }
 
 html, body, #graph {
@@ -41,15 +37,12 @@ body {
   background: #ddd;
 }
 
-@media only screen and (min-width: 768px) {
-.hidden {
+.desktop-client .hidden {
   display: none !important;
 }
-}
-@media only screen and (max-width: 767px) {
-.hidden:not(.mobile-inverse-hidden), .mobile-inverse-hidden:not(.hidden) {
+.mobile-client .hidden:not(.mobile-inverse-hidden),
+.mobile-client .mobile-inverse-hidden:not(.hidden) {
   display: none !important;
-}
 }
 
 #graph, .modal-blocker {
@@ -72,6 +65,8 @@ body {
   display: block;
   position: fixed;
   box-shadow: 2px 1px 5px #0006;
+}
+.mobile-client .box {
   right: 0;
   bottom: 0;
   left: 0;
@@ -79,29 +74,20 @@ body {
   backdrop-filter: blur(2pt);
   background: #fffc;
 }
-@media only screen and (min-width: 768px) {
-.box {
-  right: initial;
-  bottom: initial;
-  left: initial;
-  top: initial;
+.desktop-client .box {
   max-height: calc(100vh - 50pt);
-  backdrop-filter: none;
   background: white;
 }
-.box:hover {
+.desktop-client .box:hover {
   z-index: 1;
-}
 }
 
 .box.box-padding:not(.box-minimized) {
   padding: 20pt;
 }
 
-@media only screen and (max-width: 767px) {
-.box-minimized {
+.mobile-client .box-minimized {
   display: none;
-}
 }
 
 .box-minimized > *:not(.box-minimize-buttons),
@@ -109,11 +95,23 @@ body {
 .box:not(.box-minimized) .box-restore {
   display: none;
 }
-.box-minimize-buttons {
+.desktop-client .box-minimize-buttons {
   text-align: right;
 }
-.box:not(.box-minimized) .box-minimize-buttons {
+.mobile-client .box-minimize-buttons {
+  text-align: left;
+  background: white;
+}
+.mobile-client .box-minimize-buttons button {
+  font-size: 120%;
+}
+.desktop-client .box:not(.box-minimized) .box-minimize-buttons {
   margin-top: -20pt;
+  margin-left: -20pt;
+  margin-right: -20pt;
+}
+.mobile-client .box:not(.box-minimized) .box-minimize-buttons {
+  margin-top: -10pt;
   margin-left: -20pt;
   margin-right: -20pt;
 }
@@ -137,6 +135,11 @@ body {
 .box label {
   width: 30%;
   display: inline-block;
+}
+
+.box hr {
+  border: 0;
+  border-top: 1px solid #ddd;
 }
 
 .box input:not([type="submit"]), .box select, .box textarea {
@@ -205,20 +208,31 @@ button:not(:disabled):hover, .button:not(:disabled):hover {
   background: #0001;
 }
 .message .box {
-  bottom: initial;
-  right: initial;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
   text-align: right;
+}
+.desktop-client .message .box {
+  left: 50%;
+  right: initial;
+  top: 50%;
+  bottom: initial;
+  transform: translate(-50%, -50%);
+}
+.mobile-client .message .box {
+  top: initial;
 }
 .message .box .message-content {
   text-align: initial;
 }
 
 #mobile-menu-toggle {
+  top: 10pt;
   right: initial;
   bottom: initial;
+}
+#mobile-menu-close {
+  background: white !important;
+  padding-top: 15pt;
+  margin-bottom: 10pt;
 }
 
 #account.box {
@@ -233,12 +247,7 @@ button:not(:disabled):hover, .button:not(:disabled):hover {
 #account.box a {
   text-decoration: none;
 }
-#account.box > hr {
-  border: 0;
-  border-top: 1px solid #ddd;
-}
-@media only screen and (min-width: 768px) {
-#account.box {
+.desktop-client #account.box {
   bottom: initial;
   top: 10pt;
   right: initial;
@@ -247,17 +256,17 @@ button:not(:disabled):hover, .button:not(:disabled):hover {
   backdrop-filter: none;
   background: #fff;
 }
-#account.box > * {
+.desktop-client #account.box > * {
   display: inline-block;
 }
-}
 
-@media only screen and (min-width: 768px) {
-#help.box {
+.desktop-client #help.box {
   top: 10pt;
   right: 60pt;
   white-space: nowrap;
 }
+.mobile-client #help.box {
+  bottom: 60%;
 }
 #help.box h2 {
   border-bottom: 1px solid #eee;
@@ -268,8 +277,13 @@ button:not(:disabled):hover, .button:not(:disabled):hover {
 #help.box > div:nth-child(2) {
   margin: 0 -20pt 0 0;
   padding: 0 20pt 0 0;
-  max-height: 70vh;
   overflow-y: scroll;
+}
+.desktop-client #help.box > div:nth-child(2) {
+  max-height: 70vh;
+}
+.mobile-client #help.box > div:nth-child(2) {
+  max-height: 100%;
 }
 #help.box > div > ul {
   padding: 0;
@@ -302,32 +316,47 @@ button:not(:disabled):hover, .button:not(:disabled):hover {
   box-shadow: 1pt 1pt 3pt #00000022;
 }
 
-@media only screen and (min-width: 768px) {
-#log.box {
+.desktop-client #log.box {
   right: 10pt;
   top: 40pt;
 }
+.mobile-client #log.box {
+  bottom: 60%;
+}
+#log.box:not(.box-minimized) div:nth-child(2) {
+  height: 100%;
+  display: flex;
+  flex-flow: column;
 }
 #log.box ul {
   list-style-type: none;
   padding-left: 0;
   padding-top: 5pt;
   margin: 0 -20pt;
-  max-height: 70vh;
   overflow-y: scroll;
+}
+.desktop-client #log.box ul {
+  max-height: 70vh;
+}
+.mobile-client #log.box ul {
+  max-height: 100%;
 }
 #log.box li {
   position: relative;
   display: block;
 }
-#log.box li.log-item-master, #log.box li.log-item-preview, #log.box li:hover {
+#log.box li.log-item-master,
+#log.box li.log-item-preview,
+#log.box li:hover {
   padding-top: calc(5pt - 1px);/* 5pt from .button */
 }
-#log.box li.log-item-master::before, #log.box li.log-item-preview::before, #log.box li:hover::before {
+#log.box li.log-item-master::before,
+#log.box li.log-item-preview::before,
+#log.box li:hover::before {
   content: '\25BA';
   position: absolute;
   left: -2pt;
-  top: -7pt;
+  top: -8pt;
 }
 #log.box li.log-item-master {
   border-top: 1px dashed #ddd;
@@ -361,23 +390,20 @@ button:not(:disabled):hover, .button:not(:disabled):hover {
   background: white;
 }
 
-@media only screen and (min-width: 768px) {
-#person-form.box, #connection-form.box {
+.desktop-client #person-form.box,
+.desktop-client #connection-form.box {
   right: 10pt;
   bottom: 10pt;
   width: 280pt;
-}
 }
 #connection-form-persons {
   display: block;
   margin-bottom: 10pt;
 }
 
-@media only screen and (min-width: 768px) {
-#admin.box {
+.desktop-client #admin.box {
   top: 40pt;
   left: 10pt;
-}
 }
 #admin.box > .box-minimize-buttons {
   text-align: left;
@@ -385,12 +411,21 @@ button:not(:disabled):hover, .button:not(:disabled):hover {
 #admin.box hr {
   margin: 10pt 0;
 }
-
-#admin.box .login-log {
-  max-height: 10vh;
+#admin.box #accounts-list {
+  max-height: 100pt;
+  overflow-y: scroll;
+}
+.mobile-client #admin.box #accounts-list td {
+  display: block;
+}
+.mobile-client #admin.box #accounts-list td:last-child {
+  padding-bottom: 20pt;
+}
+#admin.box #login-log {
+  max-height: 100pt;
   overflow-y: auto;
 }
-#admin.box .login-log td:not(:first-child) {
+#admin.box #login-log td:not(:first-child) {
   padding-left: 10pt;
 }
 
