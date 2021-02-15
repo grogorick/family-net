@@ -370,18 +370,20 @@ function moveChildConnectionNodes(nodes)
 // load from file
 // ------------------------------------
 let nodeCenterY = 0;
-function applyLoadedData(loadedData, addLogItems)
+function applyLoadedData(loadedData, addLogItems, adjustCamera)
 {
   data = loadedData;
   console.log(data);
   data.graph.persons.forEach(p => nodeCenterY += p.y);
   nodeCenterY /= data.graph.persons.length;
-  moveCamera({
-      x: parseFloat(data.settings.camera.x),
-      y: parseFloat(data.settings.camera.y),
-      z: parseFloat(data.settings.camera.z)
-    },
-    false, false, true, false);
+  if (adjustCamera) {
+    moveCamera({
+        x: parseFloat(data.settings.camera.x),
+        y: parseFloat(data.settings.camera.y),
+        z: parseFloat(data.settings.camera.z)
+      },
+      false, false, true, false);
+  }
   logAddPerson = 3;
   data.graph.persons.forEach(p => { addPerson(p, false, false, true, false); if (logAddPerson) --logAddPerson; });
   logAddPerson = true;
@@ -424,7 +426,7 @@ function loadData(previewHash = null)
 
   if (previewHash && previewHash in dataCache) {
     console.log('load cached data ' + previewHash);
-    applyLoadedData(dataCache[previewHash], false);
+    applyLoadedData(dataCache[previewHash], false, false);
     return;
   }
 
@@ -435,7 +437,7 @@ function loadData(previewHash = null)
     if (this.readyState === 4 && this.status === 200) {
       let d = JSON.parse(this.responseText);
       let hash = previewHash ? previewHash : d.currentHash;
-      applyLoadedData(d, previewHash === null);
+      applyLoadedData(d, previewHash === null, previewHash === null);
       dataCache[hash] = JSON.parse(this.responseText);
     }
   };
