@@ -412,8 +412,10 @@ button:not(:disabled):hover, .button:not(:disabled):hover {
   margin: 10pt 0;
 }
 #admin.box #accounts-list {
-  max-height: 100pt;
+  height: 100pt;
   overflow-y: scroll;
+  resize: vertical;
+  max-height: 40vh;
 }
 .mobile-client #admin.box #accounts-list td {
   display: block;
@@ -422,8 +424,10 @@ button:not(:disabled):hover, .button:not(:disabled):hover {
   padding-bottom: 20pt;
 }
 #admin.box #login-log {
-  max-height: 100pt;
+  height: 100pt;
   overflow-y: auto;
+  resize: vertical;
+  max-height: 40vh;
 }
 #admin.box #login-log td:not(:first-child) {
   padding-left: 10pt;
@@ -464,7 +468,6 @@ button:not(:disabled):hover, .button:not(:disabled):hover {
   display: inline-block;
   width:10pt;
   height:10pt;
-  vertical-align: top;
   border-radius:5pt;
   background: #78D384;
 }
