@@ -2,7 +2,7 @@
 //phpinfo();
 
 // browser cache fix for scripts and styles
-define('V', 6);
+define('V', 7);
 define('V_', '?v=' . V);
 
 $server_url = substr($_SERVER["PHP_SELF"], 0, 1 + strrpos($_SERVER["PHP_SELF"], '/'));
@@ -61,6 +61,7 @@ define('NORMAL_', 'n'); define('NORMAL__', 'Normal');
 define('VIEWER_', 'v'); define('VIEWER__', 'Betrachter');
 
 define('FIRST_LOGIN_', 'f');
+define('ACCOUNT_UPGRADED_', 'a');
 
 define('ACTION', 'action');
 define('ADMIN_ACTION', 'admin-action');
@@ -79,7 +80,7 @@ define('CONNECTIONS', 'connections');
 
 define('CD_STORAGE_DIR', 'cd ' . STORAGE_DIR . '; ');
 
-$accounts = []; $first_login = false;
+$accounts = []; $first_login = false; $account_upgraded = false;
 $settings = [ CAMERA => [ 'x' => 0, 'y' => 0, 'z' => 1] ];
 $data = [ PERSONS => [], CONNECTIONS => [] ];
 
@@ -135,6 +136,9 @@ if (isset($_POST[ACTION]) && $_POST[ACTION] === 'login') {
       $_SESSION[EDITING] = false;
       if (array_key_exists(FIRST_LOGIN_, $a)) {
         $first_login = true;
+      }
+      else if (array_key_exists(ACCOUNT_UPGRADED_, $a)) {
+        $account_upgraded = true;
       }
       break;
     }
@@ -400,6 +404,9 @@ if (($_SESSION[TYPE] === ADMIN_ || !$accounts) && isset($_POST[ADMIN_ACTION])) {
     break;
     case 'edit-type': {
       $i = $_POST[USER];
+      if ($accounts[$i][TYPE_] === VIEWER_ && $_POST[TYPE] === NORMAL_) {
+        $accounts[$i][ACCOUNT_UPGRADED_] = true;
+      }
       $accounts[$i][TYPE_] = $_POST[TYPE];
       save_accounts();
       $admin_msg = 'Accounttyp geändert.';
@@ -450,10 +457,9 @@ if (isset($_GET[ACTION])) {
     {
       foreach ($accounts as &$a) {
         if ($a[USER_] === $_SESSION[USER]) {
-          if (array_key_exists(FIRST_LOGIN_, $a)) {
-            unset($a[FIRST_LOGIN_]);
-            save_accounts();
-          }
+          if (array_key_exists(FIRST_LOGIN_, $a)) { unset($a[FIRST_LOGIN_]); }
+          if (array_key_exists(ACCOUNT_UPGRADED_, $a)) { unset($a[ACCOUNT_UPGRADED_]); }
+          save_accounts();
           break;
         }
       }
@@ -640,7 +646,11 @@ if ($_SESSION[TYPE] === ADMIN_ || !$accounts) {
     foreach ($accounts as $i => $a) {
 ?>
         <tr>
-          <td><?=$a[USER_]?></td>
+          <td>
+            <?=$a[USER_]?>
+            <?=$a[FIRST_LOGIN_] ? '*' : ''?>
+            <?=$a[ACCOUNT_UPGRADED_] ? '+' : ''?>
+          </td>
           <td>
 <?php
       $num_admins = count(array_filter($accounts, function($a) { return $a[TYPE_] === ADMIN_; }));
@@ -971,6 +981,7 @@ if ($_SESSION[TYPE] === ADMIN_ || !$accounts) {
     let editingTimeout = <?=$_SESSION[EDITING] ?: '0'?>;
     let editingTimeoutDuration = <?=CURRENT_EDITOR_TIMEOUT?>;
     let firstLogin = <?=$first_login ? 'true' : 'false'?>;
+    let accountUpgraded = <?=$account_upgraded ? 'true' : 'false'?>;
     let modKeys = '<?=$modKeys?>';
     let boxPos = '<?=$boxPos?>';
     let isMobile = <?=$is_mobile ? 'true' : 'false'?>;

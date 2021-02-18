@@ -449,7 +449,7 @@ function loadData(previewHash = null)
   }
   xhttp.send();
 }
-if (!firstLogin) {
+if (!firstLogin && !accountUpgraded) {
   loadData();
 }
 
