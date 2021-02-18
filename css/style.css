@@ -15,7 +15,7 @@ html, body, #graph {
   bottom: 0;
   margin: 0;
 }
-body, input:not([type="submit"]), select, textarea, button {
+body, input:not([type="submit"]):not([type="checkbox"]), select, textarea, button {
   font-family: 'Josefin Sans', 'Trebuchet MS', sans-serif;
   line-height: 1.5;
   color: #000;
@@ -132,7 +132,8 @@ body {
   color: #aaa;
 }
 
-.box label {
+#person-form.box label,
+#connection-form.box label{
   width: 30%;
   display: inline-block;
 }
@@ -142,13 +143,13 @@ body {
   border-top: 1px solid #ddd;
 }
 
-.box input:not([type="submit"]), .box select, .box textarea {
+.box input:not([type="submit"]):not([type="checkbox"]), .box select, .box textarea {
   width: 150pt;
   border: 1px solid #aaa;
   border-radius: 3pt;
   padding: 3pt;
 }
-.box input:not([type="submit"]):hover, .box input:not([type="submit"]):focus,
+.box input:not([type="submit"]):not([type="checkbox"]):hover, .box input:not([type="submit"]):not([type="checkbox"]):focus,
 .box select:hover, .box select:focus,
 .box textarea:hover, .box textarea:focus {
   border-color: #555;
@@ -160,10 +161,10 @@ body {
 }
 
 .box input[placeholder="tt"], .box input[placeholder="mm"] {
-  width: 2em;
+  width: 2em !important;
 }
 .box input[placeholder="yyyy"] {
-  width: 4em;
+  width: 4em !important;
 }
 
 button, .button {
@@ -323,10 +324,13 @@ button:not(:disabled):hover, .button:not(:disabled):hover {
 .mobile-client #log.box {
   bottom: 60%;
 }
-#log.box:not(.box-minimized) div:nth-child(2) {
+#log.box:not(.box-minimized) #log-content {
   height: 100%;
   display: flex;
   flex-flow: column;
+}
+#log.box #log-extended {
+  margin-bottom: 10pt;
 }
 #log.box ul {
   list-style-type: none;

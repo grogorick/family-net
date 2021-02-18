@@ -63,6 +63,8 @@ define('VIEWER_', 'v'); define('VIEWER__', 'Betrachter');
 define('FIRST_LOGIN_', 'f');
 define('ACCOUNT_UPGRADED_', 'a');
 
+define('EXTENDED_LOG', 'e');
+
 define('ACTION', 'action');
 define('ADMIN_ACTION', 'admin-action');
 define('EDITING', 'editing');
@@ -319,7 +321,7 @@ function save_settings()
 
 function get_log($commit_count = 0)
 {
-  exec(CD_STORAGE_DIR . 'git log --author-date-order --format=format:\'%h|||%ai|||%an|||%s\'' . ($_SESSION[TYPE] === ADMIN_ ? ' --all' : '') . ($commit_count > 0 ? ' -' . $commit_count : ''), $out);
+  exec(CD_STORAGE_DIR . 'git log --author-date-order --format=format:\'%h|||%ai|||%an|||%s\'' . (($_SESSION[TYPE] === ADMIN_ && array_key_exists(EXTENDED_LOG, $_SESSION)) ? ' --all' : '') . ($commit_count > 0 ? ' -' . $commit_count : ''), $out);
   $out = array_map(function($line) {
     $line = explode('|||', $line);
     $line[1] = preg_replace('/ [+-]\d{4}/', '', $line[1]);
@@ -472,6 +474,19 @@ if (isset($_GET[ACTION])) {
     case 'get-editor':
     {
       echo json_encode(getEditor());
+      exit;
+    }
+
+    case 'toggle-extended-log':
+    {
+      if (array_key_exists(EXTENDED_LOG, $_SESSION)) {
+        unset($_SESSION[EXTENDED_LOG]);
+        echo json_encode(false);
+      }
+      else {
+        $_SESSION[EXTENDED_LOG] = true;
+        echo json_encode(true);
+      }
       exit;
     }
   }
@@ -767,8 +782,12 @@ if ($_SESSION[TYPE] === ADMIN_ || !$accounts) {
       <button class="box-restore desktop-only" title="Änderungsverlauf">&olarr;</button>
       <button class="box-minimize"><?=$box_close_minimize_symbol?></button>
     </div>
-    <div>
+    <div id="log-content">
       <h2>Änderungsverlauf</h2>
+      <div>
+        <input type="checkbox" id="log-extended" <?=array_key_exists(EXTENDED_LOG, $_SESSION) ? 'checked' : ''?> />
+        <label for="log-extended">Erweitert</label>
+      </div>
       <ul id="log-list"></ul>
     </div>
   </div>

@@ -484,6 +484,20 @@ logListUL.addEventListener('mouseleave', e =>
     s.refresh();
   }
 });
+if (currentUserIsAdmin) {
+  document.getElementById('log-extended').addEventListener('change', () =>
+  {
+    let xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function()
+    {
+      if (this.readyState === 4 && this.status === 200) {
+        window.location.reload();
+      }
+    };
+    xhttp.open('GET', '?action=toggle-extended-log', true);
+    xhttp.send();
+  });
+}
 
 let logAddLogItem = true;
 let logItemSelectedMaster = null;
@@ -509,7 +523,7 @@ function addLogItem(l, prepend, itemRestorable)
     logListUL.appendChild(li);
   }
   li.innerHTML = logAuthor + '<span>' + new Date(logDate).toLocaleString() + '</span>';
-  li.title = logMsg;
+  li.title = currentUserIsAdmin ? l[3] : logMsg;
   li.classList.add('button');
   let logPC = '';
   let logTs = [];
