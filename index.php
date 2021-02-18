@@ -78,6 +78,7 @@ define('STORAGE_FILE', 'storage.yml');
 define('PERSONS', 'persons');
 define('CONNECTIONS', 'connections');
 
+define('COMMIT_MERGE_TIME_THRESH', 3600);
 define('CD_STORAGE_DIR', 'cd ' . STORAGE_DIR . '; ');
 
 $accounts = []; $first_login = false; $account_upgraded = false;
@@ -361,7 +362,9 @@ function save_data($git_commit)
     '"' . STORAGE_DIR . '" ' .
     '"' . STORAGE_FILE . '" ' .
     '"' . $_SESSION[USER] . '" ' .
-    '"' . $git_commit . '" 2>&1', $out);
+    '"' . $git_commit . '" ' .
+    COMMIT_MERGE_TIME_THRESH . ' ' .
+    '2>&1', $out);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
