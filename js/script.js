@@ -406,7 +406,7 @@ function applyLoadedData(loadedData, addLogItems, adjustCamera)
           if (logAddLogItem) --logAddLogItem;
         }
         if (i < data.log.length - 1) {
-          setTimeout(addLog, 1000);
+          setTimeout(addLog, 100);
         }
         else {
           logAddLogItem = true;
@@ -1379,9 +1379,22 @@ function deleteConnection(c_t, toData = true, toServer = true, toGraph = true, r
 
 // events
 // ------------------------------------
-let skipClickNodeAfterDropOrCoordinatesUpdated = false;
+let startedWith_coordinatesUpdated = 0;
+let startedWith_drag = 0;
 let cdcNode = clickDoubleClick(
-  e => { if (skipClickNodeAfterDropOrCoordinatesUpdated) { skipClickNodeAfterDropOrCoordinatesUpdated = false; return; } selectPerson(e); },
+  e =>
+  {
+    if (startedWith_coordinatesUpdated) {
+      console.log('skip clickNode during coordinatesUpdated');
+      return;
+    }
+    if (startedWith_drag) {
+      console.log('skip clickNode during drag');
+      return;
+    }
+    console.log(['clickNode', e]);
+    selectPerson(e);
+  },
   selectDirectRelatives);
 
 s.bind('clickNode', cdcNode.click.bind(cdcNode));
@@ -1392,21 +1405,42 @@ s.bind('hovers', hoverPersons);
 s.bind('clickEdge', selectConnection);
 
 let cdcStage = clickDoubleClick(
-  e => { console.log(['click', e]); if (!e.data.captor.isDragging && !multipleKeyPressed(e)) { deselectAll(e); } },
-  e => {console.log(['doubleClick', e]);  deselectAll(e); if (currentUserCanEdit()) { startNewPerson(e); } });
+  e =>
+  {
+    if (startedWith_coordinatesUpdated) {
+      console.log('skip clickStage during coordinatesUpdated');
+      return;
+    }
+    if (startedWith_drag) {
+      console.log('skip clickStage during drag');
+      return;
+    }
+    console.log(['clickStage', e]);
+    if (!e.data.captor.isDragging && !multipleKeyPressed(e)) {
+      deselectAll(e);
+    }
+  },
+  e =>
+  {
+    console.log(['doubleClick', e]);
+    deselectAll(e);
+    if (currentUserCanEdit()) {
+      startNewPerson(e);
+    }
+  });
 
 s.bind('clickStage', cdcStage.click.bind(cdcStage));
 s.bind('doubleClickStage', cdcStage.doubleClick.bind(cdcStage));
 
-let skipCoordinatesUpdatedAfterDrag = false
 s.bind('coordinatesUpdated', e =>
 {
-  // console.log('coordinatesUpdated');
-  if (skipCoordinatesUpdatedAfterDrag) {
-    skipCoordinatesUpdatedAfterDrag = false;
+  if (startedWith_drag) {
+    console.log('skip coordinatesUpdated during drag');
     return;
   }
-  skipClickNodeAfterDropOrCoordinatesUpdated = true;
+  // console.log(['coordinatesUpdated', e]);
+  clearTimeout(startedWith_coordinatesUpdated);
+  startedWith_coordinatesUpdated = setTimeout(() => { startedWith_coordinatesUpdated = false; }, 1000);
   s.camera.angle = 0;
   if (currentUserCanEdit() && (logItemSelectedPreview === logItemSelectedMaster)) {
     cameraMoved(e);
@@ -1416,6 +1450,8 @@ s.bind('coordinatesUpdated', e =>
 dragListener.bind('drag', e =>
 {
   // console.log(['drag', e]);
+  clearTimeout(startedWith_drag);
+  startedWith_drag = setTimeout(() => { startedWith_drag = false; }, 1000);
   if (!multipleKeyPressed(e)) {
     let oldNode = getDataPerson(e.data.node.id);
     e.data.node.x = oldNode.x;
@@ -1426,12 +1462,10 @@ dragListener.bind('drag', e =>
   if (currentUserCanEdit()) {
     movePersons(e, false, false, false, false, false, false); // move child nodes
   }
-  skipCoordinatesUpdatedAfterDrag = true;
 });
 dragListener.bind('drop', e =>
 {
   console.log(['drop', e]);
-  skipClickNodeAfterDropOrCoordinatesUpdated = true;
   if (multipleKeyPressed(e) && currentUserCanEdit()) {
     movePersons(e, true, true, false, false, true, true);
   }
