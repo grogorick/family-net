@@ -456,8 +456,7 @@ if ($_SESSION[TYPE] === ADMIN_ || !$accounts) {
         <tr>
           <td>
             <?=$a[USER_]?>
-            <?=$a[FIRST_LOGIN_] ? '*' : ''?>
-            <?=$a[ACCOUNT_UPGRADED_] ? '+' : ''?>
+            <?=$a[FIRST_LOGIN_] ? '*' : ($a[ACCOUNT_UPGRADED_] ? '+' : '')?>
           </td>
           <td>
 <?php
