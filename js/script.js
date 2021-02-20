@@ -406,7 +406,7 @@ function applyLoadedData(loadedData, addLogItems, adjustCamera)
       let logItemRestorable = !currentUserIsEditing && (data.log[0][2] === currentUser || currentUserIsAdmin);
       logAddLogItem = 3;
       let i = 0;
-      let addLog = () => {
+      let addLog = (continueAdding = true) => {
         let j = Math.min(i + 10, data.log.length);
         for (; i < j; ++i) {
           let l = data.log[i];
@@ -414,14 +414,21 @@ function applyLoadedData(loadedData, addLogItems, adjustCamera)
           logItemRestorable = logItemRestorable && (!currentUserIsEditing && (l[2] === currentUser || currentUserIsAdmin));
           if (logAddLogItem) --logAddLogItem;
         }
-        if (i < data.log.length - 1) {
-          setTimeout(addLog, 100);
+        if (continueAdding && i < data.log.length - 1) {
+          setTimeout(addLog, 500);
         }
         else {
           logAddLogItem = true;
         }
       };
-      addLog();
+      addLog(false);
+      let logButton = document.querySelector('#log .box-restore');
+      let fn = () =>
+      {
+        logButton.removeEventListener('click', fn)
+        addLog();
+      };
+      logButton.addEventListener('click', fn);
     }
   }
 }
