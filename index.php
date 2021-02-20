@@ -539,13 +539,10 @@ if ($_SESSION[TYPE] === ADMIN_ || !$accounts) {
     array_reverse(
       array_map(
         function($line) use ($today, $yesterday) {
-          return implode('</td><td>',
-            array_map(
-              function($part) use ($today, $yesterday)
-              {
-                $date = substr($part, 0, 16);
-                return ($date === $today ? 'heute' : ($date === $yesterday ? 'gestern' : $date)) . '</td><td>' . substr($part, 16); },
-              explode(' | ', $line)));
+          $parts = explode(' | ', $line);
+			    $date = substr($parts[0], 0, 16);
+          $parts[0] = ($date === $today ? 'heute' : ($date === $yesterday ? 'gestern' : $date)) . '</td><td>' . substr($parts[0], 17);
+          return implode('</td><td>', $parts);
         },
         preg_split(
           '/' . PHP_EOL . '/',
