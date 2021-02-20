@@ -104,6 +104,14 @@ if (currentUserIsEditing) {
   dragListener.disable();
 }
 
+let lasso = new sigma.plugins.lasso(s, s.renderers[0], {
+  strokeStyle: 'black',
+  lineWidth: 2,
+  fillWhileDrawing: true,
+  fillStyle: 'rgba(41, 41, 41, 0.2)',
+  cursor: 'crosshair'
+});
+
 const bounds = {
   minX: -500,
   minY: -500,
@@ -686,8 +694,8 @@ function selectPerson(e, refreshGraph = true)
     return;
   }
 
-  let multipleKey = multipleKeyPressed(e);
-  if (!multipleKey) {
+  let isMultipleKeyPressed = multipleKeyPressed(e);
+  if (!isMultipleKeyPressed) {
     deselectAll(e, false);
     console.log(['selectPerson', e]);
   }
@@ -708,10 +716,14 @@ function selectPerson(e, refreshGraph = true)
   if (refreshGraph) {
     s.refresh();
   }
+  checkSelectionBasedActions(isMultipleKeyPressed);
+}
 
+function checkSelectionBasedActions(multipleKeyPressed)
+{
   let nodes = activeState.nodes();
   if (nodes.length === 1) {
-    if (!multipleKey) {
+    if (!multipleKeyPressed) {
       showPersonInfo(nodes[0].id);
     }
     else if (currentUserCanEdit()) {
@@ -1465,6 +1477,28 @@ dragListener.bind('drop', e =>
   if (multipleKeyPressed(e) && currentUserCanEdit()) {
     movePersons(e, true, true, false, false, true, true);
   }
+});
+
+window.addEventListener('keydown', e =>
+{
+  // console.log(e);
+  if (e.ctrlKey && e.shiftKey) {
+    lasso.activate();
+  }
+});
+window.addEventListener('keyup', e =>
+{
+  // console.log(e);
+  if (!e.ctrlKey || !e.shiftKey) {
+    lasso.deactivate();
+  }
+});
+lasso.bind('selectedNodes', function (event) {
+  let nodes = event.data;
+  activeState.dropEdges();
+  activeState.addNodes(nodes.map(n => n.id).filter(n_id => !isChildConnectionNode(n_id)));
+  s.refresh();
+  checkSelectionBasedActions(true);
 });
 
 window.addEventListener('resize', () => window.location.reload());

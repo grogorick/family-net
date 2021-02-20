@@ -2,7 +2,7 @@
 //phpinfo();
 
 // browser cache fix for scripts and styles
-define('V', 8);
+define('V', 9);
 define('V_', '?v=' . V);
 
 define('RUNTIME_DIR', 'runtime');
@@ -409,6 +409,7 @@ html_start();
   <script src="js/linkurious/edgeLabels/sigma.canvas.edges.labels.curve.js<?=V_?>"></script>
   <script src="js/linkurious/edgeLabels/sigma.canvas.edges.labels.curvedArrow.js<?=V_?>"></script>
   <script src="js/linkurious/edgeLabels/settings.js<?=V_?>"></script>
+  <script src="js/linkurious/lasso/sigma.plugins.lasso.js<?=V_?>"></script>
   <script src="js/edges.dashedarrow.js<?=V_?>"></script>
   <script src="js/edgehovers.dashedarrow.js<?=V_?>"></script>
 </head>
