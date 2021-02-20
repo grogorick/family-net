@@ -590,7 +590,8 @@ if ($_SESSION[TYPE] === ADMIN_) {
       <button class="box-minimize"><?=$box_close_minimize_symbol?></button>
     </div><?php
     $boxPos = 'unten rechts';
-    $modKeys = '<i>Shift/Strg</i>'; ?>
+    $modKeys = '<i>Shift/Strg</i>';
+    $bothModKeys = '<i>Shift &amp; Strg</i>'; ?>
     <div>
       <button id="restart-tutorial">(Die Anleitung noch einmal ansehen)</button>
       <h2 class="collapse-trigger<?=($_SESSION[TYPE] !== VIEWER_) ? ' collapsed' : ''?>">Ansehen</h2>
@@ -639,6 +640,17 @@ if ($_SESSION[TYPE] === ADMIN_) {
           <ul>
             <li><i>Doppelklick</i> auf die gewünschte Person</li>
             <li>In direkter Linie verwandte Personen werden markiert</li>
+          </ul>
+        </li>
+        <li>Mehrere Personen auswählen:
+          <ul>
+            <li><?=$modKeys?> gedrückt halten</li>
+            <li>Personen nacheinander anklicken</li>
+          </ul>
+          oder
+          <ul>
+            <li><?=$bothModKeys?> gedrückt halten</li>
+            <li>Personen mit der gedrückter Maustaste einkreisen</li>
           </ul>
         </li>
       </ul>
