@@ -98,6 +98,7 @@ let s = new sigma({
 });
 
 let activeState = sigma.plugins.activeState(s);
+
 let dragListener = sigma.plugins.dragNodes(s, s.renderers[0], activeState);
 if (currentUserIsEditing) {
   dragListener.disable();
@@ -696,8 +697,8 @@ function selectPerson(e, refreshGraph = true)
     }
     console.log(['selectPersonMultiple', e]);
   }
-  let n = e.data.node;
 
+  let n = e.data.node;
   if (activeState.nodes().some(sn => sn.id === n.id)) {
     activeState.dropNodes(n.id);
   }
@@ -754,16 +755,6 @@ function deselectPersons(e, refreshGraph = true, except = [])
   else {
     activeState.dropNodes();
   }
-  if (refreshGraph) {
-    s.refresh();
-  }
-}
-
-function selectOnePerson(e, refreshGraph = true)
-{
-  console.log(['selectOnePerson', e]);
-  deselectAll(e, false);
-  activeState.addNodes(e.data.node.id);
   if (refreshGraph) {
     s.refresh();
   }
@@ -1392,6 +1383,7 @@ let cdcNode = clickDoubleClick(
       console.log('skip clickNode during drag');
       return;
     }
+
     console.log(['clickNode', e]);
     selectPerson(e);
   },
@@ -1411,12 +1403,14 @@ let cdcStage = clickDoubleClick(
       console.log('skip clickStage during coordinatesUpdated');
       return;
     }
-    if (startedWith_drag) {
+    if (startedWith_drag || e.data.captor.isDragging) {
       console.log('skip clickStage during drag');
       return;
     }
+
     console.log(['clickStage', e]);
-    if (!e.data.captor.isDragging && !multipleKeyPressed(e)) {
+    if (!multipleKeyPressed(e)) {
+      console.log('deselect all');
       deselectAll(e);
     }
   },
@@ -1441,6 +1435,7 @@ s.bind('coordinatesUpdated', e =>
   // console.log(['coordinatesUpdated', e]);
   clearTimeout(startedWith_coordinatesUpdated);
   startedWith_coordinatesUpdated = setTimeout(() => { startedWith_coordinatesUpdated = false; }, 1000);
+
   s.camera.angle = 0;
   if (currentUserCanEdit() && (logItemSelectedPreview === logItemSelectedMaster)) {
     cameraMoved(e);
@@ -1452,6 +1447,7 @@ dragListener.bind('drag', e =>
   // console.log(['drag', e]);
   clearTimeout(startedWith_drag);
   startedWith_drag = setTimeout(() => { startedWith_drag = false; }, 1000);
+
   if (!multipleKeyPressed(e)) {
     let oldNode = getDataPerson(e.data.node.id);
     e.data.node.x = oldNode.x;

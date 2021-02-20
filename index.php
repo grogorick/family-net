@@ -94,6 +94,7 @@ if ($accounts) {
     }
     session_unset();
     header('Location: ' . $server_url);
+    exit;
   }
 }
 
@@ -103,13 +104,18 @@ if ((!$accounts || $_SESSION[TYPE] === ADMIN_) && isset($_POST[ADMIN_ACTION])) {
   switch ($_POST[ADMIN_ACTION]) {
     // admin
     case 'new': {
+      $ist_first_account = !$accounts;
       $accounts[] = [
         USER_ => trim($_POST[USER]),
         PASSWORD_ => password_hash($_POST[PASSWORD], PASSWORD_BCRYPT),
         TYPE_ => $_POST[TYPE],
         FIRST_LOGIN_ => true];
       save_accounts();
-      init();
+      if ($ist_first_account) {
+        init($accounts[0][USER_]);
+        header('Location: ' . $server_url);
+        exit;
+      }
       $admin_msg = 'Neuer Account erstellt.';
     }
     break;
@@ -157,7 +163,7 @@ if (!$accounts) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-if (!isset($_SESSION[USER]) && $accounts) {
+if (!isset($_SESSION[USER])) {
   html_min_start();
 ?>
     <form method="POST">
@@ -193,8 +199,8 @@ else if (isset($_GET['stop-edit'])) {
   exit;
 }
 
-else if (isset($_SESSION[EDITING])) {
-  if (time() > $_SESSION[EDITING] + CURRENT_EDITOR_TIMEOUT) {
+else if ($_SESSION[EDITING]) {
+  if (time() > ($_SESSION[EDITING] + CURRENT_EDITOR_TIMEOUT)) {
     stopEditing();
   }
 }
@@ -435,7 +441,7 @@ html_start();
 
 $box_close_minimize_symbol = $is_mobile ? 'X' : '&mdash;';
 
-if ($_SESSION[TYPE] === ADMIN_ || !$accounts) {
+if ($_SESSION[TYPE] === ADMIN_) {
 ?>
   <div id="admin" class="box box-padding<?=isset($_POST[ADMIN_ACTION]) ? '' : ' box-minimized'?>">
     <div class="box-minimize-buttons">
@@ -862,21 +868,18 @@ function html_min_end()
 <?php
 }
 
-function init()
+function init($admin_user)
 {
   global $accounts;
   global $server_url;
-  if (!file_exists(SETTINGS_FILE)) {
-    save_settings();
-  }
-  if (!file_exists(STORAGE_DIR . '/' . STORAGE_FILE) || !file_exists(STORAGE_DIR . '/.git')) {
-    exec('sh/init.sh ' .
-      '"' . STORAGE_DIR . '" 2>&1', $output, $ret);
-	  $_SESSION[USER] = $accounts[0][USER_];
-	  save_data('init');
-	  unset($_SESSION[USER]);
-	  header('Location: ' . $server_url);
-  }
+
+  save_settings();
+
+  exec('sh/init.sh ' .
+    '"' . STORAGE_DIR . '" ' .
+    '"' . STORAGE_FILE . '" ' .
+    '"' . $admin_user . '" ' .
+    '2>&1', $out);
 }
 
 function save_accounts()
@@ -910,7 +913,9 @@ function prepare_json_for_storage($arr)
 function startEditing()
 {
   $ret = false;
-  fclose(fopen(CURRENT_EDITOR_FILE, 'a'));
+  if (!file_exists(CURRENT_EDITOR_FILE)) {
+    fclose(fopen(CURRENT_EDITOR_FILE, 'a'));
+  }
   $f = fopen(CURRENT_EDITOR_FILE, 'r+');
   if ($f) {
     if (flock($f, LOCK_EX /*| LOCK_NB*/)) {
@@ -939,7 +944,9 @@ function startEditing()
 function getEditor()
 {
   $ret = false;
-  fclose(fopen(CURRENT_EDITOR_FILE, 'a'));
+  if (!file_exists(CURRENT_EDITOR_FILE)) {
+    fclose(fopen(CURRENT_EDITOR_FILE, 'a'));
+  }
   $f = fopen(CURRENT_EDITOR_FILE, 'r+');
   if ($f) {
     if (flock($f, LOCK_SH /*| LOCK_NB*/)) {
@@ -960,13 +967,14 @@ function getEditor()
 
 function stopEditing()
 {
-  fclose(fopen(CURRENT_EDITOR_FILE, 'a'));
+  if (!file_exists(CURRENT_EDITOR_FILE)) {
+    fclose(fopen(CURRENT_EDITOR_FILE, 'a'));
+  }
   $f = fopen(CURRENT_EDITOR_FILE, 'r+');
   if ($f) {
     if (flock($f, LOCK_EX | LOCK_NB)) {
       $other_editor = explode('|||', fread($f, 1000));
-      $other_editor = (count($other_editor) === 2) ? [intval($other_editor[0]), $other_editor[1]] : false;
-      if ($other_editor[1] === $_SESSION[USER]) {
+      if (count($other_editor) > 1 && $other_editor[1] === $_SESSION[USER]) {
         ftruncate($f, 0);
       }
       flock($f, LOCK_UN);
@@ -1045,4 +1053,9 @@ function delete_data($what, $t)
       return;
     }
   }
+}
+
+function fileDebug($file, $msg)
+{
+  file_put_contents(RUNTIME_DIR . '/' . $file . '.txt', $msg . PHP_EOL, FILE_APPEND);
 }
