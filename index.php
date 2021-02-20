@@ -2,7 +2,7 @@
 //phpinfo();
 
 // browser cache fix for scripts and styles
-define('V', 9);
+define('V', 10);
 define('V_', '?v=' . V);
 
 define('RUNTIME_DIR', 'runtime');
@@ -225,12 +225,6 @@ else {
   $data_file_content = json_encode($data);
 }
 
-//// update old data
-//foreach ($data[PERSONS] as &$p) {
-//  $p['b'] = '--';
-//}
-//save_data('manual update');
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 if (isset($_GET[ACTION])) {
@@ -337,7 +331,7 @@ if (isset($_GET[ACTION])) {
       case 'deletePerson':
       {
         delete_data(PERSONS, $d);
-        $ret = 'p ' . $d;
+        $ret = 'P ' . $d;
       }
       break;
       case 'movePersons':
@@ -349,7 +343,7 @@ if (isset($_GET[ACTION])) {
           $p['y'] = $d_['y'];
           $ts[] = $d_['t'];
         }
-        $ret = 'p ' . implode(', ', $ts);
+        $ret = 'm ' . implode(', ', $ts);
       }
       break;
 
@@ -373,7 +367,7 @@ if (isset($_GET[ACTION])) {
       case 'deleteConnection':
       {
         delete_data(CONNECTIONS, $d);
-        $ret = 'c ' . $d;
+        $ret = 'C ' . $d;
       }
       break;
 
@@ -381,8 +375,8 @@ if (isset($_GET[ACTION])) {
         exit;
     }
   }
-  save_data('update :: ' . $ret);
-  echo $ret . ' ;; ' . prepare_json_for_storage(get_log(1));
+  $test = save_data($ret);
+  echo $ret . ' ;;; ' . prepare_json_for_storage(get_log(1)) . ' ;;; ' . implode('\n', $test);
   exit;
 }
 
@@ -1042,6 +1036,7 @@ function save_data($git_commit)
     '"' . $git_commit . '" ' .
     COMMIT_MERGE_TIME_THRESH . ' ' .
     '2>&1', $out);
+  return $out;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

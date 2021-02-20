@@ -538,8 +538,8 @@ function addLogItem(l, prepend, itemRestorable)
   let logTs = [];
   if (logM.length === 2) {
     logPC = logM[1].substr(0, 2);
-    if (['p ', 'c '].includes(logPC)) {
-      logTs = logM[1].substr(2).split(', ');
+    if (['p ', 'P ', 'c ', 'C ', 'm '].includes(logPC)) {
+      logTs = logM[1].substr(2).split(/, | /);
     }
     else {
       logPC = '';
@@ -579,11 +579,11 @@ function addLogItem(l, prepend, itemRestorable)
     }
     console.log([previewLogPC, previewLogTs]);
     if (previewLogPC !== '') {
-      if (previewLogPC === 'p ') {
+      if (['p ', 'P ', 'm '].includes(previewLogPC)) {
         let existingNodeIDs = s.graph.nodes(previewLogTs).filter(n => n !== undefined).map(n => n.id);
         activeState.addNodes(existingNodeIDs);
       }
-      else if (previewLogPC === 'c ') {
+      else if (['c ', 'C '].includes(previewLogPC)) {
         let existingEdgeIDs = s.graph.edges(previewLogTs).filter(e => e !== undefined).map(e => e.id);
         activeState.addEdges(existingEdgeIDs);
       }
@@ -627,9 +627,17 @@ function addLogItem(l, prepend, itemRestorable)
   return li;
 }
 
+function removeLatestLogItem()
+{
+  logListUL.children[0].remove();
+}
+
 function addLogItemFromServerResponse(responseStr)
 {
-  response = responseStr.split(' ;; ');
+  let response = responseStr.split(' ;;; ');
+  if (response[2].includes('UPDATED') || response[2].includes('EXTENDED')) {
+    removeLatestLogItem();
+  }
   addLogItem(JSON.parse(response[1]), true, true);
   return response;
 }
