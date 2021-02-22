@@ -22,6 +22,7 @@
    * @param  {?object}                  options  Force optional parameters (e.g. color).
    */
   sigma.canvas.nodes.def = function(node, context, settings, options) {
+    if (node.hidden) return;
     var o = options || {},
         prefix = settings('prefix') || '',
         size = node[prefix + 'size'] || 1,

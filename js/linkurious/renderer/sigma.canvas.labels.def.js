@@ -16,6 +16,7 @@
    * @param  {object?}                  infos    The batch infos.
    */
   sigma.canvas.labels.def = function(node, context, settings, infos) {
+    if (node.hidden) return;
     var fontSize,
         prefix = settings('prefix') || '',
         size = node[prefix + 'size'] || 1,

@@ -2,7 +2,7 @@
 //phpinfo();
 
 // browser cache fix for scripts and styles
-define('V', 11);
+define('V', 12);
 define('V_', '?v=' . V);
 
 define('RUNTIME_DIR', 'runtime');
@@ -795,7 +795,7 @@ if ($_SESSION[TYPE] === ADMIN_) {
     let currentUser = '<?=$_SESSION[USER]?>';
     let currentUserIsAdmin = <?=($_SESSION[TYPE] === ADMIN_) ? 'true' : 'false'?>;
     let currentUserIsViewer = <?=($_SESSION[TYPE] === VIEWER_) ? 'true' : 'false'?>;
-    let currentUserIsEditing = <?=$_SESSION[EDITING] ? 'false' : 'true'?>;
+    let currentUserIsEditing = <?=$_SESSION[EDITING] ? 'true' : 'false'?>;
     let editingTimeout = <?=$_SESSION[EDITING] ?: '0'?>;
     let editingTimeoutDuration = <?=CURRENT_EDITOR_TIMEOUT?>;
     let firstLogin = <?=$first_login ? 'true' : 'false'?>;
@@ -808,6 +808,13 @@ if ($_SESSION[TYPE] === ADMIN_) {
   <script src="js/utils.js<?=V_?>"></script>
   <script src="js/script.js<?=V_?>"></script>
   <script src="js/tutorial.js<?=V_?>"></script>
+<?php
+if (isset($_GET['auto-layout-1'])) {
+?>
+  <script src="js/auto_layout_1.js<?=V_?>"></script>
+<?php
+}
+?>
 </body>
 </html>
 <?php

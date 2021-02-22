@@ -143,9 +143,7 @@ function showForm(f, opt, autofocus)
   modalBlocker.classList.remove('hidden');
   boxWithModalBlocker = f;
 
-  f.classList.remove('opt-new');
-  f.classList.remove('opt-new-child');
-  f.classList.remove('opt-edit');
+  f.classList.forEach(c => { if (c.startsWith('opt-')) f.classList.remove(c); });
   if (opt) {
     f.classList.add(opt);
   }

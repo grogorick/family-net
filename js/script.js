@@ -24,6 +24,8 @@ const settings = {
     verwitwet: { lineType: 'dashed', level: 'h' } }
 };
 
+let callbacks = {};
+
 let s = new sigma({
   renderers: [{
     container: document.getElementById('graph'),
@@ -100,7 +102,7 @@ let s = new sigma({
 let activeState = sigma.plugins.activeState(s);
 
 let dragListener = sigma.plugins.dragNodes(s, s.renderers[0], activeState);
-if (currentUserIsEditing) {
+if (!currentUserIsEditing) {
   dragListener.disable();
 }
 
@@ -132,7 +134,7 @@ let data = {
 
 function currentUserCanEdit()
 {
-  return !currentUserIsEditing && !logPreviewActive;
+  return currentUserIsEditing && !logPreviewActive;
 }
 
 function durationToString(duration)
@@ -154,6 +156,7 @@ if (startEdit) {
       xhttp.onreadystatechange = function()
       {
         if (this.readyState === 4 && this.status === 200) {
+          console.log(this.responseText);
           let otherEditor = JSON.parse(this.responseText);
           if (otherEditor !== false) {
             if (!currentUserIsViewer) {
@@ -244,6 +247,35 @@ function getDataPersonConnections(t)
   return connections;
 }
 
+function getDataPersonParents(p_t)
+{
+  let parents = [];
+  getDataPersonConnections(p_t).forEach(c =>
+  {
+    if (c.p2 == p_t && getConnectionRelationSettings(c.r).level === 'v') {
+      if (isChildConnectionNode(c.p1)) {
+        getParentTsFromChildConnectionNode(c.p1).forEach(pp_t => parents.push(getDataPerson(pp_t)));
+      }
+      else {
+        parents.push(c.p1);
+      }
+    }
+  });
+  return parents;
+}
+
+function getDataPersonChildren(p_t)
+{
+  let children = [];
+  getDataPersonConnections(p_t).forEach(c =>
+  {
+    if (compareTs(c.p1, p_t) && getConnectionRelationSettings(c.r).level === 'v') {
+      children.push(getDataPerson(c.p2));
+    }
+  });
+  return children;
+}
+
 function checkPersonsConnected(p1_t, p2_t)
 {
   return data.graph.connections.some(c =>
@@ -331,14 +363,14 @@ function getDataChildConnections(c)
 }
 function getParentConnectionFromChildConnectionNode(t)
 {
-  let p_ts = getParentsFromChildConnectionNode(t);
+  let p_ts = getParentTsFromChildConnectionNode(t);
   let p1_cs = getDataPersonConnections(p_ts[0]);
-  let c_t = p1_cs.filter((c) => c.p1 == p_ts[1] || c.p2 == p_ts[1]);
-  if (c_t.length === 1)
-    return c_t[0];
+  let p1_cs_p2 = p1_cs.filter(c => c.p1 == p_ts[1] || c.p2 == p_ts[1]);
+  if (p1_cs_p2.length === 1)
+    return p1_cs_p2[0];
   return null;
 }
-function getParentsFromChildConnectionNode(t)
+function getParentTsFromChildConnectionNode(t)
 {
   return t.split('-');
 }
@@ -364,7 +396,7 @@ function moveChildConnectionNodes(nodes)
           }
           alreadyDone.push(p_t);
           let childConnectionNode = s.graph.nodes(p_t);
-          let ps = getParentsFromChildConnectionNode(p_t);
+          let ps = getParentTsFromChildConnectionNode(p_t);
           let n2 = s.graph.nodes((ps[0] == n1.id) ? ps[1] : ps[0]);
           let newPos = getChildConnectionNodePosition(n1, n2);
           childConnectionNode.x = newPos.x;
@@ -378,61 +410,6 @@ function moveChildConnectionNodes(nodes)
 
 // load from file
 // ------------------------------------
-let nodeCenterY = 0;
-function applyLoadedData(loadedData, addLogItems, adjustCamera)
-{
-  data = loadedData;
-  console.log(data);
-  data.graph.persons.forEach(p => nodeCenterY += p.y);
-  nodeCenterY /= data.graph.persons.length;
-  if (adjustCamera) {
-    moveCamera({
-        x: parseFloat(data.settings.camera.x),
-        y: parseFloat(data.settings.camera.y),
-        z: parseFloat(data.settings.camera.z)
-      },
-      false, false, true, false);
-  }
-  logAddPerson = 3;
-  data.graph.persons.forEach(p => { addPerson(p, false, false, true, false); if (logAddPerson) --logAddPerson; });
-  logAddPerson = true;
-  logAddConnection = 3;
-  data.graph.connections.forEach(c => { addConnection(c, false, false, true, false); if (logAddConnection) --logAddConnection; });
-  logAddConnection = true;
-  s.refresh();
-
-  if (addLogItems) {
-    if (data.log.length > 0) {
-      let logItemRestorable = !currentUserIsEditing && (data.log[0][2] === currentUser || currentUserIsAdmin);
-      logAddLogItem = 3;
-      let i = 0;
-      let addLog = (continueAdding = true) => {
-        let j = Math.min(i + 10, data.log.length);
-        for (; i < j; ++i) {
-          let l = data.log[i];
-          addLogItem(l, false, logItemRestorable);
-          logItemRestorable = logItemRestorable && (!currentUserIsEditing && (l[2] === currentUser || currentUserIsAdmin));
-          if (logAddLogItem) --logAddLogItem;
-        }
-        if (continueAdding && i < data.log.length - 1) {
-          setTimeout(addLog, 500);
-        }
-        else {
-          logAddLogItem = true;
-        }
-      };
-      addLog(false);
-      let logButton = document.querySelector('#log .box-restore');
-      let fn = () =>
-      {
-        logButton.removeEventListener('click', fn)
-        addLog();
-      };
-      logButton.addEventListener('click', fn);
-    }
-  }
-}
-
 let dataCache = {};
 function loadData(previewHash = null)
 {
@@ -467,6 +444,105 @@ function loadData(previewHash = null)
 }
 if (!firstLogin && !accountUpgraded) {
   loadData();
+}
+
+function applyLoadedData(loadedData, addLogItems, adjustCamera)
+{
+  data = loadedData;
+  console.log(data);
+  prepareGraphData();
+  if (adjustCamera) {
+    moveCamera({
+        x: parseFloat(data.settings.camera.x),
+        y: parseFloat(data.settings.camera.y),
+        z: parseFloat(data.settings.camera.z)
+      },
+      false, false, true, false);
+  }
+  logAddPerson = 3;
+  data.graph.persons.forEach(p => { addPerson(p, false, false, true, false); if (logAddPerson) --logAddPerson; });
+  logAddPerson = true;
+  logAddConnection = 3;
+  data.graph.connections.forEach(c => { addConnection(c, false, false, true, false); if (logAddConnection) --logAddConnection; });
+  logAddConnection = true;
+  s.refresh();
+
+  if (typeof callbacks.graphLoaded === 'function') {
+    callbacks.graphLoaded();
+  }
+
+  if (addLogItems) {
+    if (data.log.length > 0) {
+      let logItemRestorable = currentUserIsEditing && (data.log[0][2] === currentUser || currentUserIsAdmin);
+      logAddLogItem = 3;
+      let i = 0;
+      let addLog = (continueAdding = true) => {
+        let j = Math.min(i + 10, data.log.length);
+        for (; i < j; ++i) {
+          let l = data.log[i];
+          addLogItem(l, false, logItemRestorable);
+          logItemRestorable = logItemRestorable && currentUserIsEditing && (l[2] === currentUser || currentUserIsAdmin);
+          if (logAddLogItem) --logAddLogItem;
+        }
+        if (continueAdding && i < data.log.length - 1) {
+          setTimeout(addLog, 500);
+        }
+        else {
+          logAddLogItem = true;
+        }
+      };
+      addLog(false);
+      let logButton = document.querySelector('#log .box-restore');
+      let fn = () =>
+      {
+        logButton.removeEventListener('click', fn)
+        addLog();
+      };
+      logButton.addEventListener('click', fn);
+    }
+  }
+}
+
+let nodeCenterY = 0;
+function prepareGraphData()
+{
+  data.graph.persons.forEach(p =>
+  {
+    p._parents = [];
+    p._children = [];
+    p._other = [];
+    nodeCenterY += p.y;
+  });
+  nodeCenterY /= data.graph.persons.length;
+  data.graph.connections.forEach(c =>
+  {
+    c._persons = [];
+    let p2 = getDataPerson(c.p2);
+    if (getConnectionRelationSettings(c.r).level === 'v') {
+      if (isChildConnectionNode(c.p1)) {
+        let pc = getParentConnectionFromChildConnectionNode(c.p1);
+        getParentTsFromChildConnectionNode(c.p1).map(getDataPerson).forEach(p1 =>
+        {
+          p1._children.push({ p: p2, c: c, pc: pc });
+          p2._parents.push({ p: p1, c: c, pc: pc });
+          c._persons.push(p1);
+        });
+      }
+      else {
+        let p1 = getDataPerson(c.p1);
+        p1._children.push({ p: p2, c: c });
+        p2._parents.push({ p: p1, c: c });
+        c._persons.push(p1);
+      }
+    }
+    else {
+      let p1 = getDataPerson(c.p1);
+      p1._other.push({ p: p2, c: c });
+      p2._other.push({ p: p1, c: c });
+      c._persons.push(p1);
+    }
+    c._persons.push(p2);
+  });
 }
 
 
@@ -800,7 +876,7 @@ function selectDirectRelatives(e)
         activeState.addEdges(c.t);
         if (isChildConnectionNode(c.p1)) {
           activeState.addEdges(getParentConnectionFromChildConnectionNode(c.p1).t);
-          getParentsFromChildConnectionNode(c.p1).forEach(recurseUp);
+          getParentTsFromChildConnectionNode(c.p1).forEach(recurseUp);
         }
         else {
           recurseUp(c.p1);
@@ -1053,7 +1129,15 @@ function addPerson(p, toData, toServer, toGraph, refreshGraph, doneCallback = nu
             labelAlignment: (p.y < nodeCenterY) ? 'top' : 'bottom' });
         },
       refreshGraph: refreshGraph,
-      doneCallback: doneCallback
+      doneCallback: p =>
+      {
+        if (toGraph) {
+          p._graphNode = s.graph.nodes(p.t);
+        }
+        if (doneCallback) {
+          doneCallback(p);
+        }
+      }
     }, logAddPerson);
   if (toServer) {
     restartEditingStopTimer();
@@ -1193,7 +1277,7 @@ function showConnectionInfo(t)
   let c = getDataConnection(t);
   let p1_n = '';
   if (isChildConnectionNode(c.p1)) {
-    let p1 = getParentsFromChildConnectionNode(c.p1);
+    let p1 = getParentTsFromChildConnectionNode(c.p1);
     let p1_1 = getDataPerson(p1[0]);
     let p1_2 = getDataPerson(p1[1]);
     p1_n = getPersonRufname(p1_1.n) + ' & ' + getPersonRufname(p1_2.n);
@@ -1316,7 +1400,7 @@ function addConnection(c, toData, toServer, toGraph, refreshGraph, doneCallback 
 {
   if (toGraph && isChildConnectionNode(c.p1)) {
     if (!s.graph.nodes(c.p1)) {
-      let p1 = getParentsFromChildConnectionNode(c.p1);
+      let p1 = getParentTsFromChildConnectionNode(c.p1);
       let p1_1 = getDataPerson(p1[0]);
       let p1_2 = getDataPerson(p1[1]);
       let p12 = getChildConnectionNodePosition(p1_1, p1_2);
@@ -1348,7 +1432,18 @@ function addConnection(c, toData, toServer, toGraph, refreshGraph, doneCallback 
             color: getEdgeColorFromConnection(c) });
       },
       refreshGraph: refreshGraph,
-      doneCallback: doneCallback
+      doneCallback: c =>
+      {
+        if (toGraph) {
+          c._graphEdge = s.graph.edges(c.t);
+          if (isChildConnectionNode(c.p1)) {
+            c._graphCCNode = s.graph.nodes(c.p1);
+          }
+        }
+        if (doneCallback) {
+          doneCallback(c);
+        }
+      }
     }, logAddConnection);
   if (toServer) {
     restartEditingStopTimer();

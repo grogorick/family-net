@@ -15,6 +15,7 @@
    * @param  {configurable}             settings The settings function.
    */
   sigma.canvas.hovers.def = function(node, context, settings) {
+    if (node.hidden) return;
     var x,
         y,
         w,
