@@ -510,6 +510,7 @@ function prepareGraphData()
   {
     p._parents = [];
     p._children = [];
+    p._partners = [];
     p._other = [];
     nodeCenterY += p.y;
   });
@@ -517,8 +518,10 @@ function prepareGraphData()
   data.graph.connections.forEach(c =>
   {
     c._persons = [];
+    c._children = [];
     let p2 = getDataPerson(c.p2);
-    if (getConnectionRelationSettings(c.r).level === 'v') {
+    let level = getConnectionRelationSettings(c.r).level;
+    if (level === 'v') {
       if (isChildConnectionNode(c.p1)) {
         let pc = getParentConnectionFromChildConnectionNode(c.p1);
         getParentTsFromChildConnectionNode(c.p1).map(getDataPerson).forEach(p1 =>
@@ -527,6 +530,7 @@ function prepareGraphData()
           p2._parents.push({ p: p1, c: c, pc: pc });
           c._persons.push(p1);
         });
+        pc._children.push({ p: p2, c: c });
       }
       else {
         let p1 = getDataPerson(c.p1);
@@ -537,8 +541,14 @@ function prepareGraphData()
     }
     else {
       let p1 = getDataPerson(c.p1);
-      p1._other.push({ p: p2, c: c });
-      p2._other.push({ p: p1, c: c });
+      if (level === 'h') {
+        p1._partners.push({ p: p2, c: c });
+        p2._partners.push({ p: p1, c: c });
+      }
+      else {
+        p1._other.push({ p: p2, c: c });
+        p2._other.push({ p: p1, c: c });
+      }
       c._persons.push(p1);
     }
     c._persons.push(p2);
