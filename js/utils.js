@@ -151,7 +151,7 @@ function showForm(f, opt, autofocus)
   f.classList.remove('hidden');
 
   if (autofocus) {
-    let firstInput = f.querySelector('input:not([disabled]), textarea:not([disabled])');
+    let firstInput = f.querySelector('input:not([disabled]), select:not([disabled]), textarea:not([disabled])');
     if (firstInput) {
       console.log(firstInput);
       firstInput.focus();

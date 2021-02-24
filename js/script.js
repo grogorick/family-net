@@ -16,12 +16,13 @@ const settings = {
   checkOtherEditorInterval: 10000,
 
   relations: {
-    _default: { lineType: 'dotted', level: null },
     Kind: { lineType: 'arrow', level: 'v' },
     adoptiert: { lineType: 'dashedarrow', level: 'v' },
     verheiratet: { lineType: 'line', level: 'h' },
     geschieden: { lineType: 'dashed', level: 'h' },
-    verwitwet: { lineType: 'dashed', level: 'h' } }
+    verwitwet: { lineType: 'dashed', level: 'h' },
+    unverheiratet: { lineType: 'dotted', level: 'h' },
+    unknown: { lineType: 'dotted', level: 'h' } }
 };
 
 let callbacks = {};
@@ -340,7 +341,7 @@ function getConnectionRelationSettings(r)
   if (r in settings.relations) {
     return settings.relations[r];
   }
-  return settings.relations._default;
+  return settings.relations.unknown;
 }
 
 function alignToGrid(n)
@@ -1277,7 +1278,7 @@ function startNewChildConnection()
 function clearConnectionMenu()
 {
   connectionMenuPersons.innerHTML = '';
-  connectionMenuRelation.value = '';
+  connectionMenuRelation.value = '???';
   connectionMenuDesc.value = '';
 }
 

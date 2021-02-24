@@ -764,14 +764,17 @@ if ($_SESSION[TYPE] === ADMIN_) {
     <i id="connection-form-persons" class="opt opt-edit"></i>
     <div class="box-row">
       <label for="connection-form-relation">Art: </label>
-      <input id="connection-form-relation" list="connection-form-relation-suggestions" autocomplete="off" <?=($_SESSION[EDITING] ? '' : 'disabled')?>>
-      <datalist id="connection-form-relation-suggestions">
-        <option value="Kind">
-        <option value="adoptiert">
-        <option value="verheiratet">
-        <option value="geschieden">
-        <option value="verwitwet">
-      </datalist>
+      <select id="connection-form-relation" <?=($_SESSION[EDITING] ? '' : 'disabled')?>>
+        <option value="Kind">Kind</option>
+        <option value="adoptiert">adoptiert</option>
+        <option disabled></option>
+        <option value="verheiratet">verheiratet</option>
+        <option value="geschieden">geschieden</option>
+        <option value="verwitwet">verwitwet</option>
+        <option value="unverheiratet">unverheiratet</option>
+        <option disabled></option>
+        <option value="???" selected>??? (unbekannt)</option>
+      </select>
     </div>
     <div class="box-row">
       <label for="connection-form-desc">Info: </label>
