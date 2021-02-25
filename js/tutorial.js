@@ -183,9 +183,7 @@ tutorialSteps = tutorialSteps.concat([
     before: () => {
       tutorialWindow.button_Abbrechen.classList.add('hidden');
       tutorialWindow.button_Weiter.innerHTML = 'OK';
-      let xhttp = new XMLHttpRequest();
-      xhttp.open('GET', '?action=tutorial-completed', true);
-      xhttp.send(); },
+      xhRequest('?action=tutorial-completed'); },
     after: () => loadData(),
     buttonTimeout: 10 }
 ]);

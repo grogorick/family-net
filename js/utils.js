@@ -106,30 +106,22 @@ function toServerDataGraph(action, d, cb = { toServer: null, toData: null, toGra
     }
     if (cb.toGraph) {
       cb.toGraph(d);
-      if (cb.refreshGraph) {
-        s.refresh();
-      }
+    }
+    if (cb.refreshGraph) {
+      s.refresh();
     }
     if (cb.doneCallback) {
       cb.doneCallback(d);
     }
   };
   if (cb.toServer) {
-    var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function()
+    xhRequest('?action=' + action + '&d=' + encodeURIComponent(JSON.stringify(d)), responseText =>
     {
-      if (this.readyState === 4 && this.status === 200) {
-        console.log(this.responseText);
-        if (cb.toServer !== true) {
-          cb.toServer(this.responseText, d);
-        }
-        continueWhenServerIsDone();
+      if (cb.toServer !== true) {
+        cb.toServer(responseText, d);
       }
-    };
-    xhttp.open('GET', '?action=' + action
-      + '&d=' + encodeURIComponent(JSON.stringify(d))
-      , true);
-    xhttp.send();
+      continueWhenServerIsDone();
+    });
   }
   else {
     continueWhenServerIsDone();
@@ -189,7 +181,7 @@ function showMessage(msg, buttons = { 'OK': DISMISS_MESSAGE })
   m.box = m.modalBlocker.querySelector('.box');
   m.content = m.box.querySelector('.message-content');
   m.content.innerHTML = msg;
-  m.dismiss = e => { m.modalBlocker.parentElement.removeChild(m.modalBlocker); };
+  m.dismiss = e => { m.modalBlocker.remove(); };
   let buttonTemplate = m.box.querySelector('button');
   m.box.removeChild(buttonTemplate);
   for (b in buttons) {
@@ -297,3 +289,21 @@ document.querySelectorAll('.box input[placeholder="yyyy"]').forEach(yyyy =>
     updateDateValue(tt, mm, yyyy);
   });
 });
+
+function xhRequest(url, responseCallback = null, log = true)
+{
+  let xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function()
+  {
+    if (this.readyState === 4 && this.status === 200) {
+      if (log) {
+        console.log(this.responseText);
+      }
+      if (responseCallback !== null) {
+        responseCallback(this.responseText);
+      }
+    }
+  };
+  xhttp.open('GET', url, true);
+  xhttp.send();
+}

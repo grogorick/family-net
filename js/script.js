@@ -14,6 +14,7 @@ const settings = {
   gridStep: 20,
   saveCameraTimeout: 5000,
   checkOtherEditorInterval: 10000,
+  stopEditWarningCountdown: 60,
 
   relations: {
     Kind: { lineType: 'arrow', level: 'v' },
@@ -27,9 +28,14 @@ const settings = {
 
 let callbacks = {};
 
+let windowSize = { height: window.innerHeight, width: window.innerWidth };
+document.body.style.height = windowSize.height + 'px';
+
+let graphElement = document.getElementById('graph');
+
 let s = new sigma({
   renderers: [{
-    container: document.getElementById('graph'),
+    container: graphElement,
     type: 'canvas'
   }],
   settings: {
@@ -109,9 +115,9 @@ if (!currentUserIsEditing) {
 
 let lasso = new sigma.plugins.lasso(s, s.renderers[0], {
   strokeStyle: 'black',
-  lineWidth: 2,
+  lineWidth: 0,
   fillWhileDrawing: true,
-  fillStyle: 'rgba(41, 41, 41, 0.2)',
+  fillStyle: 'rgba(0, 0, 0, 0.03)',
   cursor: 'crosshair'
 });
 
@@ -140,7 +146,7 @@ function currentUserCanEdit()
 
 function durationToString(duration)
 {
-  return (duration >= 60) ? Math.floor(duration / 60) + 'min' : ((duration % 60) + 's')
+  return (duration >= 60) ? Math.floor(duration / 60) + 'min' : (Math.floor(duration % 60) + 's')
 }
 
 let startEdit = document.getElementById('start-edit');
@@ -153,30 +159,24 @@ if (startEdit) {
     let checkOtherEditor = () =>
     {
       console.log('check other editor');
-      let xhttp = new XMLHttpRequest();
-      xhttp.onreadystatechange = function()
+      xhRequest('?action=get-editor', responseText =>
       {
-        if (this.readyState === 4 && this.status === 200) {
-          console.log(this.responseText);
-          let otherEditor = JSON.parse(this.responseText);
-          if (otherEditor !== false) {
-            if (!currentUserIsViewer) {
-              startEdit.classList.add('hidden');
-            }
-            let otherEditorTimeout = otherEditor[0] + editingTimeoutDuration - Math.floor(new Date().getTime() / 1000);
-            otherEditorDiv.innerHTML = '(' + otherEditor[1] + ' bearbeitet gerade - ' + durationToString(otherEditorTimeout) + ')';
-            otherEditorDiv.classList.remove('hidden');
+        let otherEditor = JSON.parse(responseText);
+        if (otherEditor !== false) {
+          if (!currentUserIsViewer) {
+            startEdit.classList.add('hidden');
           }
-          else {
-            otherEditorDiv.classList.add('hidden');
-            if (!currentUserIsViewer) {
-              startEdit.classList.remove('hidden');
-            }
+          let otherEditorTimeout = otherEditor[0] + editingTimeoutDuration - Math.floor(new Date().getTime() / 1000);
+          otherEditorDiv.innerHTML = otherEditor[1] + ' bearbeitet gerade (' + durationToString(otherEditorTimeout) + ')';
+          otherEditorDiv.classList.remove('hidden');
+        }
+        else {
+          otherEditorDiv.classList.add('hidden');
+          if (!currentUserIsViewer) {
+            startEdit.classList.remove('hidden');
           }
         }
-      };
-      xhttp.open('GET', '?action=get-editor', true);
-      xhttp.send();
+      });
     };
     setInterval(checkOtherEditor, settings.checkOtherEditorInterval);
     checkOtherEditor();
@@ -185,19 +185,51 @@ if (startEdit) {
 
 let stopEditTimer = document.getElementById('stop-edit-timer');
 if (stopEditTimer && editingTimeout) {
+  let stopEditCountdownMessage = null;
   setInterval(() =>
   {
     let remainingDuration = editingTimeout + editingTimeoutDuration - Math.floor(new Date().getTime() / 1000);
-    if (remainingDuration <= 0) {
-      window.location.reload();
+    let remainingDurationStr = durationToString(remainingDuration);
+    stopEditTimer.innerHTML = ' (' + remainingDurationStr + ')';
+    if (stopEditCountdownMessage !== null) {
+      if (remainingDuration < 1) {
+        window.location.reload();
+      }
+      else {
+        stopEditCountdownMessage.content.querySelector('.stop-edit-countdown').innerHTML = remainingDurationStr;
+      }
     }
-    stopEditTimer.innerHTML = ' (' + durationToString(remainingDuration) + ')';
+    else if (remainingDuration < settings.stopEditWarningCountdown + 1) {
+      stopEditCountdownMessage = showMessage(
+        'Deine Bearbeitungszeit endet in <span class="stop-edit-countdown">' + durationToString(settings.stopEditWarningCountdown) + '</span>',
+        {
+          'Weiter bearbeiten': e =>
+          {
+            stopEditCountdownMessage.content.innerHTML = 'Bearbeitungsmodus wird verlängert...';
+            stopEditCountdownMessage['button_Weiter bearbeiten'].remove();
+            xhRequest('?action=restart-edit-timer', responseText =>
+            {
+              if (responseText.startsWith('restarted ')) {
+                restartEditingStopTimer(parseInt(responseText.substr('restarted '.length)));
+                stopEditCountdownMessage.dismiss();
+                stopEditCountdownMessage = null;
+              }
+              else {
+                window.location.reload();
+              }
+            });
+          }
+        });
+    }
   }, 1000);
 }
 
-function restartEditingStopTimer()
+function restartEditingStopTimer(timestamp = null)
 {
-  editingTimeout =  Math.floor(new Date().getTime() / 1000);
+  if (timestamp === null) {
+    timestamp = Math.floor(new Date().getTime() / 1000);
+  }
+  editingTimeout = timestamp;
 }
 
 
@@ -425,23 +457,15 @@ function loadData(previewHash = null)
   }
 
   console.log('load data from server ' + previewHash);
-  let xhttp = new XMLHttpRequest();
-  xhttp.onreadystatechange = function()
+  xhRequest(previewHash
+    ? '?action=preview&hash=' + previewHash
+    : '?action=init', responseText =>
   {
-    if (this.readyState === 4 && this.status === 200) {
-      let d = JSON.parse(this.responseText);
-      let hash = previewHash ? previewHash : d.currentHash;
-      applyLoadedData(d, previewHash === null, previewHash === null);
-      dataCache[hash] = JSON.parse(this.responseText);
-    }
-  };
-  if (!previewHash) {
-    xhttp.open('GET', '?action=init', true);
-  }
-  else {
-    xhttp.open('GET', '?action=preview&hash=' + previewHash, true);
-  }
-  xhttp.send();
+    let d = JSON.parse(responseText);
+    let hash = previewHash ? previewHash : d.currentHash;
+    applyLoadedData(d, previewHash === null, previewHash === null);
+    dataCache[hash] = d;
+  }, false);
 }
 if (!firstLogin && !accountUpgraded) {
   loadData();
@@ -590,15 +614,7 @@ logListUL.addEventListener('mouseleave', e =>
 if (currentUserIsAdmin) {
   document.getElementById('log-extended').addEventListener('change', () =>
   {
-    let xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function()
-    {
-      if (this.readyState === 4 && this.status === 200) {
-        window.location.reload();
-      }
-    };
-    xhttp.open('GET', '?action=toggle-extended-log', true);
-    xhttp.send();
+    xhRequest('?action=toggle-extended-log', () => window.location.reload());
   });
 }
 
@@ -876,13 +892,14 @@ function deselectPersons(e, refreshGraph = true, except = [])
 
 function selectDirectRelatives(e)
 {
+  console.log('select direct relatives of ' + e.data.node.id);
   let recurseUp = p_t =>
   {
-    console.log('p ' + p_t);
+    // console.log('p ' + p_t);
     activeState.addNodes(p_t);
     getDataPersonConnections(p_t).forEach(c =>
     {
-      console.log('c ' + c.r);
+      // console.log('c ' + c.r);
       if (c.p2 == p_t && getConnectionRelationSettings(c.r).level === 'v') {
         activeState.addEdges(c.t);
         if (isChildConnectionNode(c.p1)) {
@@ -893,30 +910,30 @@ function selectDirectRelatives(e)
           recurseUp(c.p1);
         }
       }
-      else {
-        console.log('-');
-      }
+      // else {
+      //   console.log('-');
+      // }
     });
   };
   let recurseDown = p_t =>
   {
-    console.log('p ' + p_t);
+    // console.log('p ' + p_t);
     activeState.addNodes(p_t);
     getDataPersonConnections(p_t).forEach(c =>
     {
-      console.log('c ' + c.r);
+      // console.log('c ' + c.r);
       if (compareTs(c.p1, p_t) && getConnectionRelationSettings(c.r).level === 'v') {
         activeState.addEdges(c.t);
         recurseDown(c.p2);
       }
-      else {
-        console.log('-');
-      }
+      // else {
+      //   console.log('-');
+      // }
     });
   };
   deselectAll();
   recurseUp(e.data.node.id);
-  console.log('---');
+  // console.log('---');
   recurseDown(e.data.node.id);
   s.refresh();
 }
@@ -984,10 +1001,19 @@ function startNewPerson(e)
     n: '',
     o: ''},
     false, false, true, true);
-  clearPersonMenu();
-  updateDateValue(personMenuBirthDay, personMenuBirthMonth, personMenuBirthYear);
-  updateDateValue(personMenuDeathDay, personMenuDeathMonth, personMenuDeathYear);
-  showForm(personMenuForm, 'opt-new', true);
+  let fn = () =>
+  {
+    clearPersonMenu();
+    updateDateValue(personMenuBirthDay, personMenuBirthMonth, personMenuBirthYear);
+    updateDateValue(personMenuDeathDay, personMenuDeathMonth, personMenuDeathYear);
+    showForm(personMenuForm, 'opt-new', true);
+  };
+  if (isMobile) {
+    setTimeout(fn, 500);
+  }
+  else {
+    fn();
+  }
 }
 
 function clearPersonMenu()
@@ -1575,29 +1601,31 @@ s.bind('coordinatesUpdated', e =>
   }
 });
 
+dragListener.bind('startdrag', e =>
+{
+  if (multipleKeyPressed(e)) {
+    console.log(['startdrag', e]);
+  }
+  else {
+    console.log('deactivate dragging');
+    dragListener.bind('dragend', () => {
+      console.log('reactivate dragging');
+      dragListener.enable();
+    });
+    dragListener.disable();
+  }
+});
 dragListener.bind('drag', e =>
 {
   // console.log(['drag', e]);
   clearTimeout(startedWith_drag);
   startedWith_drag = setTimeout(() => { startedWith_drag = false; }, 1000);
-
-  if (!multipleKeyPressed(e)) {
-    let oldNode = getDataPerson(e.data.node.id);
-    e.data.node.x = oldNode.x;
-    e.data.node.y = oldNode.y;
-    s.refresh();
-    return;
-  }
-  if (currentUserCanEdit()) {
-    movePersons(e, false, false, false, false, false, false); // move child nodes
-  }
+  movePersons(e, false, false, false, false, false, false); // move child nodes
 });
 dragListener.bind('drop', e =>
 {
   console.log(['drop', e]);
-  if (multipleKeyPressed(e) && currentUserCanEdit()) {
-    movePersons(e, true, true, false, false, true, true);
-  }
+  movePersons(e, true, true, false, true, true, true);
 });
 
 window.addEventListener('keydown', e =>
@@ -1614,14 +1642,20 @@ window.addEventListener('keyup', e =>
     lasso.deactivate();
   }
 });
-lasso.bind('selectedNodes', function (event) {
-  let nodes = event.data;
+lasso.bind('selectedNodes', (e) =>
+{
+  let nodes = e.data;
   activeState.dropEdges();
   activeState.addNodes(nodes.map(n => n.id).filter(n_id => !isChildConnectionNode(n_id)));
   s.refresh();
   checkSelectionBasedActions(true);
 });
 
-window.addEventListener('resize', () => window.location.reload());
+window.addEventListener('resize', (e) =>
+{
+  if (window.innerHeight !== windowSize.height && window.innerWidth !== windowSize.width) {
+    window.location.reload();
+  }
+});
 
 setTimeout(s.refresh.bind(s), 1000);

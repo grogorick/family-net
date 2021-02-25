@@ -2,7 +2,7 @@
 //phpinfo();
 
 // browser cache fix for scripts and styles
-define('V', 12);
+define('V', 13);
 define('V_', '?v=' . V);
 
 define('RUNTIME_DIR', 'runtime');
@@ -288,6 +288,13 @@ if (isset($_GET[ACTION])) {
     startEditing();
 
     switch ($_GET[ACTION]) {
+      // restart edit timer
+      case 'restart-edit-timer':
+      {
+        echo 'restarted ' . $_SESSION[EDITING];
+        exit;
+      }
+
       // log
       case 'reset':
       {
@@ -807,10 +814,10 @@ if ($_SESSION[TYPE] === ADMIN_) {
     let boxPos = '<?=$boxPos?>';
     let isMobile = <?=$is_mobile ? 'true' : 'false'?>;
   </script>
-  <script src="js/mobile.js<?=V_?>"></script>
   <script src="js/utils.js<?=V_?>"></script>
   <script src="js/script.js<?=V_?>"></script>
   <script src="js/tutorial.js<?=V_?>"></script>
+  <script src="js/mobile.js<?=V_?>"></script>
 <?php
 if (isset($_GET['auto-layout-1'])) {
 ?>
@@ -846,9 +853,10 @@ function html_min_start()
   <style type="text/css">
     html, body {
       height: 100%;
+      margin: 0;
     }
     body {
-      margin: 0;
+      padding: 0 20pt;
       display: flex;
     }
     body > div {
@@ -862,14 +870,20 @@ function html_min_start()
       border-radius: 3pt;
       padding: 3pt;
     }
-    @media only screen and (max-width: 767px) {
-      input {
-        margin: 10pt 0;
-        display: block;
-        font-size: 120%;
-        width: 70vw;
-      }
+<?php
+  global $is_mobile;
+  if ($is_mobile) {
+?>
+    input {
+      margin: 30pt 0;
+      padding: 20pt 30pt;
+      display: block;
+      font-size: 300%;
+      width: 80vw;
     }
+<?php
+  }
+?>
   </style>
 </head>
 <body>
