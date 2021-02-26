@@ -1,10 +1,10 @@
-settings_1 = {
-  nodeSpacingX: 100,
-  nodeSpacingY: 100
-};
-
-function AutoLayout1()
+function TreeLayout()
 {
+  this.settings = {
+    nodeSpacingX: 100,
+    nodeSpacingY: 100
+  };
+
   this.prepared = false;
 
   this.apply = (p0_t = null) =>
@@ -18,16 +18,22 @@ function AutoLayout1()
         this.prepare();
       }
 
-      let p0 = p0_t ? getDataPerson(p0_t) : data.graph.persons[0];
+      let p0 = null;
+      if (p0_t) {
+        p0 = getDataPerson(p0_t);
+      }
+      else {
+        p0 = data.graph.persons[0];
+        p0._graphNode.x = 0;
+        p0._graphNode.y = 0;
+      }
       console.log('layout for "' + p0.n + '"');
-      p0._graphNode.x = 0;
-      p0._graphNode.y = 0;
       p0._graphNode.hidden = false;
       this.layout(p0);
 
-      // let left = p0._graphNode.x - p0.al1.up.left;
-      // let right = p0._graphNode.x + p0.al1.up.right;
-      // for (let x = left; x <= right; x += settings_1.nodeSpacingX) {
+      // let left = p0._graphNode.x - p0.layout_tree.up.left;
+      // let right = p0._graphNode.x + p0.layout_tree.up.right;
+      // for (let x = left; x <= right; x += this.settings.nodeSpacingX) {
       //   [-1000, 500].forEach((y, j) =>
       //   {
       //     s.graph.addNode({
@@ -45,6 +51,8 @@ function AutoLayout1()
       //     color: '#eee' });
       // }
 
+      setTimeout(() => activeState.addNodes(p0.t), 500);
+      
       s.refresh();
       console.log('autolayout 1 done');
     }
@@ -59,7 +67,7 @@ function AutoLayout1()
 
   this.prepare = () =>
   {
-    data.graph.persons.forEach(p => { p.al1 = {
+    data.graph.persons.forEach(p => { p.layout_tree = {
       up: { left: 0, right: 0 },
       down: { left: 0, right: 0, childrenLeft: 0, childrenRight: 0, partners: 0, children: 0, width: 0 }};
     });
@@ -82,24 +90,24 @@ function AutoLayout1()
 
   this.prepareUp = p =>
   {
-    if ('done' in p.al1.up) {
+    if ('done' in p.layout_tree.up) {
       return;
     }
-    p.al1.up.done = true;
+    p.layout_tree.up.done = true;
     switch (p._parents.length) {
     case 0: break;
     case 1:
       let pp = p._parents[0].p;
       this.prepareUp(pp);
-      p.al1.up.left = pp.al1.up.left;
-      p.al1.up.right = pp.al1.up.right;
+      p.layout_tree.up.left = pp.layout_tree.up.left;
+      p.layout_tree.up.right = pp.layout_tree.up.right;
       break;
     case 2:
       p._parents.forEach(pp => this.prepareUp(pp.p));
       let pp1 = p._parents[0].p;
       let pp2 = p._parents[1].p;
-      p.al1.up.left = pp1.al1.up.left + pp1.al1.up.right + 1;
-      p.al1.up.right = pp2.al1.up.left + pp2.al1.up.right + 1;
+      p.layout_tree.up.left = pp1.layout_tree.up.left + pp1.layout_tree.up.right + 1;
+      p.layout_tree.up.right = pp2.layout_tree.up.left + pp2.layout_tree.up.right + 1;
       break;
     }
   };
@@ -107,7 +115,7 @@ function AutoLayout1()
   this.layoutUp = p =>
   {
     let x = p._graphNode.x,
-        y = p._graphNode.y - settings_1.nodeSpacingY;
+        y = p._graphNode.y - this.settings.nodeSpacingY;
     switch (p._parents.length) {
     case 0: break;
     case 1:
@@ -118,11 +126,11 @@ function AutoLayout1()
     case 2:
       let pp1 = p._parents[0];
       let pp2 = p._parents[1];
-      // pp1.pc._graphEdge.label = '' + (pp1.p.al1.up.right + pp2.p.al1.up.left + 2);
-      pp1.p._graphNode.x = x - (pp1.p.al1.up.right + 1) * settings_1.nodeSpacingX;
+      // pp1.pc._graphEdge.label = '' + (pp1.p.layout_tree.up.right + pp2.p.layout_tree.up.left + 2);
+      pp1.p._graphNode.x = x - (pp1.p.layout_tree.up.right + 1) * this.settings.nodeSpacingX;
       pp1.p._graphNode.y = y;
 
-      pp2.p._graphNode.x = x + (pp2.p.al1.up.left + 1) * settings_1.nodeSpacingX;
+      pp2.p._graphNode.x = x + (pp2.p.layout_tree.up.left + 1) * this.settings.nodeSpacingX;
       pp2.p._graphNode.y = y;
 
       pp1.pc._graphEdge.hidden = false;
@@ -137,7 +145,7 @@ function AutoLayout1()
       pp.p._graphNode.hidden = false;
       pp.c._graphEdge.hidden = false;
       this.layoutUp(pp.p);
-      // pp.p._graphNode.label += '\n' + pp.p.al1.up.left + '/' + pp.p.al1.up.right + '\n' + pp.p._graphNode.x;
+      // pp.p._graphNode.label += '\n' + pp.p.layout_tree.up.left + '/' + pp.p.layout_tree.up.right + '\n' + pp.p._graphNode.x;
     });
     if (bothParents) {
       moveChildConnectionNodes([p._parents[0].p._graphNode]);
@@ -148,7 +156,7 @@ function AutoLayout1()
 
   this.prepareDown = (p, invertPartners = true) =>
   {
-    let down = p.al1.down;
+    let down = p.layout_tree.down;
     if ('done' in down) {
       return;
     }
@@ -163,11 +171,11 @@ function AutoLayout1()
       pp.c._children.forEach(cp =>
       {
         this.prepareDown(cp.p, (childIdx += 2) <= p._children.length);
-        down.children += cp.p.al1.down.width;
+        down.children += cp.p.layout_tree.down.width;
         if (firstLeft === null) {
-          firstLeft = cp.p.al1.down.left;
+          firstLeft = cp.p.layout_tree.down.left;
         }
-        lastRight = cp.p.al1.down.right;
+        lastRight = cp.p.layout_tree.down.right;
       });
     });
     if (firstLeft === null) {
@@ -194,24 +202,24 @@ function AutoLayout1()
 
   this.layoutDown = (p, test = '') =>
   {
-    // p._graphNode.label += '\n' + p.al1.down.left + ' + ' + p.al1.down.right + '\n' + p.al1.down.childrenLeft + ' + ' + p.al1.down.childrenRight + '\n' + p.al1.down.width + ' / ' + p.al1.down.children;
+    // p._graphNode.label += '\n' + p.layout_tree.down.left + ' + ' + p.layout_tree.down.right + '\n' + p.layout_tree.down.childrenLeft + ' + ' + p.layout_tree.down.childrenRight + '\n' + p.layout_tree.down.width + ' / ' + p.layout_tree.down.children;
     p._partners.forEach((pp, i) =>
     {
-      pp.p._graphNode.x = p._graphNode.x + (p.al1.down.invertPartners ? -1 : 1) * (i + 1) * 2 * settings_1.nodeSpacingX;
+      pp.p._graphNode.x = p._graphNode.x + (p.layout_tree.down.invertPartners ? -1 : 1) * (i + 1) * 2 * this.settings.nodeSpacingX;
       pp.p._graphNode.y = p._graphNode.y;
       pp.p._graphNode.hidden = false;
       pp.c._graphEdge.hidden = false;
     });
     moveChildConnectionNodes([p._graphNode]);
-    let x = p._graphNode.x - p.al1.down.childrenLeft * 2 * settings_1.nodeSpacingX;
-    let y = p._graphNode.y + settings_1.nodeSpacingY;
-    let tmpPartners = p.al1.down.invertPartners ? p._partners.reverse() : p._partners;
+    let x = p._graphNode.x - p.layout_tree.down.childrenLeft * 2 * this.settings.nodeSpacingX;
+    let y = p._graphNode.y + this.settings.nodeSpacingY;
+    let tmpPartners = p.layout_tree.down.invertPartners ? p._partners.reverse() : p._partners;
     tmpPartners.forEach(pp =>
     {
       pp.c._children.forEach(cp =>
       {
-        cp.p._graphNode.x = x + cp.p.al1.down.left * 2 * settings_1.nodeSpacingX;
-        x += (cp.p.al1.down.width + 1) * 2 * settings_1.nodeSpacingX;
+        cp.p._graphNode.x = x + cp.p.layout_tree.down.left * 2 * this.settings.nodeSpacingX;
+        x += (cp.p.layout_tree.down.width + 1) * 2 * this.settings.nodeSpacingX;
         cp.p._graphNode.y = y;
         cp.p._graphNode.hidden = false;
         cp.c._graphEdge.hidden = false;
@@ -226,6 +234,5 @@ function minus1(x)
   return x ? x - 1 : 0;
 }
 
-let autoLayout1 = new AutoLayout1();
-callbacks.graphLoaded = autoLayout1.apply;
+layouts['tree'] = new TreeLayout();
 

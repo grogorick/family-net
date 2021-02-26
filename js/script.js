@@ -26,7 +26,10 @@ const settings = {
     unknown: { lineType: 'dotted', level: 'h' } }
 };
 
-let callbacks = {};
+let callbacks = {
+  graphLoaded: []
+};
+let layouts = {};
 
 let windowSize = { height: window.innerHeight, width: window.innerWidth };
 document.body.style.height = windowSize.height + 'px';
@@ -109,7 +112,7 @@ let s = new sigma({
 let activeState = sigma.plugins.activeState(s);
 
 let dragListener = sigma.plugins.dragNodes(s, s.renderers[0], activeState);
-if (!currentUserIsEditing) {
+if (!currentUserIsEditing || currentLayoutId) {
   dragListener.disable();
 }
 
@@ -492,8 +495,8 @@ function applyLoadedData(loadedData, addLogItems, adjustCamera)
   logAddConnection = true;
   s.refresh();
 
-  if (typeof callbacks.graphLoaded === 'function') {
-    callbacks.graphLoaded();
+  if (callbacks.graphLoaded) {
+    callbacks.graphLoaded.forEach(cb => cb());
   }
 
   if (addLogItems) {
@@ -1546,7 +1549,16 @@ let cdcNode = clickDoubleClick(
     console.log(['clickNode', e]);
     selectPerson(e);
   },
-  selectDirectRelatives);
+  e =>
+  {
+    if (!currentLayoutId) {
+      selectDirectRelatives(e);
+    }
+    else {
+      deselectAll(e);
+      layouts[currentLayoutId].apply(e.data.node.id);
+    }
+  });
 
 s.bind('clickNode', cdcNode.click.bind(cdcNode));
 s.bind('doubleClickNode', cdcNode.doubleClick.bind(cdcNode));
@@ -1657,5 +1669,9 @@ window.addEventListener('resize', (e) =>
     window.location.reload();
   }
 });
+
+if (currentLayoutId) {
+  callbacks.graphLoaded.push(() => { layouts[currentLayoutId].apply(); });
+}
 
 setTimeout(s.refresh.bind(s), 1000);

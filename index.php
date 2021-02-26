@@ -2,7 +2,7 @@
 //phpinfo();
 
 // browser cache fix for scripts and styles
-define('V', 13);
+define('V', 14);
 define('V_', '?v=' . V);
 
 define('RUNTIME_DIR', 'runtime');
@@ -813,15 +813,16 @@ if ($_SESSION[TYPE] === ADMIN_) {
     let modKeys = '<?=$modKeys?>';
     let boxPos = '<?=$boxPos?>';
     let isMobile = <?=$is_mobile ? 'true' : 'false'?>;
+    let currentLayoutId = '<?=$_GET['layout'] ?? ''?>';
   </script>
   <script src="js/utils.js<?=V_?>"></script>
   <script src="js/script.js<?=V_?>"></script>
   <script src="js/tutorial.js<?=V_?>"></script>
   <script src="js/mobile.js<?=V_?>"></script>
 <?php
-if (isset($_GET['auto-layout-1'])) {
+if (isset($_GET['layout'])) {
 ?>
-  <script src="js/auto_layout_1.js<?=V_?>"></script>
+  <script src="js/layout_<?=$_GET['layout']?>.js<?=V_?>"></script>
 <?php
 }
 ?>
