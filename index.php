@@ -2,7 +2,7 @@
 //phpinfo();
 
 // browser cache fix for scripts and styles
-define('V', 14);
+define('V', 17);
 define('V_', '?v=' . V);
 
 define('RUNTIME_DIR', 'runtime');
@@ -575,6 +575,11 @@ if ($_SESSION[TYPE] === ADMIN_) {
     </div>
     <div id="log-content">
       <h2>Änderungsverlauf</h2>
+      <div>
+        <span class="log-play-button log-play-backward"></span><!--
+        --><span class="log-play-button log-play-stop"></span><!--
+        --><span class="log-play-button log-play-forward"></span>
+      </div>
       <div>
         <input type="checkbox" id="log-extended" <?=array_key_exists(EXTENDED_LOG, $_SESSION) ? 'checked' : ''?> />
         <label for="log-extended">Erweitert</label>

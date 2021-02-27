@@ -98,7 +98,9 @@ function escapeHtml(unsafe) {
 
 function toServerDataGraph(action, d, cb = { toServer: null, toData: null, toGraph: null, refreshGraph: false, doneCallback: null }, log = true)
 {
-  console.log(log ? [action, d, 'toServer:', cb.toServer, 'toData:', cb.toData, 'toGraph:', cb.toGraph, 'refreshGraph:', cb.refreshGraph] : '...');
+  if (log) {
+    console.log([action, d, 'toServer:', cb.toServer, 'toData:', cb.toData, 'toGraph:', cb.toGraph, 'refreshGraph:', cb.refreshGraph]);
+  }
   let continueWhenServerIsDone = function()
   {
     if (cb.toData) {
@@ -306,4 +308,33 @@ function xhRequest(url, responseCallback = null, log = true)
   };
   xhttp.open('GET', url, true);
   xhttp.send();
+}
+
+function Callbacks()
+{
+  this.cbs = [];
+  this.add = (cb) =>
+  {
+    this.cbs.push(cb);
+  }
+  this.addOnce = (cb) =>
+  {
+    let tmp = () =>
+    {
+      cb();
+      this.remove(tmp);
+    }
+    this.add(tmp);
+  }
+  this.remove = (cb) =>
+  {
+    let idx = this.cbs.indexOf(cb);
+    if (idx !== -1) {
+      this.cbs.splice(idx, 1);
+    }
+  }
+  this.call = () =>
+  {
+    this.cbs.slice(0).forEach(cb => cb());
+  }
 }

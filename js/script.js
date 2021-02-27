@@ -15,6 +15,7 @@ const settings = {
   saveCameraTimeout: 5000,
   checkOtherEditorInterval: 10000,
   stopEditWarningCountdown: 60,
+  logPlaybackDelay: 200,
 
   relations: {
     Kind: { lineType: 'arrow', level: 'v' },
@@ -27,7 +28,8 @@ const settings = {
 };
 
 let callbacks = {
-  graphLoaded: []
+  graphLoaded: new Callbacks(),
+  logPlayStopped: new Callbacks()
 };
 let layouts = {};
 
@@ -477,7 +479,7 @@ if (!firstLogin && !accountUpgraded) {
 function applyLoadedData(loadedData, addLogItems, adjustCamera)
 {
   data = loadedData;
-  console.log(data);
+  // console.log(data);
   prepareGraphData();
   if (adjustCamera) {
     moveCamera({
@@ -487,17 +489,33 @@ function applyLoadedData(loadedData, addLogItems, adjustCamera)
       },
       false, false, true, false);
   }
-  logAddPerson = 3;
-  data.graph.persons.forEach(p => { addPerson(p, false, false, true, false); if (logAddPerson) --logAddPerson; });
+  logAddPerson = addLogItems ? 3 : false;
+  data.graph.persons.forEach(p =>
+  {
+    addPerson(p, false, false, true, false);
+    if (logAddPerson) {
+      --logAddPerson;
+      if (!logAddPerson) {
+        console.log('...');
+      }
+    }
+  });
   logAddPerson = true;
-  logAddConnection = 3;
-  data.graph.connections.forEach(c => { addConnection(c, false, false, true, false); if (logAddConnection) --logAddConnection; });
+  logAddConnection = addLogItems ? 3 : false;
+  data.graph.connections.forEach(c =>
+  {
+    addConnection(c, false, false, true, false);
+    if (logAddConnection) {
+      --logAddConnection;
+      if (!logAddConnection) {
+        console.log('...');
+      }
+    }
+  });
   logAddConnection = true;
   s.refresh();
 
-  if (callbacks.graphLoaded) {
-    callbacks.graphLoaded.forEach(cb => cb());
-  }
+  callbacks.graphLoaded.call();
 
   if (addLogItems) {
     if (data.log.length > 0) {
@@ -587,13 +605,16 @@ function prepareGraphData()
 // log history
 // ------------------------------------
 let logListUL = document.getElementById('log-list');
+let logPlayBackward = document.querySelector('#log .log-play-backward');
+let logPlayStop = document.querySelector('#log .log-play-stop');
+let logPlayForward = document.querySelector('#log .log-play-forward');
 let logRestoreSelectedItem = document.getElementById('log-restore-selected-item');
 
 let logPreviewActive = false;
 let logCacheUserSelectedNodes = [];
 let logCacheUserSelectedEdges = [];
-logListUL.addEventListener('mouseenter', e =>
-{
+
+function logRememberSelectedGraphElements() {
   console.log('enter ul');
   if (!logPreviewActive) {
     logCacheUserSelectedNodes = activeState.nodes().map(n => n.id);
@@ -604,16 +625,18 @@ logListUL.addEventListener('mouseenter', e =>
   }
   hideForm(personMenuForm);
   hideForm(connectionMenuForm);
-});
-logListUL.addEventListener('mouseleave', e =>
-{
+}
+function logRestoreSelectedGraphElements() {
   console.log('leave ul');
   if (!logPreviewActive) {
     activeState.addNodes(logCacheUserSelectedNodes);
     activeState.addEdges(logCacheUserSelectedEdges);
     s.refresh();
   }
-});
+}
+logListUL.addEventListener('mouseenter', e => logRememberSelectedGraphElements);
+logListUL.addEventListener('mouseleave', e => logRestoreSelectedGraphElements);
+
 if (currentUserIsAdmin) {
   document.getElementById('log-extended').addEventListener('change', () =>
   {
@@ -674,8 +697,8 @@ function addLogItem(l, prepend, itemRestorable)
   li.setAttribute('data-log-ts', logTs.join(','));
   li.addEventListener('mouseenter', e =>
   {
-    console.log('enter li');
-    if (li.classList.contains('log-item-preview')) {
+    // console.log('enter li');
+    if (li.classList.contains('log-item-preview') && !('forceLogItemPreview' in e)) {
       console.log('cancel hover preview - already selected');
       return;
     }
@@ -690,7 +713,7 @@ function addLogItem(l, prepend, itemRestorable)
         break;
       }
     }
-    console.log([previewLogPC, previewLogTs]);
+    // console.log([previewLogPC, previewLogTs]);
     if (previewLogPC !== '') {
       if (['p ', 'P ', 'm '].includes(previewLogPC)) {
         let existingNodeIDs = s.graph.nodes(previewLogTs).filter(n => n !== undefined).map(n => n.id);
@@ -705,14 +728,14 @@ function addLogItem(l, prepend, itemRestorable)
   });
   li.addEventListener('mouseleave', e =>
   {
-    console.log('leave li');
+    // console.log('leave li');
     activeState.dropNodes();
     activeState.dropEdges();
     s.refresh();
   });
   li.addEventListener('click', e =>
   {
-    console.log('log click');
+    // console.log('log click');
     if (li === logItemSelectedPreview) {
       console.log('cancel restore log item - already restored');
       return;
@@ -754,6 +777,65 @@ function addLogItemFromServerResponse(responseStr)
   addLogItem(JSON.parse(response[1]), true, true);
   return response;
 }
+
+let logPlaying = false;
+function logPlayStep()
+{
+  let hovering = new MouseEvent('mouseenter', {
+    view: window,
+    bubbles: true,
+    cancelable: true
+  });
+  hovering.forceLogItemPreview = true;
+  logItemSelectedPreview.dispatchEvent(hovering);
+  setTimeout(() =>
+  {
+    let nextItem = (!logPlaying) ? null : (logPlaying === 'forward') ? logItemSelectedPreview.previousElementSibling : logItemSelectedPreview.nextElementSibling;
+    if (nextItem !== null) {
+      activeState.dropNodes();
+      activeState.dropEdges();
+      nextItem.click();
+    }
+    else {
+      callbacks.graphLoaded.remove(logPlayStep);
+      callbacks.logPlayStopped.call();
+    }
+  }, settings.logPlaybackDelay);
+}
+logPlayBackward.addEventListener('click', () =>
+{
+  if (logPlaying) {
+    if (logPlaying === 'forward') {
+      callbacks.logPlayStopped.addOnce(() => logPlayBackward.click());
+      logPlaying = false;
+    }
+    return;
+  }
+  console.log('log play start backward');
+  logPlaying = 'backward';
+  callbacks.graphLoaded.add(logPlayStep);
+  logPlayStep();
+});
+logPlayStop.addEventListener('click', () =>
+{
+  console.log('log play stopping...');
+  logPlaying = false;
+  callbacks.logPlayStopped.addOnce(() => console.log('log play stopped'));
+});
+logPlayForward.addEventListener('click', () =>
+{
+  if (logPlaying) {
+    if (logPlaying === 'backward') {
+      callbacks.logPlayStopped.addOnce(() => logPlayBackward.click());
+      logPlaying = false;
+    }
+    return;
+  }
+  console.log('log play start forward');
+  logPlaying = 'forward';
+  callbacks.graphLoaded.add(logPlayStep);
+  logPlayStep();
+});
 
 
 // move camera
@@ -1671,7 +1753,7 @@ window.addEventListener('resize', (e) =>
 });
 
 if (currentLayoutId) {
-  callbacks.graphLoaded.push(() => { layouts[currentLayoutId].apply(); });
+  callbacks.graphLoaded.add(() => layouts[currentLayoutId].apply());
 }
 
 setTimeout(s.refresh.bind(s), 1000);

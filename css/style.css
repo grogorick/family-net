@@ -391,6 +391,37 @@ button:not(:disabled):hover, .button:not(:disabled):hover {
   font-size: 80%;
 }
 
+#log .log-play-button {
+	margin: 0;
+	padding: 10pt;
+}
+#log .log-play-button::before {
+	--play-btn-size: 10pt;
+	--play-btn-color: #ddd;
+	content: ' ';
+	display: inline-block;
+	box-sizing: border-box;
+	border-style: solid;
+	width: var(--play-btn-size);
+	height: var(--play-btn-size);
+}
+#log .log-play-button:hover::before {
+	--play-btn-color: #000;
+}
+#log .log-play-stop::before {
+	border-style: double;
+	border-width: 0 0 0 var(--play-btn-size);
+	border-color: var(--play-btn-color);
+}
+#log .log-play-backward::before {
+	border-width: calc(var(--play-btn-size) / 2) var(--play-btn-size) calc(var(--play-btn-size) / 2) 0;
+	border-color: transparent var(--play-btn-color) transparent transparent;
+}
+#log .log-play-forward::before {
+	border-width: calc(var(--play-btn-size) / 2) 0 calc(var(--play-btn-size) / 2) var(--play-btn-size);
+	border-color: transparent transparent transparent var(--play-btn-color);
+}
+
 #log-restore-selected-item {
   left: 50%;
   top: 10pt;
