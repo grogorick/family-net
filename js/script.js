@@ -616,7 +616,8 @@ let logPreviewActive = false;
 let logCacheUserSelectedNodes = [];
 let logCacheUserSelectedEdges = [];
 
-function logRememberSelectedGraphElements() {
+logListUL.addEventListener('mouseenter', e =>
+{
   console.log('enter ul');
   if (!logPreviewActive) {
     logCacheUserSelectedNodes = activeState.nodes().map(n => n.id);
@@ -627,17 +628,16 @@ function logRememberSelectedGraphElements() {
   }
   hideForm(personMenuForm);
   hideForm(connectionMenuForm);
-}
-function logRestoreSelectedGraphElements() {
+});
+logListUL.addEventListener('mouseleave', e =>
+{
   console.log('leave ul');
   if (!logPreviewActive) {
     activeState.addNodes(logCacheUserSelectedNodes);
     activeState.addEdges(logCacheUserSelectedEdges);
     s.refresh();
   }
-}
-logListUL.addEventListener('mouseenter', e => logRememberSelectedGraphElements);
-logListUL.addEventListener('mouseleave', e => logRestoreSelectedGraphElements);
+});
 
 if (currentUserIsAdmin) {
   document.getElementById('log-extended').addEventListener('change', () =>
