@@ -18,12 +18,14 @@ html, body {
   width: 100%;
   height: 100%;
 }
-body, input:not([type="submit"]):not([type="checkbox"]), select, textarea, button {
+body,
+input:not([type="submit"]):not([type="checkbox"]),
+select,
+textarea,
+button {
   font-family: 'Josefin Sans', 'Trebuchet MS', sans-serif;
   line-height: 1.5;
   color: #000;
-}
-body {
   background: white;
 }
 
@@ -146,7 +148,9 @@ body {
   border-top: 1px solid #ddd;
 }
 
-.box input:not([type="submit"]):not([type="checkbox"]), .box select, .box textarea {
+.box input:not([type="submit"]):not([type="checkbox"]),
+.box select,
+.box textarea {
   width: 150pt;
   border: 1px solid #aaa;
   border-radius: 3pt;
@@ -180,7 +184,10 @@ button, .button {
   text-decoration: none;
   background: transparent;
 }
-button:not(:disabled):hover, .button:not(:disabled):hover {
+button.selected, .button.selected {
+  background: radial-gradient(circle, #fff 70%, #eee 90%) !important; /* #f8f8f8 */
+}
+.desktop-client button:not(:disabled):hover, .desktop-client .button:not(:disabled):hover {
   background: radial-gradient(circle, #fcfcfc 50%, #f9f9f9 100%) !important;
 }
 .button-border {
@@ -190,7 +197,7 @@ button:not(:disabled):hover, .button:not(:disabled):hover {
 .button-border-full {
   border: 1px solid #eee;
 }
-.button-border:not(:disabled):hover, .button-border-full:not(:disabled):hover {
+.desktop-client .button-border:not(:disabled):hover, .desktop-client .button-border-full:not(:disabled):hover {
   border-top: 1px solid #ddd;
 }
 
@@ -228,10 +235,35 @@ button:not(:disabled):hover, .button:not(:disabled):hover {
   text-align: initial;
 }
 
-#mobile-menu-toggle {
+#mobile-actions.box {
   top: 10pt;
   right: initial;
   bottom: initial;
+}
+#mobile-action-new-person, #mobile-action-new-connection, #mobile-action-move-person {
+  padding: 5pt 10pt;
+}
+#mobile-action-new-connection span:first-child {
+  color: #0004;
+  margin-right: -2pt;
+}
+#mobile-action-new-connection span:last-child {
+  color: #0004;
+  margin-left: -2pt;
+}
+#mobile-action-move-person span:first-child {
+  color: #0002;
+  position: relative;
+  top: 2pt;
+}
+#mobile-action-move-person span:nth-child(2) {
+  color: #0006;
+  margin-left: -2pt;
+  margin-right: -2pt;
+}
+#mobile-action-move-person span:nth-child(3) {
+  position: relative;
+  top: -2pt;
 }
 #mobile-menu-close {
   background: white !important;
@@ -270,7 +302,7 @@ button:not(:disabled):hover, .button:not(:disabled):hover {
   white-space: nowrap;
 }
 .mobile-client #help.box {
-  bottom: 60%;
+  bottom: 50%;
 }
 #help.box h2 {
   border-bottom: 1px solid #eee;
@@ -325,7 +357,7 @@ button:not(:disabled):hover, .button:not(:disabled):hover {
   top: 40pt;
 }
 .mobile-client #log.box {
-  bottom: 60%;
+  bottom: 50%;
 }
 #log.box:not(.box-minimized) #log-content {
   height: 100%;
@@ -422,9 +454,13 @@ button:not(:disabled):hover, .button:not(:disabled):hover {
 	border-color: transparent transparent transparent var(--play-btn-color);
 }
 
-#log-restore-selected-item {
+.desktop-client #log-restore-selected-item {
   left: 50%;
   top: 10pt;
+  background: white;
+}
+.mobile-client #log-restore-selected-item {
+  top: initial;
   background: white;
 }
 

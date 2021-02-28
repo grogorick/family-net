@@ -12,6 +12,7 @@ const settings = {
   edgeColorPreview: '#ddd',
 
   gridStep: 20,
+  mobileGraphClickDelay: 500,
   saveCameraTimeout: 5000,
   checkOtherEditorInterval: 10000,
   stopEditWarningCountdown: 60,
@@ -44,7 +45,7 @@ let s = new sigma({
     type: 'canvas'
   }],
   settings: {
-    doubleClickEnabled: false,
+    doubleClickEnabled: isMobile,
     rescaleIgnoreSize: true,
 
     font: '"Josefin Sans", "Trebuchet MS", sans-serif',
@@ -52,6 +53,7 @@ let s = new sigma({
     activeFontStyle: 'bold',
 
     zoomingRatio: 1.2,
+    doubleClickZoomingRatio: 2,
     zoomMin: 1,
     zoomMax: 10,
 
@@ -93,7 +95,7 @@ let s = new sigma({
     minArrowSize: 5,
 
     // connection hover
-    enableEdgeHovering: true,
+    enableEdgeHovering: !isMobile,
     edgeHoverPrecision: 5,
     // edgeHoverSizeRatio: 5
     // edgeHoverExtremities: true,
@@ -779,6 +781,8 @@ function addLogItemFromServerResponse(responseStr)
 }
 
 let logPlaying = false;
+let LOG_PLAYING_FORWARD = 'forward';
+let LOG_PLAYING_BACKWARD = 'backward';
 function logPlayStep()
 {
   let hovering = new MouseEvent('mouseenter', {
@@ -790,7 +794,7 @@ function logPlayStep()
   logItemSelectedPreview.dispatchEvent(hovering);
   setTimeout(() =>
   {
-    let nextItem = (!logPlaying) ? null : (logPlaying === 'forward') ? logItemSelectedPreview.previousElementSibling : logItemSelectedPreview.nextElementSibling;
+    let nextItem = (!logPlaying) ? null : (logPlaying === LOG_PLAYING_FORWARD) ? logItemSelectedPreview.previousElementSibling : logItemSelectedPreview.nextElementSibling;
     if (nextItem !== null) {
       activeState.dropNodes();
       activeState.dropEdges();
@@ -805,14 +809,14 @@ function logPlayStep()
 logPlayBackward.addEventListener('click', () =>
 {
   if (logPlaying) {
-    if (logPlaying === 'forward') {
+    if (logPlaying === LOG_PLAYING_FORWARD) {
       callbacks.logPlayStopped.addOnce(() => logPlayBackward.click());
       logPlaying = false;
     }
     return;
   }
   console.log('log play start backward');
-  logPlaying = 'backward';
+  logPlaying = LOG_PLAYING_BACKWARD;
   callbacks.graphLoaded.add(logPlayStep);
   logPlayStep();
 });
@@ -825,14 +829,14 @@ logPlayStop.addEventListener('click', () =>
 logPlayForward.addEventListener('click', () =>
 {
   if (logPlaying) {
-    if (logPlaying === 'backward') {
+    if (logPlaying === LOG_PLAYING_BACKWARD) {
       callbacks.logPlayStopped.addOnce(() => logPlayBackward.click());
       logPlaying = false;
     }
     return;
   }
   console.log('log play start forward');
-  logPlaying = 'forward';
+  logPlaying = LOG_PLAYING_FORWARD;
   callbacks.graphLoaded.add(logPlayStep);
   logPlayStep();
 });
@@ -879,7 +883,7 @@ function moveCamera(xyz, toData, toServer, toGraph, refreshGraph)
 
 // select
 // ------------------------------------
-function deselectAll(e, refreshGraph = true, except = [])
+function deselectAll(e = null, refreshGraph = true, except = [])
 {
   deselectPersons(e, false, except);
   deselectConnections(e, false, except);
@@ -891,75 +895,7 @@ function deselectAll(e, refreshGraph = true, except = [])
 
 // select persons
 // ------------------------------------
-function selectPerson(e, refreshGraph = true)
-{
-  if (isChildConnectionNode(e.data.node.id)) {
-    return;
-  }
-
-  let isMultipleKeyPressed = multipleKeyPressed(e);
-  if (!isMultipleKeyPressed) {
-    deselectAll(e, false);
-    console.log(['selectPerson', e]);
-  }
-  else {
-    if (activeState.nodes().length > 0 || activeState.edges().length > 1) {
-      deselectConnections(null, false)
-    }
-    console.log(['selectPersonMultiple', e]);
-  }
-
-  let n = e.data.node;
-  if (activeState.nodes().some(sn => sn.id === n.id)) {
-    activeState.dropNodes(n.id);
-  }
-  else {
-    activeState.addNodes(n.id);
-  }
-  if (refreshGraph) {
-    s.refresh();
-  }
-  checkSelectionBasedActions(isMultipleKeyPressed);
-}
-
-function checkSelectionBasedActions(multipleKeyPressed)
-{
-  let nodes = activeState.nodes();
-  if (nodes.length === 1) {
-    if (!multipleKeyPressed) {
-      showPersonInfo(nodes[0].id);
-    }
-    else if (currentUserCanEdit()) {
-      let edges = activeState.edges();
-      if (edges.length === 1) {
-        let c = edges[0];
-        let p = nodes[0];
-        if (checkPersonsConnected(c.source, p.id) || checkPersonsConnected(c.target, p.id)) {
-          console.log('already connected');
-          return;
-        }
-        startNewChildConnection();
-      }
-    }
-  }
-  else if (nodes.length === 2 && currentUserCanEdit()) {
-    if (!activeState.edges().length) {
-      let p1 = nodes[0];
-      let p2 = nodes[1];
-      if (p1.id == p2.id) {
-        console.log('no connection possible - 2 different persons must be selected');
-        return;
-      }
-      if (checkPersonsConnected(p1.id, p2.id)) {
-        console.log('no connection possible - persons already connected');
-        return;
-      }
-      startNewConnection();
-    }
-  }
-}
-
-function deselectPersons(e, refreshGraph = true, except = [])
+function deselectPersons(e = null, refreshGraph = true, except = [])
 {
   if (except.length) {
     activeState.dropNodes(
@@ -1026,22 +962,7 @@ function selectDirectRelatives(e)
 
 // select connections
 // ------------------------------------
-function selectConnection(e, refreshGraph = true)
-{
-  deselectAll(e, false);
-  console.log(['selectConnection', e]);
-  let c = e.data.edge;
-  activeState.addEdges(c.id);
-  if (refreshGraph) {
-    s.refresh();
-  }
-
-  if (!multipleKeyPressed(e)) {
-    showConnectionInfo(c.id);
-  }
-}
-
-function deselectConnections(e, refreshGraph = true, except = [])
+function deselectConnections(e = null, refreshGraph = true, except = [])
 {
   if (except.length) {
     activeState.dropEdges(
@@ -1094,7 +1015,7 @@ function startNewPerson(e)
     showForm(personMenuForm, 'opt-new', true);
   };
   if (isMobile) {
-    setTimeout(fn, 500);
+    setTimeout(fn, settings.mobileGraphClickDelay);
   }
   else {
     fn();
@@ -1115,45 +1036,54 @@ function clearPersonMenu()
 
 function showPersonInfo(t)
 {
-  console.log(['showPersonInfo', t]);
-  let p = getDataPerson(t);
-  let db = p.b.split('-');
-  personMenuName.value = p.n;
-  personMenuBirthDay.value = db[2];
-  personMenuBirthMonth.value = db[1];
-  personMenuBirthYear.value = db[0];
-  updateDateValue(personMenuBirthDay, personMenuBirthMonth, personMenuBirthYear);
-  let dd = p.d.split('-');
-  personMenuDeathDay.value = dd[2];
-  personMenuDeathMonth.value = dd[1];
-  personMenuDeathYear.value = dd[0];
-  updateDateValue(personMenuDeathDay, personMenuDeathMonth, personMenuDeathYear);
-  personMenuNote.value = p.o;
-  if (currentUserCanEdit()) {
-    personMenuDelete.classList.toggle('hidden', getDataPersonConnections(t).length > 0)
-    personMenuEdit.classList.remove('hidden');
-    personMenuName.disabled = false;
-    personMenuBirthDay.disabled = false;
-    personMenuBirthMonth.disabled = false;
-    personMenuBirthYear.disabled = false;
-    personMenuDeathDay.disabled = false;
-    personMenuDeathMonth.disabled = false;
-    personMenuDeathYear.disabled = false;
-    personMenuNote.disabled = false;
+  let fn = () =>
+  {
+    console.log(['showPersonInfo', t]);
+    let p = getDataPerson(t);
+    let db = p.b.split('-');
+    personMenuName.value = p.n;
+    personMenuBirthDay.value = db[2];
+    personMenuBirthMonth.value = db[1];
+    personMenuBirthYear.value = db[0];
+    updateDateValue(personMenuBirthDay, personMenuBirthMonth, personMenuBirthYear);
+    let dd = p.d.split('-');
+    personMenuDeathDay.value = dd[2];
+    personMenuDeathMonth.value = dd[1];
+    personMenuDeathYear.value = dd[0];
+    updateDateValue(personMenuDeathDay, personMenuDeathMonth, personMenuDeathYear);
+    personMenuNote.value = p.o;
+    if (currentUserCanEdit()) {
+      personMenuDelete.classList.toggle('hidden', getDataPersonConnections(t).length > 0)
+      personMenuEdit.classList.remove('hidden');
+      personMenuName.disabled = false;
+      personMenuBirthDay.disabled = false;
+      personMenuBirthMonth.disabled = false;
+      personMenuBirthYear.disabled = false;
+      personMenuDeathDay.disabled = false;
+      personMenuDeathMonth.disabled = false;
+      personMenuDeathYear.disabled = false;
+      personMenuNote.disabled = false;
+    }
+    else {
+      personMenuDelete.classList.add('hidden');
+      personMenuEdit.classList.add('hidden');
+      personMenuName.disabled = true;
+      personMenuBirthDay.disabled = true;
+      personMenuBirthMonth.disabled = true;
+      personMenuBirthYear.disabled = true;
+      personMenuDeathDay.disabled = true;
+      personMenuDeathMonth.disabled = true;
+      personMenuDeathYear.disabled = true;
+      personMenuNote.disabled = true;
+    }
+    showForm(personMenuForm, 'opt-edit', false);
+  };
+  if (isMobile) {
+    setTimeout(fn, settings.mobileGraphClickDelay);
   }
   else {
-    personMenuDelete.classList.add('hidden');
-    personMenuEdit.classList.add('hidden');
-    personMenuName.disabled = true;
-    personMenuBirthDay.disabled = true;
-    personMenuBirthMonth.disabled = true;
-    personMenuBirthYear.disabled = true;
-    personMenuDeathDay.disabled = true;
-    personMenuDeathMonth.disabled = true;
-    personMenuDeathYear.disabled = true;
-    personMenuNote.disabled = true;
+    fn();
   }
-  showForm(personMenuForm, 'opt-edit', false);
 }
 
 personMenuAdd.addEventListener('click', e =>
@@ -1304,11 +1234,11 @@ function deletePerson(p_t, toData = true, toServer = true, toGraph = true, refre
   }
 }
 
-function movePersons(e, toData, toServer, toGraph, refreshGraph, alignNodesToGrid, log)
+function movePersons(n_id, toData, toServer, toGraph, refreshGraph, alignNodesToGrid, log)
 {
   let nodes = activeState.nodes();
-  if (!nodes.some(n => n.id === e.data.node.id)) {
-    nodes = [e.data.node];
+  if (!nodes.some(n => n.id === n_id)) {
+    nodes = [s.graph.nodes(n_id)];
   }
   if (alignNodesToGrid) {
     nodes.forEach(alignToGrid);
@@ -1361,29 +1291,63 @@ let connectionMenuCancel = document.getElementById('connection-form-cancel');
 
 function startNewConnection()
 {
+  let p1 = activeState.nodes()[0];
+  let p2 = activeState.nodes()[1];
+  if (checkPersonsConnected(p1.id, p2.id)) {
+    console.log('no connection possible - persons already connected');
+    return;
+  }
   addConnection({
       t: CONNECTION_PREVIEW,
-      p1: activeState.nodes()[0].id,
-      p2: activeState.nodes()[1].id,
+      p1: p1.id,
+      p2: p2.id,
       r: '',
       d: ''},
     false, false, true, true);
-  clearConnectionMenu();
-  showForm(connectionMenuForm, 'opt-new', true);
+  let fn = () =>
+  {
+    clearConnectionMenu();
+    showForm(connectionMenuForm, 'opt-new', true);
+  };
+  if (isMobile) {
+    setTimeout(fn, settings.mobileGraphClickDelay);
+  }
+  else {
+    fn();
+  }
 }
 
 function startNewChildConnection()
 {
   let c = activeState.edges()[0];
+  if (isChildConnectionNode(c.source)) {
+    console.log('no child connection possible - selected connection is already a child connection');
+    return;
+  }
+  let p1_id = createChildConnectionNodeId(c.source, c.target);
+  let p2 = activeState.nodes()[0];
+  if (checkPersonsConnected(c.source, p2.id) || checkPersonsConnected(c.target, p2.id)) {
+    console.log('no child connection possible - persons already connected');
+    return;
+  }
   addConnection({
       t: CONNECTION_PREVIEW,
-      p1: createChildConnectionNodeId(c.source, c.target),
+      p1: p1_id,
       p2: activeState.nodes()[0].id,
       r: '',
       d: ''},
     false, false, true, true);
-  clearConnectionMenu();
-  showForm(connectionMenuForm, 'opt-new-child', true);
+  let fn = () =>
+  {
+    clearConnectionMenu();
+    showForm(connectionMenuForm, 'opt-new-child', true);
+  };
+  if (isMobile) {
+    setTimeout(fn, settings.mobileGraphClickDelay);
+  }
+  else {
+    fn();
+  }
 }
 
 function clearConnectionMenu()
@@ -1395,35 +1359,44 @@ function clearConnectionMenu()
 
 function showConnectionInfo(t)
 {
-  console.log(['showConnectionInfo', t]);
-  let c = getDataConnection(t);
-  let p1_n = '';
-  if (isChildConnectionNode(c.p1)) {
-    let p1 = getParentTsFromChildConnectionNode(c.p1);
-    let p1_1 = getDataPerson(p1[0]);
-    let p1_2 = getDataPerson(p1[1]);
-    p1_n = getPersonRufname(p1_1.n) + ' & ' + getPersonRufname(p1_2.n);
+  let fn = () =>
+  {
+    console.log(['showConnectionInfo', t]);
+    let c = getDataConnection(t);
+    let p1_n = '';
+    if (isChildConnectionNode(c.p1)) {
+      let p1 = getParentTsFromChildConnectionNode(c.p1);
+      let p1_1 = getDataPerson(p1[0]);
+      let p1_2 = getDataPerson(p1[1]);
+      p1_n = getPersonRufname(p1_1.n) + ' & ' + getPersonRufname(p1_2.n);
+    }
+    else {
+      p1_n = getPersonRufname(getDataPerson(c.p1).n);
+    }
+    let p2 = getDataPerson(c.p2);
+    connectionMenuPersons.innerHTML = escapeHtml(p1_n) + ' &mdash; ' + escapeHtml(getPersonRufname(p2.n));
+    connectionMenuRelation.value = c.r;
+    connectionMenuDesc.value = c.d;
+    if (currentUserCanEdit()) {
+      connectionMenuDelete.classList.toggle('hidden', getDataChildConnections(c).length > 0);
+      connectionMenuEdit.classList.remove('hidden');
+      connectionMenuRelation.disabled = false;
+      connectionMenuDesc.disabled = false;
+    }
+    else {
+      connectionMenuDelete.classList.add('hidden');
+      connectionMenuEdit.classList.add('hidden');
+      connectionMenuRelation.disabled = true;
+      connectionMenuDesc.disabled = true;
+    }
+    showForm(connectionMenuForm, 'opt-edit', false);
+  };
+  if (isMobile) {
+    setTimeout(fn, settings.mobileGraphClickDelay);
   }
   else {
-    p1_n = getPersonRufname(getDataPerson(c.p1).n);
+    fn();
   }
-  let p2 = getDataPerson(c.p2);
-  connectionMenuPersons.innerHTML = escapeHtml(p1_n) + ' &mdash; ' + escapeHtml(getPersonRufname(p2.n));
-  connectionMenuRelation.value = c.r;
-  connectionMenuDesc.value = c.d;
-  if (currentUserCanEdit()) {
-    connectionMenuDelete.classList.toggle('hidden', getDataChildConnections(c).length > 0);
-    connectionMenuEdit.classList.remove('hidden');
-    connectionMenuRelation.disabled = false;
-    connectionMenuDesc.disabled = false;
-  }
-  else {
-    connectionMenuDelete.classList.add('hidden');
-    connectionMenuEdit.classList.add('hidden');
-    connectionMenuRelation.disabled = true;
-    connectionMenuDesc.disabled = true;
-  }
-  showForm(connectionMenuForm, 'opt-edit', false);
 }
 
 connectionMenuAdd.addEventListener('click', e =>
@@ -1614,137 +1587,6 @@ function deleteConnection(c_t, toData = true, toServer = true, toGraph = true, r
 
 // events
 // ------------------------------------
-let startedWith_coordinatesUpdated = 0;
-let startedWith_drag = 0;
-let cdcNode = clickDoubleClick(
-  e =>
-  {
-    if (startedWith_coordinatesUpdated) {
-      console.log('skip clickNode during coordinatesUpdated');
-      return;
-    }
-    if (startedWith_drag) {
-      console.log('skip clickNode during drag');
-      return;
-    }
-
-    console.log(['clickNode', e]);
-    selectPerson(e);
-  },
-  e =>
-  {
-    if (!currentLayoutId) {
-      selectDirectRelatives(e);
-    }
-    else {
-      deselectAll(e);
-      layouts[currentLayoutId].apply(e.data.node.id);
-    }
-  });
-
-s.bind('clickNode', cdcNode.click.bind(cdcNode));
-s.bind('doubleClickNode', cdcNode.doubleClick.bind(cdcNode));
-
-s.bind('hovers', hoverPersons);
-
-s.bind('clickEdge', selectConnection);
-
-let cdcStage = clickDoubleClick(
-  e =>
-  {
-    if (startedWith_coordinatesUpdated) {
-      console.log('skip clickStage during coordinatesUpdated');
-      return;
-    }
-    if (startedWith_drag || e.data.captor.isDragging) {
-      console.log('skip clickStage during drag');
-      return;
-    }
-
-    console.log(['clickStage', e]);
-    if (!multipleKeyPressed(e)) {
-      console.log('deselect all');
-      deselectAll(e);
-    }
-  },
-  e =>
-  {
-    console.log(['doubleClick', e]);
-    deselectAll(e);
-    if (currentUserCanEdit()) {
-      startNewPerson(e);
-    }
-  });
-
-s.bind('clickStage', cdcStage.click.bind(cdcStage));
-s.bind('doubleClickStage', cdcStage.doubleClick.bind(cdcStage));
-
-s.bind('coordinatesUpdated', e =>
-{
-  if (startedWith_drag) {
-    console.log('skip coordinatesUpdated during drag');
-    return;
-  }
-  // console.log(['coordinatesUpdated', e]);
-  clearTimeout(startedWith_coordinatesUpdated);
-  startedWith_coordinatesUpdated = setTimeout(() => { startedWith_coordinatesUpdated = false; }, 1000);
-
-  s.camera.angle = 0;
-  if (currentUserCanEdit() && (logItemSelectedPreview === logItemSelectedMaster)) {
-    cameraMoved(e);
-  }
-});
-
-dragListener.bind('startdrag', e =>
-{
-  if (multipleKeyPressed(e)) {
-    console.log(['startdrag', e]);
-  }
-  else {
-    console.log('deactivate dragging');
-    dragListener.bind('dragend', () => {
-      console.log('reactivate dragging');
-      dragListener.enable();
-    });
-    dragListener.disable();
-  }
-});
-dragListener.bind('drag', e =>
-{
-  // console.log(['drag', e]);
-  clearTimeout(startedWith_drag);
-  startedWith_drag = setTimeout(() => { startedWith_drag = false; }, 1000);
-  movePersons(e, false, false, false, false, false, false); // move child nodes
-});
-dragListener.bind('drop', e =>
-{
-  console.log(['drop', e]);
-  movePersons(e, true, true, false, true, true, true);
-});
-
-window.addEventListener('keydown', e =>
-{
-  // console.log(e);
-  if (e.ctrlKey && e.shiftKey) {
-    lasso.activate();
-  }
-});
-window.addEventListener('keyup', e =>
-{
-  // console.log(e);
-  if (!e.ctrlKey || !e.shiftKey) {
-    lasso.deactivate();
-  }
-});
-lasso.bind('selectedNodes', (e) =>
-{
-  let nodes = e.data;
-  activeState.dropEdges();
-  activeState.addNodes(nodes.map(n => n.id).filter(n_id => !isChildConnectionNode(n_id)));
-  s.refresh();
-  checkSelectionBasedActions(true);
-});
-
 window.addEventListener('resize', (e) =>
 {
   if (window.innerHeight !== windowSize.height && window.innerWidth !== windowSize.width) {

@@ -2,7 +2,7 @@
 //phpinfo();
 
 // browser cache fix for scripts and styles
-define('V', 17);
+define('V', 18);
 define('V_', '?v=' . V);
 
 define('RUNTIME_DIR', 'runtime');
@@ -419,7 +419,14 @@ html_start();
 
   <div id="modal-blocker-graph" class="modal-blocker backdrop-blur hidden"></div>
 
-  <div id="mobile-menu-toggle" class="box button hidden-toggle mobile-only" data-hidden-toggle-target="#account">&#9776;</div>
+  <div id="mobile-actions" class="box mobile-only">
+    <div id="mobile-menu-toggle" class="button hidden-toggle" data-hidden-toggle-target="#account" style="">&#9776;</div><!--
+	  <?php if ($_SESSION[EDITING]) { ?>
+    --><div id="mobile-action-new-person" class="button" style="">&#11096;</div><!--
+    --><div id="mobile-action-new-connection" class="button" style=""><span>&#11096;</span>&HorizontalLine;<span>&#11096;</span></div><!--
+    --><div id="mobile-action-move-person" class="button" style=""><span>&#11096;</span><span>&#11096;</span><span>&#11096;</span></div><!--
+    <?php } ?>-->
+  </div>
 
   <div id="account" class="box mobile-inverse-hidden">
     <div id="mobile-menu-close" class="button mobile-only hidden-toggle" data-hidden-toggle-target="#account">X</div><!--
@@ -823,7 +830,18 @@ if ($_SESSION[TYPE] === ADMIN_) {
   <script src="js/utils.js<?=V_?>"></script>
   <script src="js/script.js<?=V_?>"></script>
   <script src="js/tutorial.js<?=V_?>"></script>
+<?php
+  if ($is_mobile) {
+?>
   <script src="js/mobile.js<?=V_?>"></script>
+<?php
+  }
+  else {
+?>
+  <script src="js/desktop.js<?=V_?>"></script>
+<?php
+}
+?>
 <?php
 if (isset($_GET['layout'])) {
 ?>
