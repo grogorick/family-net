@@ -120,14 +120,6 @@ if (!currentUserIsEditing || currentLayoutId) {
   dragListener.disable();
 }
 
-let lasso = new sigma.plugins.lasso(s, s.renderers[0], {
-  strokeStyle: 'black',
-  lineWidth: 0,
-  fillWhileDrawing: true,
-  fillStyle: 'rgba(0, 0, 0, 0.03)',
-  cursor: 'crosshair'
-});
-
 const bounds = {
   minX: -500,
   minY: -500,

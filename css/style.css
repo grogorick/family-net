@@ -243,27 +243,26 @@ button.selected, .button.selected {
 #mobile-action-new-person, #mobile-action-new-connection, #mobile-action-move-person {
   padding: 5pt 10pt;
 }
-#mobile-action-new-connection span:first-child {
+.mobile-action-new-person::before {
+  content: '\2B58';
+}
+.mobile-action-new-connection::before {
+  content: '\2B58';
   color: #0004;
-  margin-right: -2pt;
 }
-#mobile-action-new-connection span:last-child {
+.mobile-action-new-connection > span::before {
+  content: '\2500';
+}
+.mobile-action-new-connection::after {
+  content: '\2B58';
   color: #0004;
-  margin-left: -2pt;
 }
-#mobile-action-move-person span:first-child {
-  color: #0002;
-  position: relative;
-  top: 2pt;
+.mobile-action-move-person::before {
+  content: '\2B58\2B58';
+  color: #0004;
 }
-#mobile-action-move-person span:nth-child(2) {
-  color: #0006;
-  margin-left: -2pt;
-  margin-right: -2pt;
-}
-#mobile-action-move-person span:nth-child(3) {
-  position: relative;
-  top: -2pt;
+.mobile-action-move-person::after {
+  content: '\2B58';
 }
 #mobile-menu-close {
   background: white !important;
@@ -349,6 +348,7 @@ button.selected, .button.selected {
   display: inline-block;
   padding: 3pt 5pt;
   margin: 0 3pt;
+  background: white;
   box-shadow: 1pt 1pt 3pt #00000022;
 }
 

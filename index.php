@@ -431,9 +431,10 @@ html_start();
   <div id="mobile-actions" class="box mobile-only">
     <div id="mobile-menu-toggle" class="button hidden-toggle" data-hidden-toggle-target="#account" style="">&#9776;</div><!--
 	  <?php if ($_SESSION[EDITING]) { ?>
-    --><div id="mobile-action-new-person" class="button" style="">&#11096;</div><!--
-    --><div id="mobile-action-new-connection" class="button" style=""><span>&#11096;</span>&HorizontalLine;<span>&#11096;</span></div><!--
-    --><div id="mobile-action-move-person" class="button" style=""><span>&#11096;</span><span>&#11096;</span><span>&#11096;</span></div><!--
+    --><div id="mobile-action-new-person" class="button mobile-action-new-person" style=""></div><!--
+    --><div id="mobile-action-new-connection" class="button mobile-action-new-connection" style=""><span></span></div><!--
+    --><div id="mobile-action-move-person" class="button mobile-action-move-person" style=""></div><!--
+    --><div id="mobile-action-select-tree" class="button" style="">tree</div><!--
     <?php } ?>-->
   </div>
 
@@ -611,7 +612,7 @@ if ($_SESSION[TYPE] === ADMIN_) {
       <button class="box-restore desktop-only" title="Hilfe">?</button>
       <button class="box-minimize"><?=$box_close_minimize_symbol?></button>
     </div><?php
-    $boxPos = 'unten rechts';
+    $klickenTippen = !$is_mobile ? 'klicken' : 'tippen';
     $modKeys = '<i>Shift/Strg</i>';
     $bothModKeys = '<i>Shift &amp; Strg</i>'; ?>
     <div>
@@ -624,7 +625,7 @@ if ($_SESSION[TYPE] === ADMIN_) {
               <dl>
                 <dd><div class="tutorial-person"></div> Normal</dd>
                 <dd><div class="tutorial-person t-p-highlight"></div> Ausgewählt</dd>
-                <dd><div class="tutorial-person t-p-warning"></div> Warnung (wenn die Details '???' enthalten)</dd>
+                <dd><div class="tutorial-person t-p-warning"></div> Warnung (enthält '???')</dd>
               </dl>
             </li>
             <li>Verbindungen
@@ -636,34 +637,44 @@ if ($_SESSION[TYPE] === ADMIN_) {
                 <br />
                 <dd><div class="tutorial-connection"></div> Normal</dd>
                 <dd><div class="tutorial-connection t-c-highlight"></div> Ausgewählt</dd>
-                <dd><div class="tutorial-connection t-c-warning"></div> Warnung (wenn die Details '???' enthalten)</dd>
+                <dd><div class="tutorial-connection t-c-warning"></div> Warnung (enthält '???')</dd>
               </dl>
             </li>
           </ul>
         </li>
         <li>Sichtbaren Ausschnitt ändern:
           <ul>
+          <?php if (!$is_mobile) { ?>
             <li>Auf dem Hintergrund klicken und halten und ziehen</li>
+          <?php } else { ?>
+            <li>Über den Hintergrund wischen</li>
+          <?php } ?>
           </ul>
         </li>
         <li>Infos einer Personen anzeigen:
           <ul>
-            <li>Person anklicken</li>
-            <li>Das Detailfenster wird <?=$boxPos?> angezeigt</li>
+            <li>Person an<?=$klickenTippen?></li>
+            <li>Das Detailfenster wird angezeigt</li>
           </ul>
         </li>
         <li>Infos einer Verbindung zwischen Personen anzeigen:
           <ul>
-            <li>Verbindungslinie anklicken</li>
-            <li>Das Detailfenster wird <?=$boxPos?> angezeigt</li>
+            <li>Verbindungslinie an<?=$klickenTippen?></li>
+            <li>Das Detailfenster wird angezeigt</li>
           </ul>
         </li>
         <li>Stammbaum einer Person hervorheben:
           <ul>
+          <?php if (!$is_mobile) { ?>
             <li><i>Doppelklick</i> auf die gewünschte Person</li>
+          <?php } else { ?>
+            <li>Oben <span class="help-button">tree</span> auswählen</li>
+            <li>Die gewünschte Person antippen</li>
+          <?php } ?>
             <li>In direkter Linie verwandte Personen werden markiert</li>
           </ul>
         </li>
+		  <?php if (!$is_mobile) { ?>
         <li>Mehrere Personen auswählen:
           <ul>
             <li><?=$modKeys?> gedrückt halten</li>
@@ -675,26 +686,32 @@ if ($_SESSION[TYPE] === ADMIN_) {
             <li>Personen mit der gedrückter Maustaste einkreisen</li>
           </ul>
         </li>
+	    <?php } ?>
       </ul>
       <?php if ($_SESSION[TYPE] !== VIEWER_) { ?>
       <h2 class="collapse-trigger collapsed">Bearbeiten</h2>
       <ul>
         <li>Bearbeitungsmodus de-/aktivieren:
           <ul>
-            <li>Oben links <span class="help-button">Bearbeiten</span> klicken zum aktivieren</li>
-            <li>Anschließend <span class="help-button">Fertig</span> klicken zum deaktivieren</li>
+            <li>Oben links <span class="help-button">Bearbeiten</span> <?=$klickenTippen?> zum aktivieren</li>
+            <li>Anschließend <span class="help-button">Fertig</span> <?=$klickenTippen?> zum deaktivieren</li>
             <li>Es kann immer nur ein Nutzer im Bearbeitungsmodus sein</li>
           </ul>
         </li>
         <li>Eine Person hinzufügen:
           <ul>
+          <?php if (!$is_mobile) { ?>
             <li><i>Doppelklick</i> dort, wo die Person hinzugefügt werden soll</li>
-            <li>Daten der Person im Eingabefenster (<?=$boxPos?>) eintragen:
+          <?php } else { ?>
+            <li>Oben <span class="help-button mobile-action-new-person"></span> auswählen</li>
+            <li>Dort hintippen, wo die Person hinzugefügt werden soll</li>
+          <?php } ?>
+            <li>Daten der Person im Eingabefenster eintragen:
               <dl>
                 <dt><i>Name</i></dt>
                 <dd>
                   Vorname(n) und Nachname(n) mit einem Komma trennen.<br />
-                  Rufname mit einem * kennzeichnen, sonst der erste Vorname.<br />
+                  Rufname mit einem * kennzeichnen, wenn es nicht der erste Vorname ist.<br />
                   Spitzname in Klammern angegeben.
                   <p>
                     Bsp.:<br />
@@ -706,53 +723,75 @@ if ($_SESSION[TYPE] === ADMIN_) {
                 </dd>
               </dl>
             </li>
-            <li><span class="help-button">Hinzufügen</span> klicken</li>
+            <li><span class="help-button">Hinzufügen</span> <?=$klickenTippen?></li>
           </ul>
         </li>
         <li>Eine Person verschieben:
           <ul>
+          <?php if (!$is_mobile) { ?>
             <li><?=$modKeys?> gedrückt halten</li>
             <li>Auf die Person klicken und halten und ziehen</li>
+          <?php } else { ?>
+            <li>Oben <span class="help-button mobile-action-move-person"></span> auswählen</li>
+            <li>Auf die Person tippen</li>
+            <li>Auf die neue Position tippen</li>
+            <li>(Falls nötig erneut auf eine neue Position tippen)</li>
+            <li>Oben <span class="help-button mobile-action-move-person"></span> wieder deaktivieren</li>
+          <?php } ?>
           </ul>
         </li>
         <li>Zwei Personen verbinden:
           <ul>
+          <?php if (!$is_mobile) { ?>
             <li><?=$modKeys?> gedrückt halten</li>
-            <li>Die erste Person anklicken</li>
-            <li>Die zweite Person anklicken</li>
-            <li>Daten der Verbindung im Eingabefenster (<?=$boxPos?>) eintragen</li>
-            <li><span class="help-button">Verbinden</span> klicken</li>
+          <?php } else { ?>
+            <li>Oben <span class="help-button mobile-action-new-connection"><span></span></span> auswählen</li>
+          <?php } ?>
+            <li>Die erste Person an<?=$klickenTippen?></li>
+            <li>Die zweite Person an<?=$klickenTippen?></li>
+            <li>Daten der Verbindung im Eingabefenster eintragen</li>
+            <li><span class="help-button">Verbinden</span> <?=$klickenTippen?></li>
           </ul>
         </li>
         <li>Zwei Eltern und ein Kind verbinden:
           <ul>
+          <?php if (!$is_mobile) { ?>
             <li><?=$modKeys?> gedrückt halten</li>
-            <li>Die Verbindung zwischen den Eltern anklicken</li>
-            <li>Das Kind anklicken</li>
-            <li>Daten der Verbindung im Eingabefenster (<?=$boxPos?>) eintragen</li>
-            <li><span class="help-button">Verbinden</span> klicken</li>
+          <?php } else { ?>
+            <li>Oben <span class="help-button mobile-action-new-connection"><span></span></span> auswählen</li>
+          <?php } ?>
+            <li>Die Verbindung zwischen den Eltern an<?=$klickenTippen?></li>
+            <li>Das Kind an<?=$klickenTippen?></li>
+            <li>Daten der Verbindung im Eingabefenster eintragen</li>
+            <li><span class="help-button">Verbinden</span> <?=$klickenTippen?></li>
           </ul>
         </li>
         <li>Eine Person entfernen:
           <ul>
             <li>(Die Person darf keine Verbindungen haben)</li>
-            <li>Die Person anklicken</li>
-            <li>Im Detailfenster (<?=$boxPos?>) <span class="help-button">Entfernen</span> klicken<br />oder<br /><?=$modKeys?> gedrückt halten und <i>Entf</i> tippen</li>
+            <li>Die Person an<?=$klickenTippen?></li>
+            <li>Im Detailfenster <span class="help-button">Entfernen</span> <?=$klickenTippen?>
+            <?php if (!$is_mobile) { ?>
+              <br />oder<br /><?=$modKeys?> gedrückt halten und <i>Entf</i> tippen</li>
+            <?php } ?>
           </ul>
         </li>
         <li>Eine Verbindung entfernen:
           <ul>
             <li>(Die Verbindung darf keine Kind-Verbindungen haben)</li>
-            <li>Die Verbindung anklicken</li>
-            <li>Im Detailfenster (<?=$boxPos?>) <span class="help-button">Entfernen</span> klicken<br />oder<br /><?=$modKeys?> gedrückt halten und <i>Entf</i> tippen</li>
+            <li>Die Verbindung an<?=$klickenTippen?></li>
+            <li>Im Detailfenster <span class="help-button">Entfernen</span> <?=$klickenTippen?>
+            <?php if (!$is_mobile) { ?>
+              <br />oder<br /><?=$modKeys?> gedrückt halten und <i>Entf</i> tippen</li>
+            <?php } ?>
           </ul>
         </li>
         <li>Änderungen rückgängig machen:
           <ul>
-            <li>Oben rechts <span class="help-button">&olarr;</span> klicken</li>
+            <li>Oben rechts <span class="help-button">&olarr;</span> <?=$klickenTippen?></li>
             <li>Einen früheren Zustand auswählen</li>
             <li>Das Netz wird als Vorschau entsprechend angezeigt</li>
-            <li>Oben mittig <span class="help-button">Das Netz auf diesen Zustand zurücksetzen</span> klicken</li>
+            <li><span class="help-button">Das Netz auf diesen Zustand zurücksetzen</span> <?=$klickenTippen?></li>
           </ul>
         </li>
       </ul>
@@ -832,7 +871,6 @@ if ($_SESSION[TYPE] === ADMIN_) {
     let firstLogin = <?=$first_login ? 'true' : 'false'?>;
     let accountUpgraded = <?=$account_upgraded ? 'true' : 'false'?>;
     let modKeys = '<?=$modKeys?>';
-    let boxPos = '<?=$boxPos?>';
     let isMobile = <?=$is_mobile ? 'true' : 'false'?>;
     let currentLayoutId = '<?=$_GET['layout'] ?? ''?>';
   </script>

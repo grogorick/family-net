@@ -152,6 +152,13 @@ dragListener.bind('drop', e =>
   movePersons(e.data.node.id, true, true, false, true, true, true);
 });
 
+let lasso = new sigma.plugins.lasso(s, s.renderers[0], {
+  strokeStyle: 'black',
+  lineWidth: 0,
+  fillWhileDrawing: true,
+  fillStyle: 'rgba(0, 0, 0, 0.03)',
+  cursor: 'crosshair'
+});
 window.addEventListener('keydown', e =>
 {
   // console.log(e);

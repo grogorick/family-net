@@ -90,11 +90,11 @@ if (!currentUserIsViewer) { tutorialSteps = tutorialSteps.concat([
     delayNextStep: true } ]); }
 
 tutorialSteps = tutorialSteps.concat([
-  { m: '<p>Mit einem einfachen Klick auf eine Person, kannst du ihre Details anzeigen' + (currentUserIsViewer ? '.' : ' bzw. bearbeiten.') + '</p><p class="invisible">Die Details findest du dann hier ' + boxPos + '.</p>',
+  { m: '<p>Mit einem einfachen Klick auf eine Person, kannst du ihre Details anzeigen' + (currentUserIsViewer ? '.' : ' bzw. bearbeiten.') + '</p><p class="invisible">Die Details findest du dann im Detailfenster.</p>',
     before: () => tutorialHighlight(tutorialSet.H1, 50),
     keepHighlights: true },
 
-  { m: '<p class="old">Mit einem einfachen Klick auf eine Person, kannst du ihre Details anzeigen' + (currentUserIsViewer ? '.' : ' bzw. bearbeiten.') + '</p><p>Die Details findest du dann hier ' + boxPos + '.</p>',
+  { m: '<p class="old">Mit einem einfachen Klick auf eine Person, kannst du ihre Details anzeigen' + (currentUserIsViewer ? '.' : ' bzw. bearbeiten.') + '</p><p>Die Details findest du dann im Detailfenster.</p>',
     before: () => {
       personMenuDelete.classList.add('hidden');
       personMenuEdit.classList.add('hidden');
@@ -124,13 +124,13 @@ if (!currentUserIsViewer) { tutorialSteps = tutorialSteps.concat([
     delayNextStep: true } ]); }
 
 tutorialSteps = tutorialSteps.concat([
-  { m: '<p>Auch Details von Verbindungen kannst du mit einem einfachen Klick anzeigen' + (currentUserIsViewer ? '.' : ' bzw. bearbeiten.') + '</p><p class="invisible">Die Details findest du ebenfalls ' + boxPos + '.</p>',
+  { m: '<p>Auch Details von Verbindungen kannst du mit einem einfachen Klick anzeigen' + (currentUserIsViewer ? '.' : ' bzw. bearbeiten.') + '</p><p class="invisible">Die Details findest du ebenfalls im Detailfenster.</p>',
     before: () => {
       activeState.addEdges('c12'); s.refresh();
       tutorialHighlight(tutorialSet.H12, 50); },
     keepHighlights: true },
 
-  { m: '<p class="old">Auch Details von Verbindungen kannst du mit einem einfachen Klick anzeigen' + (currentUserIsViewer ? '.' : ' bzw. bearbeiten.') + '</p><p>Die Details findest du ebenfalls ' + boxPos + '.</p>',
+  { m: '<p class="old">Auch Details von Verbindungen kannst du mit einem einfachen Klick anzeigen' + (currentUserIsViewer ? '.' : ' bzw. bearbeiten.') + '</p><p>Die Details findest du ebenfalls im Detailfenster.</p>',
     before: () => {
       connectionMenuDelete.classList.add('hidden');
       connectionMenuEdit.classList.add('hidden');
