@@ -2,7 +2,7 @@
 //phpinfo();
 
 // browser cache fix for scripts and styles
-define('V', 18);
+define('V', 19);
 define('V_', '?v=' . V);
 
 define('RUNTIME_DIR', 'runtime');
@@ -32,6 +32,8 @@ define('CURRENT_EDITOR_TIMEOUT', 10 * 60);
 
 define('SETTINGS_FILE', RUNTIME_DIR . '/settings.yml');
 define('CAMERA', 'camera');
+define('CAMERA_DESKTOP', 'd');
+define('CAMERA_MOBILE', 'm');
 
 define('STORAGE_DIR', 'storage');
 define('STORAGE_FILE', 'storage.yml');
@@ -44,7 +46,7 @@ define('CD_STORAGE_DIR', 'cd ' . STORAGE_DIR . '; ');
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 $accounts = []; $first_login = false; $account_upgraded = false;
-$settings = [ CAMERA => [ 'x' => 0, 'y' => 0, 'z' => 1] ];
+$settings = [ CAMERA => ['default' => [ 'x' => 0, 'y' => 0, 'z' => 1] ] ];
 $data = [ PERSONS => [], CONNECTIONS => [] ];
 
 $server_url = substr($_SERVER["PHP_SELF"], 0, 1 + strrpos($_SERVER["PHP_SELF"], '/'));
@@ -211,8 +213,13 @@ $settings_file_content = file_get_contents(SETTINGS_FILE);
 if ($settings_file_content) {
   $settings = json_decode($settings_file_content, true);
 }
+$user_settings = $settings;
+$cam_client = $is_mobile ? CAMERA_MOBILE : CAMERA_DESKTOP;
+if (array_key_exists($_SESSION[USER], $settings[CAMERA]) && array_key_exists($cam_client, $user_settings[CAMERA][$_SESSION[USER]])) {
+  $user_settings[CAMERA] = $user_settings[CAMERA][$_SESSION[USER]][$cam_client];
+}
 else {
-  $settings_file_content = json_encode($settings);
+  $user_settings[CAMERA] = $user_settings[CAMERA]['default'];
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -243,7 +250,7 @@ if (isset($_GET[ACTION])) {
     case 'init':
     {
       echo '{' .
-          '"settings":' . $settings_file_content . PHP_EOL . ',' .
+          '"settings":' . json_encode($user_settings) . PHP_EOL . ',' .
           '"graph":' . $data_str . PHP_EOL . ',' .
           '"log":' . prepare_json_for_storage(get_log()) . ',' .
           '"currentHash":"' . get_current_log_hash() . '"' .
@@ -272,13 +279,15 @@ if (isset($_GET[ACTION])) {
 
     case 'toggle-extended-log':
     {
-      if (array_key_exists(EXTENDED_LOG, $_SESSION)) {
-        unset($_SESSION[EXTENDED_LOG]);
-        echo json_encode(false);
-      }
-      else {
-        $_SESSION[EXTENDED_LOG] = true;
-        echo json_encode(true);
+      if ($_SESSION[TYPE] === ADMIN_) {
+        if (array_key_exists(EXTENDED_LOG, $_SESSION)) {
+          unset($_SESSION[EXTENDED_LOG]);
+          echo json_encode(false);
+        }
+        else {
+          $_SESSION[EXTENDED_LOG] = true;
+          echo json_encode(true);
+        }
       }
       exit;
     }
@@ -312,7 +321,7 @@ if (isset($_GET[ACTION])) {
       // settings
       case 'moveCamera':
       {
-        $settings[CAMERA] = $d;
+        $settings[CAMERA][$_SESSION[USER]][$is_mobile ? CAMERA_MOBILE : CAMERA_DESKTOP] = $d;
         save_settings();
         exit;
       }
