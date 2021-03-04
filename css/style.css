@@ -110,12 +110,12 @@ button {
 .mobile-client .box-minimize-buttons button {
   font-size: 120%;
 }
-.desktop-client .box:not(.box-minimized) .box-minimize-buttons {
+.desktop-client .box:not(.box-minimized) .box-minimize-buttons.negative-padding {
   margin-top: -20pt;
   margin-left: -20pt;
   margin-right: -20pt;
 }
-.mobile-client .box:not(.box-minimized) .box-minimize-buttons {
+.mobile-client .box:not(.box-minimized) .box-minimize-buttons.negative-padding {
   margin-top: -10pt;
   margin-left: -20pt;
   margin-right: -20pt;
@@ -293,6 +293,18 @@ button.selected, .button.selected {
 }
 .desktop-client #account.box > * {
   display: inline-block;
+}
+
+.desktop-client #layouts.box {
+  top: 40pt;
+  left: 10pt;
+  font-size: 85%;
+}
+#layouts.box > .box-minimize-buttons {
+  display: inline-block;
+}
+#layouts.box a.selected-layout {
+  font-weight: bold;
 }
 
 .desktop-client #help.box {
@@ -476,7 +488,7 @@ button.selected, .button.selected {
 }
 
 .desktop-client #admin.box {
-  top: 40pt;
+  top: 69pt;
   left: 10pt;
 }
 #admin.box > .box-minimize-buttons {

@@ -338,3 +338,13 @@ function Callbacks()
     this.cbs.slice(0).forEach(cb => cb());
   }
 }
+
+function splitDate(str)
+{
+  let d = str.split('-');
+  while (d.length < 3) {
+    d.push('');
+  }
+  return d.map(v => parseInt(v) || '');
+}
+

@@ -315,6 +315,17 @@ function checkPersonsConnected(p1_t, p2_t)
     (compareTs(c.p1, p2_t) && compareTs(c.p2, p1_t)));
 }
 
+function getScreenPositionFromGraphPosition(x, y)
+{
+  let r = s.renderers[0];
+  let c = s.camera;
+  let factor = Math.max((bounds.maxX - bounds.minX) / r.width, (bounds.maxY - bounds.minY) / r.height);
+  return {
+    x: (x - c.x * factor) / factor / c.ratio + r.width / 2,
+    y: (y - c.y * factor) / factor / c.ratio + r.height / 2
+  };
+}
+
 function getGraphPositionFromScreenPosition(x, y)
 {
   let r = s.renderers[0];
@@ -350,10 +361,8 @@ function getPersonDisplayFullName(d_n)
 
 function getPersonDisplayString(p)
 {
-  let b = p.b.split('-');
-  b = b.length ? b[0] : '';
-  let d = p.d.split('-');
-  d = d.length ? d[0] : '';
+  let b = splitDate(p.b)[0];
+  let d = splitDate(p.d)[0];
   return getPersonDisplayFullName(p.n) + ((b || d) ? ' \n ' + b + ' — ' + d : '');
 }
 
@@ -1033,13 +1042,13 @@ function showPersonInfo(t)
   {
     console.log(['showPersonInfo', t]);
     let p = getDataPerson(t);
-    let db = p.b.split('-');
+    let db = splitDate(p.b);
     personMenuName.value = p.n;
     personMenuBirthDay.value = db[2];
     personMenuBirthMonth.value = db[1];
     personMenuBirthYear.value = db[0];
     updateDateValue(personMenuBirthDay, personMenuBirthMonth, personMenuBirthYear);
-    let dd = p.d.split('-');
+    let dd = splitDate(p.d);
     personMenuDeathDay.value = dd[2];
     personMenuDeathMonth.value = dd[1];
     personMenuDeathYear.value = dd[0];
@@ -1593,6 +1602,32 @@ function deleteConnection(c_t, toData = true, toServer = true, toGraph = true, r
 
 // events
 // ------------------------------------
+
+function bindDefaultViewerEvents()
+{
+  s.bind('clickNode', e =>
+  {
+    let n_id = e.data.node.id;
+    deselectAll(null, false, [n_id]);
+    activeState.addNodes(n_id);
+    s.refresh();
+    showPersonInfo(n_id);
+  });
+
+  s.bind('clickEdge', e =>
+  {
+    let e_id = e.data.edge.id;
+    deselectAll(null, false, [e_id]);
+    activeState.addEdges(e_id);
+    s.refresh();
+    showConnectionInfo(e_id);
+  });
+
+  s.bind('clickStage', deselectAll);
+
+  s.bind('coordinatesUpdated', () => { s.camera.angle = 0; });
+}
+
 window.addEventListener('resize', (e) =>
 {
   if (window.innerHeight !== windowSize.height && window.innerWidth !== windowSize.width) {

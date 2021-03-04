@@ -1,5 +1,8 @@
-let startedWith_coordinatesUpdated = 0;
-let startedWith_drag = 0;
+
+s.bind('hovers', hoverPersons);
+
+if (!currentLayoutId) {
+
 let cdcNode = clickDoubleClick(
   e =>
   {
@@ -53,8 +56,6 @@ let cdcNode = clickDoubleClick(
 
 s.bind('clickNode', cdcNode.click.bind(cdcNode));
 s.bind('doubleClickNode', cdcNode.doubleClick.bind(cdcNode));
-
-s.bind('hovers', hoverPersons);
 
 s.bind('clickEdge', e =>
 {
@@ -110,6 +111,8 @@ let cdcStage = clickDoubleClick(
 s.bind('clickStage', cdcStage.click.bind(cdcStage));
 s.bind('doubleClickStage', cdcStage.doubleClick.bind(cdcStage));
 
+let startedWith_coordinatesUpdated = false;
+let startedWith_drag = false;
 s.bind('coordinatesUpdated', e =>
 {
   if (startedWith_drag) {
@@ -180,3 +183,10 @@ lasso.bind('selectedNodes', (e) =>
   activeState.addNodes(nodes.map(n => n.id).filter(n_id => !isChildConnectionNode(n_id)));
   s.refresh();
 });
+
+}
+else { // only viewing when an auto layout is used
+
+bindDefaultViewerEvents();
+
+}

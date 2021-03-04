@@ -20,6 +20,8 @@ document.getElementById('mobile-admin').addEventListener('click', () =>
   document.querySelector('#admin .box-restore').click();
 });
 
+if (!currentLayoutId) {
+
 let mobileActionMode = null;
 let MOBILE_ACTION_NEW_PERSON = 'new-person';
 let MOBILE_ACTION_NEW_CONNECTION = 'new-connection';
@@ -176,3 +178,9 @@ s.bind('coordinatesUpdated', e =>
     cameraMoved(e);
   }
 });
+
+}
+else { // only viewing when an auto layout is used
+
+  bindDefaultViewerEvents();
+}
