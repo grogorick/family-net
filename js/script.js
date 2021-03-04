@@ -796,7 +796,7 @@ function logPlayStep()
   logItemSelectedPreview.dispatchEvent(hovering);
   setTimeout(() =>
   {
-    let nextItem = (!logPlaying) ? null : (logPlaying === LOG_PLAYING_FORWARD) ? logItemSelectedPreview.previousElementSibling : logItemSelectedPreview.nextElementSibling;
+    let nextItem = (!logPlaying) ? null : ((logPlaying === LOG_PLAYING_FORWARD) ? logItemSelectedPreview.previousElementSibling : logItemSelectedPreview.nextElementSibling);
     if (nextItem !== null) {
       activeState.dropNodes();
       activeState.dropEdges();
@@ -804,12 +804,15 @@ function logPlayStep()
     }
     else {
       callbacks.graphLoaded.remove(logPlayStep);
+      logPlaying = false;
+      console.log('log play stopped');
       callbacks.logPlayStopped.call();
     }
   }, settings.logPlaybackDelay);
 }
 logPlayBackward.addEventListener('click', () =>
 {
+  console.log('log play click backward');
   if (logPlaying) {
     if (logPlaying === LOG_PLAYING_FORWARD) {
       callbacks.logPlayStopped.addOnce(() => logPlayBackward.click());
@@ -826,13 +829,13 @@ logPlayStop.addEventListener('click', () =>
 {
   console.log('log play stopping...');
   logPlaying = false;
-  callbacks.logPlayStopped.addOnce(() => console.log('log play stopped'));
 });
 logPlayForward.addEventListener('click', () =>
 {
+  console.log('log play click forward');
   if (logPlaying) {
     if (logPlaying === LOG_PLAYING_BACKWARD) {
-      callbacks.logPlayStopped.addOnce(() => logPlayBackward.click());
+      callbacks.logPlayStopped.addOnce(() => logPlayForward.click());
       logPlaying = false;
     }
     return;

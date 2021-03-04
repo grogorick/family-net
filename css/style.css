@@ -458,12 +458,16 @@ button.selected, .button.selected {
 	border-color: var(--play-btn-color);
 }
 #log .log-play-backward::before {
-	border-width: calc(var(--play-btn-size) / 2) var(--play-btn-size) calc(var(--play-btn-size) / 2) 0;
-	border-color: transparent var(--play-btn-color) transparent transparent;
+/*	border-width: calc(var(--play-btn-size) / 2) var(--play-btn-size) calc(var(--play-btn-size) / 2) 0;
+	border-color: transparent var(--play-btn-color) transparent transparent;*/
+  border-width: var(--play-btn-size) calc(var(--play-btn-size) / 2) 0 calc(var(--play-btn-size) / 2);
+  border-color: var(--play-btn-color) transparent transparent transparent;
 }
 #log .log-play-forward::before {
-	border-width: calc(var(--play-btn-size) / 2) 0 calc(var(--play-btn-size) / 2) var(--play-btn-size);
-	border-color: transparent transparent transparent var(--play-btn-color);
+/*	border-width: calc(var(--play-btn-size) / 2) 0 calc(var(--play-btn-size) / 2) var(--play-btn-size);
+	border-color: transparent transparent transparent var(--play-btn-color);*/
+  border-width: 0 calc(var(--play-btn-size) / 2) var(--play-btn-size) calc(var(--play-btn-size) / 2);
+  border-color: transparent transparent var(--play-btn-color) transparent;
 }
 
 .desktop-client #log-restore-selected-item {
