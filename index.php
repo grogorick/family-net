@@ -2,7 +2,7 @@
 //phpinfo();
 
 // browser cache fix for scripts and styles
-define('V', 19);
+define('V', 19.3);
 define('V_', '?v=' . V);
 
 define('RUNTIME_DIR', 'runtime');
@@ -839,7 +839,6 @@ if ($_SESSION[TYPE] === ADMIN_) {
         <option value="geschieden">geschieden</option>
         <option value="verwitwet">verwitwet</option>
         <option value="unverheiratet">unverheiratet</option>
-        <option disabled></option>
         <option value="???" selected>??? (unbekannt)</option>
       </select>
     </div>

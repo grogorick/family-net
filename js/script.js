@@ -1298,7 +1298,11 @@ function startNewConnection()
     false, false, true, true);
   let fn = () =>
   {
-    clearConnectionMenu();
+    clearConnectionMenu('verheiratet');
+    [...connectionMenuRelation.children].forEach(option =>
+    {
+      option.disabled = !option.value;
+    });
     showForm(connectionMenuForm, 'opt-new', true);
   };
   if (isMobile) {
@@ -1331,7 +1335,11 @@ function startNewChildConnection()
     false, false, true, true);
   let fn = () =>
   {
-    clearConnectionMenu();
+    clearConnectionMenu('Kind');
+    [...connectionMenuRelation.children].forEach(option =>
+    {
+      option.disabled = !option.value || (getConnectionRelationSettings(option.value).level === 'h');
+    });
     showForm(connectionMenuForm, 'opt-new-child', true);
   };
   if (isMobile) {
@@ -1342,10 +1350,10 @@ function startNewChildConnection()
   }
 }
 
-function clearConnectionMenu()
+function clearConnectionMenu(relationValue = '???')
 {
   connectionMenuPersons.innerHTML = '';
-  connectionMenuRelation.value = '???';
+  connectionMenuRelation.value = relationValue;
   connectionMenuDesc.value = '';
 }
 
@@ -1356,7 +1364,8 @@ function showConnectionInfo(t)
     console.log(['showConnectionInfo', t]);
     let c = getDataConnection(t);
     let p1_n = '';
-    if (isChildConnectionNode(c.p1)) {
+    let isChildConnection = isChildConnectionNode(c.p1);
+    if (isChildConnection) {
       let p1 = getParentTsFromChildConnectionNode(c.p1);
       let p1_1 = getDataPerson(p1[0]);
       let p1_2 = getDataPerson(p1[1]);
@@ -1381,6 +1390,10 @@ function showConnectionInfo(t)
       connectionMenuRelation.disabled = true;
       connectionMenuDesc.disabled = true;
     }
+    [...connectionMenuRelation.children].forEach(option =>
+    {
+      option.disabled = !option.value || (isChildConnection && getConnectionRelationSettings(option.value).level === 'h');
+    });
     showForm(connectionMenuForm, 'opt-edit', false);
   };
   if (isMobile) {
