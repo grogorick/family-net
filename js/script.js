@@ -560,9 +560,10 @@ function prepareGraphData()
     c._persons = [];
     c._children = [];
     let p2 = getDataPerson(c.p2);
+    let isChildConnection = isChildConnectionNode(c.p1);
     let level = getConnectionRelationSettings(c.r).level;
-    if (level === 'v') {
-      if (isChildConnectionNode(c.p1)) {
+    if (isChildConnection || level === 'v') {
+      if (isChildConnection) {
         let pc = getParentConnectionFromChildConnectionNode(c.p1);
         getParentTsFromChildConnectionNode(c.p1).map(getDataPerson).forEach(p1 =>
         {
