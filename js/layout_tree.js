@@ -242,18 +242,19 @@ function TreeLayout()
     let childIdx = 0,
         firstLeft = null,
         lastRight = 0;
-    p._partners.forEach(pp =>
+    let tmpChildren = p._children.slice(0);
+    let fn = cp =>
     {
-      pp.c._children.forEach(cp =>
-      {
-        this.prepareDown(cp.p, (childIdx += 2) <= p._children.length);
-        down.children += cp.p.layout_tree.down.width;
-        if (firstLeft === null) {
-          firstLeft = cp.p.layout_tree.down.left;
-        }
-        lastRight = cp.p.layout_tree.down.right;
-      });
-    });
+      tmpChildren.splice(tmpChildren.findIndex(tmpCp => tmpCp.p.t === cp.p.t), 1);
+      this.prepareDown(cp.p, (childIdx += 2) <= p._children.length);
+      down.children += cp.p.layout_tree.down.width;
+      if (firstLeft === null) {
+        firstLeft = cp.p.layout_tree.down.left;
+      }
+      lastRight = cp.p.layout_tree.down.right;
+    };
+    p._partners.forEach(pp => pp.c._children.forEach(fn));
+    tmpChildren.forEach(fn);
     if (firstLeft === null) {
       firstLeft = 0;
     }
@@ -290,18 +291,19 @@ function TreeLayout()
     let x = p._graphNode.x - p.layout_tree.down.childrenLeft * 2 * this.settings.nodeSpacingX;
     let y = p._graphNode.y + this.settings.nodeSpacingY;
     let tmpPartners = p.layout_tree.down.invertPartners ? p._partners.reverse() : p._partners;
-    tmpPartners.forEach(pp =>
+    let tmpChildren = p._children.slice(0);
+    let fn = cp =>
     {
-      pp.c._children.forEach(cp =>
-      {
-        cp.p._graphNode.x = x + cp.p.layout_tree.down.left * 2 * this.settings.nodeSpacingX;
-        x += (cp.p.layout_tree.down.width + 1) * 2 * this.settings.nodeSpacingX;
-        cp.p._graphNode.y = p._graphNode.y + (this.yearBasedOffsetY(p.b, cp.p.b) || this.settings.nodeSpacingY);
-        cp.p._graphNode.hidden = false;
-        cp.c._graphEdge.hidden = false;
-        this.layoutDown(cp.p, test + ' ');
-      });
-    });
+      tmpChildren.splice(tmpChildren.findIndex(tmpCp => tmpCp.p.t === cp.p.t), 1);
+      cp.p._graphNode.x = x + cp.p.layout_tree.down.left * 2 * this.settings.nodeSpacingX;
+      x += (cp.p.layout_tree.down.width + 1) * 2 * this.settings.nodeSpacingX;
+      cp.p._graphNode.y = p._graphNode.y + (this.yearBasedOffsetY(p.b, cp.p.b) || this.settings.nodeSpacingY);
+      cp.p._graphNode.hidden = false;
+      cp.c._graphEdge.hidden = false;
+      this.layoutDown(cp.p, test + ' ');
+    };
+    tmpPartners.forEach(pp => pp.c._children.forEach(fn));
+    tmpChildren.forEach(fn);
   };
 
   this.yearBasedOffsetY = (p1_date, p2_date) =>
