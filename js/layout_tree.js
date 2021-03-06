@@ -277,7 +277,7 @@ function TreeLayout()
     down.width = down.left + down.right;
   }
 
-  this.layoutDown = (p, test = '') =>
+  this.layoutDown = (p) =>
   {
     // p._graphNode.label += '\n' + p.layout_tree.down.left + ' + ' + p.layout_tree.down.right + '\n' + p.layout_tree.down.childrenLeft + ' + ' + p.layout_tree.down.childrenRight + '\n' + p.layout_tree.down.width + ' / ' + p.layout_tree.down.children;
     p._partners.forEach((pp, i) =>
@@ -300,7 +300,7 @@ function TreeLayout()
       cp.p._graphNode.y = p._graphNode.y + (this.yearBasedOffsetY(p.b, cp.p.b) || this.settings.nodeSpacingY);
       cp.p._graphNode.hidden = false;
       cp.c._graphEdge.hidden = false;
-      this.layoutDown(cp.p, test + ' ');
+      this.layoutDown(cp.p);
     };
     tmpPartners.forEach(pp => pp.c._children.forEach(fn));
     tmpChildren.forEach(fn);

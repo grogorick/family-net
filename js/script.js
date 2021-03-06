@@ -464,15 +464,32 @@ function loadData(previewHash = null)
     return;
   }
 
+  let msg = null;
+  let delayedMsg = setTimeout(() =>
+  {
+    msg = showMessage((m => m[Math.floor(Math.random() * m.length)])([
+      'Einen gaaanz kurzen Moment bitte...',
+      'Gleich geht\'s bestimmt los...',
+      'Das Netz wird gesponnen...',
+      'Die Alten werden mit Fragen gelöchert...',
+      'Uralte Aufzeichnungen werden entstaubt...',
+      'Die Ahnen werden erforscht...'
+    ]), {});
+  }, 500);
+
   console.log('load data from server ' + previewHash);
   xhRequest(previewHash
     ? '?action=preview&hash=' + previewHash
     : '?action=init', responseText =>
   {
+    clearTimeout(delayedMsg);
     let d = JSON.parse(responseText);
     let hash = previewHash ? previewHash : d.currentHash;
     applyLoadedData(d, previewHash === null, previewHash === null);
     dataCache[hash] = d;
+    if (msg !== null) {
+      setTimeout(msg.dismiss, 1000);
+    }
   }, false);
 }
 if (!firstLogin && !accountUpgraded) {
