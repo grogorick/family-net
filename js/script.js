@@ -1608,14 +1608,27 @@ function deleteConnection(c_t, toData = true, toServer = true, toGraph = true, r
 
 function bindDefaultViewerEvents()
 {
-  s.bind('clickNode', e =>
+  let cdcNode = clickDoubleClick(
+  e =>
   {
     let n_id = e.data.node.id;
     deselectAll(null, false, [n_id]);
     activeState.addNodes(n_id);
     s.refresh();
     showPersonInfo(n_id);
+  },
+  e =>
+  {
+    if (!currentLayoutId) {
+      selectDirectRelatives(e);
+    }
+    else {
+      deselectAll();
+      layouts[currentLayoutId].apply(e.data.node.id);
+    }
   });
+  s.bind('clickNode', cdcNode.click.bind(cdcNode));
+  s.bind('doubleClickNode', cdcNode.doubleClick.bind(cdcNode));
 
   s.bind('clickEdge', e =>
   {
