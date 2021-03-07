@@ -2,7 +2,7 @@
 //phpinfo();
 
 // browser cache fix for scripts and styles
-define('V', 20);
+define('V', 21);
 define('V_', '?v=' . V);
 
 define('RUNTIME_DIR', 'runtime');

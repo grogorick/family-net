@@ -7,10 +7,7 @@ function TreeLayout()
     yearsPerGridLine: 100
   };
 
-  this.prepared = false;
-
-  this.urlParams = new URLSearchParams(window.location.search);
-  this.useYearBasedY = this.urlParams.has('yearBased');
+  this.useYearBasedY = urlParams.has('yearBased');
 
   this.apply = (p0_t = null) =>
   {
@@ -18,26 +15,23 @@ function TreeLayout()
       console.log('autolayout 1 start');
       this.hideAll();
 
-      console.log('prepare');
-      if (!this.prepared) {
-        this.prepare();
-      }
-
       this.p0 = null;
       if (p0_t) {
         this.p0 = getDataPerson(p0_t);
       }
-      else {
+      if (this.p0 === null) {
         this.p0 = data.graph.persons[0];
         this.p0._graphNode.x = 0;
         this.p0._graphNode.y = 0;
       }
 
+      console.log('prepare');
+      this.prepare();
+
       console.log('layout for "' + this.p0.n + '"');
       console.log(this.p0);
       this.p0._graphNode.hidden = false;
       this.layout(this.p0);
-      s.refresh();
 
       if (this.useYearBasedY) {
         console.log('year grid');
@@ -46,7 +40,8 @@ function TreeLayout()
       }
 
       console.log('autolayout 1 done');
-      setTimeout(() => activeState.addNodes(this.p0.t), 500);
+      activeState.addNodes(this.p0.t);
+      s.refresh();
     }
   };
 
@@ -131,19 +126,8 @@ function TreeLayout()
 
   this.prepare = () =>
   {
-    data.graph.persons.forEach(p => { p.layout_tree = {
-      up: { left: 0, right: 0 },
-      down: { left: 0, right: 0, childrenLeft: 0, childrenRight: 0, partners: 0, children: 0, width: 0 }};
-    });
-    data.graph.persons.forEach(p =>
-    {
-      this.prepareUp(p);
-    });
-    data.graph.persons.forEach(p =>
-    {
-      this.prepareDown(p);
-    });
-    this.prepared = true;
+    this.prepareUp(this.p0);
+    this.prepareDown(this.p0);
   };
 
   this.layout = p =>
@@ -154,10 +138,19 @@ function TreeLayout()
 
   this.prepareUp = p =>
   {
-    if ('done' in p.layout_tree.up) {
-      return;
+    if ('layout_tree' in p) {
+      if ('up' in p.layout_tree) {
+        return;
+      }
     }
-    p.layout_tree.up.done = true;
+    else {
+      p.layout_tree = {};
+    }
+    p.layout_tree.up = {
+      left: 0,
+      right: 0
+    };
+
     switch (p._parents.length) {
     case 0: break;
     case 1:
@@ -230,31 +223,48 @@ function TreeLayout()
     }
   };
 
-  this.prepareDown = (p, invertPartners = true) =>
+  this.prepareDown = (p, reversePartnersAndChildren = true) =>
   {
-    let down = p.layout_tree.down;
-    if ('done' in down) {
-      return;
+    if ('layout_tree' in p) {
+      if ('down' in p.layout_tree) {
+        return;
+      }
     }
-    down.done = true;
-    down.invertPartners = invertPartners;
-    down.children = minus1(p._children.length);
+    else {
+      p.layout_tree = {};
+    }
+    let down = p.layout_tree.down = {
+      left: 0,
+      right: 0,
+      childrenLeft: 0,
+      childrenRight: 0,
+      partners: 0,
+      children: minus1(p._children.length),
+      width: 0,
+      reversePartnersAndChildren: reversePartnersAndChildren
+    };
+
     let childIdx = 0,
         firstLeft = null,
         lastRight = 0;
     let tmpChildren = p._children.slice(0);
-    let fn = cp =>
+    let prepareChild = cp =>
     {
       tmpChildren.splice(tmpChildren.findIndex(tmpCp => tmpCp.p.t === cp.p.t), 1);
-      this.prepareDown(cp.p, (childIdx += 2) <= p._children.length);
+      this.prepareDown(cp.p, childIdx < p._children.length / 2);
+      cp.p.layout_tree.down.childIdx = childIdx;
       down.children += cp.p.layout_tree.down.width;
       if (firstLeft === null) {
         firstLeft = cp.p.layout_tree.down.left;
       }
       lastRight = cp.p.layout_tree.down.right;
+      ++childIdx;
     };
-    p._partners.forEach(pp => pp.c._children.forEach(fn));
-    tmpChildren.forEach(fn);
+    let tmpPartners = p.layout_tree.down.reversePartnersAndChildren ? p._partners.slice(0).reverse() : p._partners;
+    tmpPartners.forEach(pp => p.layout_tree.down.reversePartnersAndChildren
+      ? pp.c._children.slice(0).reverse().forEach(prepareChild)
+      : pp.c._children.forEach(prepareChild));
+    tmpChildren.forEach(prepareChild);
     if (firstLeft === null) {
       firstLeft = 0;
     }
@@ -262,7 +272,7 @@ function TreeLayout()
     let partnerOffset = p._partners.length / 2;
     down.childrenLeft = childrenHalf + firstLeft;
     down.childrenRight = childrenHalf + lastRight;
-    if (down.invertPartners) {
+    if (down.reversePartnersAndChildren) {
       down.childrenLeft += partnerOffset;
       down.childrenRight -= partnerOffset;
       down.left = Math.max(down.childrenLeft, p._partners.length);
@@ -277,22 +287,27 @@ function TreeLayout()
     down.width = down.left + down.right;
   }
 
-  this.layoutDown = (p) =>
+  this.layoutDown = p =>
   {
     // p._graphNode.label += '\n' + p.layout_tree.down.left + ' + ' + p.layout_tree.down.right + '\n' + p.layout_tree.down.childrenLeft + ' + ' + p.layout_tree.down.childrenRight + '\n' + p.layout_tree.down.width + ' / ' + p.layout_tree.down.children;
+    // p._graphNode.label = getPersonRufname(p.n) + '\n' + p.layout_tree.down.childIdx + ' ' + p.layout_tree.down.reversePartnersAndChildren;
     p._partners.forEach((pp, i) =>
     {
-      pp.p._graphNode.x = p._graphNode.x + (p.layout_tree.down.invertPartners ? -1 : 1) * (i + 1) * 2 * this.settings.nodeSpacingX;
+      pp.p._graphNode.x = p._graphNode.x + (p.layout_tree.down.reversePartnersAndChildren ? -1 : 1) * (i + 1) * 2 * this.settings.nodeSpacingX;
       pp.p._graphNode.y = p._graphNode.y + (this.yearBasedOffsetY(p.b, pp.p.b) || 0);
       pp.p._graphNode.hidden = false;
       pp.c._graphEdge.hidden = false;
+      // pp.p._graphNode.label = getPersonRufname(pp.p.n) + '\n' + i;
+
+      // if (pp.p._partners > 1) {
+      //   s.graph.addNode({
+      //     id: p.t + '-more-partners'
+      //   });
+      // }
     });
-    moveChildConnectionNodes([p._graphNode]);
     let x = p._graphNode.x - p.layout_tree.down.childrenLeft * 2 * this.settings.nodeSpacingX;
-    let y = p._graphNode.y + this.settings.nodeSpacingY;
-    let tmpPartners = p.layout_tree.down.invertPartners ? p._partners.reverse() : p._partners;
     let tmpChildren = p._children.slice(0);
-    let fn = cp =>
+    let layoutChild = cp =>
     {
       tmpChildren.splice(tmpChildren.findIndex(tmpCp => tmpCp.p.t === cp.p.t), 1);
       cp.p._graphNode.x = x + cp.p.layout_tree.down.left * 2 * this.settings.nodeSpacingX;
@@ -302,8 +317,12 @@ function TreeLayout()
       cp.c._graphEdge.hidden = false;
       this.layoutDown(cp.p);
     };
-    tmpPartners.forEach(pp => pp.c._children.forEach(fn));
-    tmpChildren.forEach(fn);
+    let tmpPartners = p.layout_tree.down.reversePartnersAndChildren ? p._partners.slice(0).reverse() : p._partners;
+    tmpPartners.forEach(pp => p.layout_tree.down.reversePartnersAndChildren
+      ? pp.c._children.slice(0).reverse().forEach(layoutChild)
+      : pp.c._children.forEach(layoutChild));
+    tmpChildren.forEach(layoutChild);
+    moveChildConnectionNodes(p._partners.map(pp => pp.p._graphNode));
   };
 
   this.yearBasedOffsetY = (p1_date, p2_date) =>
