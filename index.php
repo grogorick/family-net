@@ -418,8 +418,6 @@ html_start();
   <script src="js/linkurious/activeState/sigma.plugins.activeState.js<?=V_?>"></script>
   <script src="js/linkurious/dragNodes/sigma.plugins.dragNodes.js<?=V_?>"></script>
   <script src="js/linkurious/edgeLabels/sigma.canvas.edges.labels.def.js<?=V_?>"></script>
-  <script src="js/linkurious/edgeLabels/sigma.canvas.edges.labels.curve.js<?=V_?>"></script>
-  <script src="js/linkurious/edgeLabels/sigma.canvas.edges.labels.curvedArrow.js<?=V_?>"></script>
   <script src="js/linkurious/edgeLabels/settings.js<?=V_?>"></script>
   <script src="js/linkurious/lasso/sigma.plugins.lasso.js<?=V_?>"></script>
   <script src="js/edges.dashedarrow.js<?=V_?>"></script>
