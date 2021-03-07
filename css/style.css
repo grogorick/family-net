@@ -303,7 +303,7 @@ button.selected, .button.selected {
 #layouts.box > .box-minimize-buttons {
   display: inline-block;
 }
-#layouts.box a.selected-layout {
+#layouts.box .selected-layout {
   font-weight: bold;
 }
 

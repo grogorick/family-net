@@ -204,7 +204,7 @@ else if (isset($_GET['stop-edit'])) {
 }
 
 else if ($_SESSION[EDITING]) {
-  if (time() > ($_SESSION[EDITING] + CURRENT_EDITOR_TIMEOUT)) {
+  if ($useLayout || time() > ($_SESSION[EDITING] + CURRENT_EDITOR_TIMEOUT)) {
     stopEditing();
   }
 }
@@ -432,7 +432,7 @@ html_start();
 
   <div id="mobile-actions" class="box mobile-only">
     <div id="mobile-menu-toggle" class="button hidden-toggle" data-hidden-toggle-target="#account" style="">&#9776;</div><!--
-	  <?php if (!$useLayout && $_SESSION[EDITING]) { ?>
+	  <?php if ($_SESSION[EDITING]) { ?>
     --><div id="mobile-action-new-person" class="button mobile-action-new-person" style=""></div><!--
     --><div id="mobile-action-new-connection" class="button mobile-action-new-connection" style=""><span></span></div><!--
     --><div id="mobile-action-move-person" class="button mobile-action-move-person" style=""></div><!--
@@ -445,14 +445,14 @@ html_start();
     --><span id="account-name"><?=$_SESSION[USER]?></span><!--
     --><hr class="mobile-only" /><!--
     <?php
-      if (!$useLayout) {
+      if ($_SESSION[TYPE] !== VIEWER_ && !$useLayout) {
         if (!$_SESSION[EDITING]) {
     ?>
     --><a href="<?=$server_url?>?start-edit" class="button" id="start-edit" title="Bearbeitungsmodus starten">Bearbeiten</a><!--
-    --><div id="other-editor" class="button hidden"></div><!--
     <?php } else { ?>
     --><a href="<?=$server_url?>?stop-edit" class="button" id="stop-edit" title="Bearbeitungsmodus beenden">Fertig<span id="stop-edit-timer"></span></a><!--
     <?php } } ?>
+    --><div id="other-editor" class="button hidden"></div><!--
     --><div id="mobile-log" class="button mobile-only">Änderungsverlauf</div><!--
     --><div id="mobile-help" class="button mobile-only">Hilfe</div><!--
     --><hr class="mobile-only" /><!--
@@ -465,6 +465,9 @@ html_start();
 
 $box_close_minimize_symbol = $is_mobile ? 'X' : '&mdash;';
 
+$layout_class_netz = (!isset($_GET['layout']) || $_GET['layout'] === 'netz') ? ' selected-layout' : '';
+$layout_class_tree = (isset($_GET['layout']) && $_GET['layout'] === 'tree' && !isset($_GET['yearBased'])) ? ' selected-layout' : '';
+$layout_class_tree_yearBased = (isset($_GET['layout']) && $_GET['layout'] === 'tree' && isset($_GET['yearBased'])) ? ' selected-layout' : '';
 $tmpLayout = isset($_GET['layout']) ? $_GET['layout'] . (isset($_GET['yearBased']) ? 'YearBased' : '') : false;
 ?>
   <div id="layouts" class="box box-minimized">
@@ -472,9 +475,9 @@ $tmpLayout = isset($_GET['layout']) ? $_GET['layout'] . (isset($_GET['yearBased'
       <button class="box-restore desktop-only" title="Layouts">L</button>
       <button class="box-minimize"><?=$box_close_minimize_symbol?></button>
     </div>
-    <a class="button<?=(!$tmpLayout) ? ' selected-layout' : ''?>" href="<?=$server_url?>">Netz</a>
-    <a class="button<?=($tmpLayout === 'tree') ? ' selected-layout' : ''?>" href="<?=$server_url?>?layout=tree">Baum</a>
-    <a class="button<?=($tmpLayout === 'treeYearBased') ? ' selected-layout' : ''?>" href="<?=$server_url?>?layout=tree&yearBased">Jahresbaum</a>
+    <button class="<?=$layout_class_netz?>" data-url="<?=$server_url?>">Netz</button>
+    <button class="<?=$layout_class_tree?>" data-url="<?=$server_url?>?layout=tree">Baum</button>
+    <button class="<?=$layout_class_tree_yearBased?>" data-url="<?=$server_url?>?layout=tree&yearBased">Jahresbaum</button>
   </div>
 <?php
 

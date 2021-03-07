@@ -32,10 +32,13 @@ let callbacks = {
   graphLoaded: new Callbacks(),
   logPlayStopped: new Callbacks()
 };
+
 let layouts = {};
 
 let windowSize = { height: window.innerHeight, width: window.innerWidth };
 document.body.style.height = windowSize.height + 'px';
+
+let urlParams = new URLSearchParams(window.location.search);
 
 let graphElement = document.getElementById('graph');
 
@@ -116,9 +119,6 @@ let s = new sigma({
 let activeState = sigma.plugins.activeState(s);
 
 let dragListener = sigma.plugins.dragNodes(s, s.renderers[0], activeState);
-if (!currentUserIsEditing || currentLayoutId) {
-  dragListener.disable();
-}
 
 const bounds = {
   minX: -500,
@@ -140,7 +140,7 @@ let data = {
 
 function currentUserCanEdit()
 {
-  return currentUserIsEditing && !logPreviewActive;
+  return currentUserIsEditing && !currentLayoutId && !logPreviewActive;
 }
 
 function durationToString(duration)
@@ -150,10 +150,7 @@ function durationToString(duration)
 
 let startEdit = document.getElementById('start-edit');
 if (startEdit) {
-  if (currentUserIsViewer) {
-    startEdit.classList.add('hidden');
-  }
-  else {
+  if (!currentUserIsViewer) {
     let otherEditorDiv = document.getElementById('other-editor');
     let checkOtherEditor = () =>
     {
@@ -1623,12 +1620,19 @@ function deleteConnection(c_t, toData = true, toServer = true, toGraph = true, r
 // events
 // ------------------------------------
 
+if (!currentUserCanEdit()) {
+  dragListener.disable();
+}
+
 function bindDefaultViewerEvents()
 {
   let cdcNode = clickDoubleClick(
   e =>
   {
     let n_id = e.data.node.id;
+    if (isChildConnectionNode(n_id)) {
+      return;
+    }
     deselectAll(null, false, [n_id]);
     activeState.addNodes(n_id);
     s.refresh();
@@ -1661,6 +1665,19 @@ function bindDefaultViewerEvents()
   s.bind('coordinatesUpdated', () => { s.camera.angle = 0; });
 }
 
+document.querySelectorAll('#layouts > button').forEach(btn =>
+{
+  btn.addEventListener('click', e =>
+  {
+    let url = btn.getAttribute('data-url');
+    let nodes = activeState.nodes();
+    if (nodes.length) {
+      url += (url.endsWith('/') ? '?' : '&') + 'sel=' + nodes[0].id;
+    }
+    window.location.href = url;
+  });
+});
+
 window.addEventListener('resize', (e) =>
 {
   if (window.innerHeight !== windowSize.height && window.innerWidth !== windowSize.width) {
@@ -1668,8 +1685,36 @@ window.addEventListener('resize', (e) =>
   }
 });
 
+let selectionFromURL = urlParams.get('sel');
+let showFromURL = urlParams.get('show');
 if (currentLayoutId) {
-  callbacks.graphLoaded.add(() => layouts[currentLayoutId].apply());
+  callbacks.graphLoaded.add(() => layouts[currentLayoutId].apply(selectionFromURL));
+}
+let fromURL = showFromURL || selectionFromURL;
+if (fromURL) {
+  callbacks.graphLoaded.addOnce(() =>
+  {
+    let p = getDataPerson(fromURL);
+    if (p) {
+      activeState.addNodes(fromURL);
+      if (currentLayoutId) {
+        s.camera.goTo({
+            x: p._graphNode.x,
+            y: p._graphNode.y });
+      }
+      s.refresh();
+      if (showFromURL === fromURL) {
+        showPersonInfo(showFromURL);
+      }
+    }
+    else if (getDataConnection(fromURL)) {
+      activeState.addEdges(fromURL);
+      s.refresh();
+      if (showFromURL === fromURL) {
+        showConnectionInfo(showFromURL);
+      }
+    }
+  });
 }
 
 setTimeout(s.refresh.bind(s), 1000);

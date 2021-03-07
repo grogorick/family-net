@@ -20,7 +20,7 @@ document.getElementById('mobile-admin').addEventListener('click', () =>
   document.querySelector('#admin .box-restore').click();
 });
 
-if (!currentLayoutId) {
+if (currentUserCanEdit()) {
 
 let mobileActionMode = null;
 let MOBILE_ACTION_NEW_PERSON = 'new-person';
@@ -34,35 +34,29 @@ let mobileActionMovePerson = document.getElementById('mobile-action-move-person'
 if (currentUserIsEditing) {
   mobileActionNewPerson.addEventListener('click', () =>
   {
-    if (currentUserCanEdit()) {
-      mobileActionMode = mobileActionNewPerson.classList.toggle('selected') ? MOBILE_ACTION_NEW_PERSON : null;
-      mobileActionNewConnection.classList.remove('selected');
-      mobileActionMovePerson.classList.remove('selected');
-      if (mobileActionMode) {
-        deselectAll();
-      }
+    mobileActionMode = mobileActionNewPerson.classList.toggle('selected') ? MOBILE_ACTION_NEW_PERSON : null;
+    mobileActionNewConnection.classList.remove('selected');
+    mobileActionMovePerson.classList.remove('selected');
+    if (mobileActionMode) {
+      deselectAll();
     }
   });
   mobileActionNewConnection.addEventListener('click', () =>
   {
-    if (currentUserCanEdit()) {
-      mobileActionNewPerson.classList.remove('selected');
-      mobileActionMode = mobileActionNewConnection.classList.toggle('selected') ? MOBILE_ACTION_NEW_CONNECTION : null;
-      mobileActionMovePerson.classList.remove('selected');
-      if (mobileActionMode) {
-        deselectAll();
-      }
+    mobileActionNewPerson.classList.remove('selected');
+    mobileActionMode = mobileActionNewConnection.classList.toggle('selected') ? MOBILE_ACTION_NEW_CONNECTION : null;
+    mobileActionMovePerson.classList.remove('selected');
+    if (mobileActionMode) {
+      deselectAll();
     }
   });
   mobileActionMovePerson.addEventListener('click', () =>
   {
-    if (currentUserCanEdit()) {
-      mobileActionNewPerson.classList.remove('selected');
-      mobileActionNewConnection.classList.remove('selected');
-      mobileActionMode = mobileActionMovePerson.classList.toggle('selected') ? MOBILE_ACTION_MOVE_PERSON : null;
-      if (mobileActionMode) {
-        deselectAll();
-      }
+    mobileActionNewPerson.classList.remove('selected');
+    mobileActionNewConnection.classList.remove('selected');
+    mobileActionMode = mobileActionMovePerson.classList.toggle('selected') ? MOBILE_ACTION_MOVE_PERSON : null;
+    if (mobileActionMode) {
+      deselectAll();
     }
   });
 }
@@ -77,7 +71,10 @@ function clearMobileActionMode()
 s.bind('clickNode', e =>
 {
   let n_id = e.data.node.id;
-  if (currentUserCanEdit() && mobileActionMode) {
+  if (isChildConnectionNode(n_id)) {
+    return;
+  }
+  if (mobileActionMode) {
     switch (mobileActionMode) {
       case MOBILE_ACTION_NEW_CONNECTION:
       {
@@ -116,7 +113,7 @@ s.bind('clickNode', e =>
 s.bind('clickEdge', e =>
 {
   let e_id = e.data.edge.id;
-  if (currentUserCanEdit() && mobileActionMode) {
+  if (mobileActionMode) {
     switch (mobileActionMode) {
       case MOBILE_ACTION_NEW_CONNECTION:
       {
@@ -144,7 +141,7 @@ s.bind('clickEdge', e =>
 
 s.bind('clickStage', e =>
 {
-  if (currentUserCanEdit() && mobileActionMode) {
+  if (mobileActionMode) {
     switch (mobileActionMode) {
       case MOBILE_ACTION_NEW_PERSON:
       {
@@ -174,7 +171,7 @@ s.bind('coordinatesUpdated', e =>
 {
   // console.log(['coordinatesUpdated', e]);
   s.camera.angle = 0;
-  if (currentUserCanEdit() && (logItemSelectedPreview === logItemSelectedMaster)) {
+  if (logItemSelectedPreview === logItemSelectedMaster) {
     cameraMoved(e);
   }
 });

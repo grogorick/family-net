@@ -1,7 +1,7 @@
 
 s.bind('hovers', hoverPersons);
 
-if (!currentLayoutId) {
+if (currentUserCanEdit()) {
 
 let cdcNode = clickDoubleClick(
   e =>
@@ -27,7 +27,7 @@ let cdcNode = clickDoubleClick(
       s.refresh();
       showPersonInfo(n_id);
     }
-    else if (currentUserCanEdit()) {
+    else {
       activeState.addNodes(n_id);
       s.refresh();
       let numNodes = activeState.nodes().length;
@@ -45,6 +45,10 @@ let cdcNode = clickDoubleClick(
   },
   e =>
   {
+    console.log(['doubleClickNode', e]);
+    if (isChildConnectionNode(e.data.node.id)) {
+      return;
+    }
     if (!currentLayoutId) {
       selectDirectRelatives(e);
     }
@@ -66,7 +70,7 @@ s.bind('clickEdge', e =>
     s.refresh();
     showConnectionInfo(e_id);
   }
-  else if (currentUserCanEdit()) {
+  else {
     deselectConnections(null, false, [e_id]);
     activeState.addEdges(e_id);
     s.refresh();
@@ -103,9 +107,7 @@ let cdcStage = clickDoubleClick(
   {
     console.log(['doubleClick', e]);
     deselectAll();
-    if (currentUserCanEdit()) {
-      startNewPerson(e);
-    }
+    startNewPerson(e);
   });
 
 s.bind('clickStage', cdcStage.click.bind(cdcStage));
@@ -123,7 +125,7 @@ s.bind('coordinatesUpdated', e =>
   clearTimeout(startedWith_coordinatesUpdated);
   startedWith_coordinatesUpdated = setTimeout(() => { startedWith_coordinatesUpdated = false; }, 1000);
 
-  if (currentUserCanEdit() && (logItemSelectedPreview === logItemSelectedMaster)) {
+  if (logItemSelectedPreview === logItemSelectedMaster) {
     cameraMoved(e);
   }
 });
