@@ -126,25 +126,25 @@ function TreeLayout()
 
   this.prepare = () =>
   {
+    data.graph.persons.forEach(p => p.layout_tree = {});
     this.prepareUp(this.p0);
     this.prepareDown(this.p0);
   };
 
   this.layout = p =>
   {
+    tmpEdges.forEach(e => s.graph.dropEdge(e));
+    tmpNodes.forEach(n => s.graph.dropNode(n));
+    tmpEdges = [];
+    tmpNodes = [];
     this.layoutUp(p);
     this.layoutDown(p);
   };
 
   this.prepareUp = p =>
   {
-    if ('layout_tree' in p) {
-      if ('up' in p.layout_tree) {
-        return;
-      }
-    }
-    else {
-      p.layout_tree = {};
+    if ('up' in p.layout_tree) {
+      return;
     }
     p.layout_tree.up = {
       left: 0,
@@ -225,13 +225,8 @@ function TreeLayout()
 
   this.prepareDown = (p, reversePartnersAndChildren = true) =>
   {
-    if ('layout_tree' in p) {
-      if ('down' in p.layout_tree) {
-        return;
-      }
-    }
-    else {
-      p.layout_tree = {};
+    if ('down' in p.layout_tree) {
+      return;
     }
     let down = p.layout_tree.down = {
       left: 0,
@@ -299,11 +294,13 @@ function TreeLayout()
       pp.c._graphEdge.hidden = false;
       // pp.p._graphNode.label = getPersonRufname(pp.p.n) + '\n' + i;
 
-      // if (pp.p._partners > 1) {
-      //   s.graph.addNode({
-      //     id: p.t + '-more-partners'
-      //   });
-      // }
+      let tmpParents = pp.p._parents.filter(ppp => !('layout_tree' in ppp.p) || !('down' in ppp.p.layout_tree));
+      if (tmpParents.length) {
+        addTmpLine(pp.p, 'parents', { x: 0, y: -this.settings.nodeSpacingY / 2 }, 'Stammbaum von ' + getPersonRufname(pp.p.n));
+      }
+      if (pp.p._partners.length > 1) {
+        addTmpLine(pp.p, 'partners', { x: (p.layout_tree.down.reversePartnersAndChildren ? -1 : 1) * this.settings.nodeSpacingY / 2, y: 0 }, 'Weitere Partner von ' + getPersonRufname(pp.p.n));
+      }
     });
     let x = p._graphNode.x - p.layout_tree.down.childrenLeft * 2 * this.settings.nodeSpacingX;
     let tmpChildren = p._children.slice(0);

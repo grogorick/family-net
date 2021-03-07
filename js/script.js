@@ -394,7 +394,11 @@ function createChildConnectionNodeId(p1_t, p2_t)
 }
 function isChildConnectionNode(p_t)
 {
-  return (typeof p_t == 'string') && p_t.includes('-');
+  return (typeof p_t === 'string') && p_t.includes('-');
+}
+function isTmpGraphElement(p_t)
+{
+  return (typeof p_t === 'string') && p_t[0] === '*';
 }
 function getDataChildConnections(c)
 {
@@ -1096,7 +1100,7 @@ function showPersonInfo(t)
       personMenuDeathYear.disabled = true;
       personMenuNote.disabled = true;
     }
-    showForm(personMenuForm, 'opt-edit', false);
+    showForm(personMenuForm, 'opt-edit', currentUserCanEdit());
   };
   if (isMobile) {
     setTimeout(fn, settings.mobileGraphClickDelay);
@@ -1414,7 +1418,7 @@ function showConnectionInfo(t)
     {
       option.disabled = !option.value || (isChildConnection && getConnectionRelationSettings(option.value).level === 'h');
     });
-    showForm(connectionMenuForm, 'opt-edit', false);
+    showForm(connectionMenuForm, 'opt-edit', currentUserCanEdit());
   };
   if (isMobile) {
     setTimeout(fn, settings.mobileGraphClickDelay);
@@ -1609,6 +1613,33 @@ function deleteConnection(c_t, toData = true, toServer = true, toGraph = true, r
   }
 }
 
+tmpNodes = [];
+tmpEdges = [];
+
+function addTmpLine(p, id, offset_xy, label)
+{
+  let t_p = '*' + p.t + '-' + id + '-p';
+  let t_c = '*' + p.t + '-' + id + '-c';
+  tmpNodes.push(t_p);
+  tmpEdges.push(t_c);
+  s.graph.addNode({
+    id: t_p,
+    x: p._graphNode.x + offset_xy.x,
+    y: p._graphNode.y + offset_xy.y,
+    size: .1,
+    color: '#ddd'
+  });
+  s.graph.addEdge({
+    id: t_c,
+    source: p.t,
+    target: t_p,
+    label: label,
+    size: settings.edgeSize,
+    type: 'line',
+    color: '#ddd'
+  });
+}
+
 
 // events
 // ------------------------------------
@@ -1623,22 +1654,26 @@ function bindDefaultViewerEvents()
   e =>
   {
     let n_id = e.data.node.id;
-    if (isChildConnectionNode(n_id)) {
+    deselectAll(null, false, [n_id]);
+    if (isChildConnectionNode(n_id) || isTmpGraphElement(n_id)) {
       return;
     }
-    deselectAll(null, false, [n_id]);
     activeState.addNodes(n_id);
     s.refresh();
     showPersonInfo(n_id);
   },
   e =>
   {
+    let n_id = e.data.node.id;
+    if (isChildConnectionNode(n_id) || isTmpGraphElement(n_id)) {
+      return;
+    }
     if (!currentLayoutId) {
       selectDirectRelatives(e);
     }
     else {
       deselectAll();
-      layouts[currentLayoutId].apply(e.data.node.id);
+      layouts[currentLayoutId].apply(n_id);
     }
   });
   s.bind('clickNode', cdcNode.click.bind(cdcNode));
@@ -1648,6 +1683,11 @@ function bindDefaultViewerEvents()
   {
     let e_id = e.data.edge.id;
     deselectAll(null, false, [e_id]);
+    if (isTmpGraphElement(e_id)) {
+      activeState.addNodes(e.data.edge.source);
+      s.refresh();
+      return;
+    }
     activeState.addEdges(e_id);
     s.refresh();
     showConnectionInfo(e_id);

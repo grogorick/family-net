@@ -13,7 +13,6 @@
    * @param  {configurable}             settings     The settings function.
    */
   sigma.canvas.edges.arrow = function(edge, source, target, context, settings) {
-    if (edge.hidden) return;
     var color = edge.active ?
           edge.active_color || settings('defaultEdgeActiveColor') :
           edge.color,
