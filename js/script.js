@@ -50,6 +50,7 @@ let s = new sigma({
   settings: {
     doubleClickEnabled: isMobile,
     rescaleIgnoreSize: true,
+    edgeHoverExtremities: false,
 
     font: '"Josefin Sans", "Trebuchet MS", sans-serif',
     fontStyle: '',
@@ -356,7 +357,7 @@ function getPersonDisplayFullName(d_n)
   return d_n.replaceAll(/[,*?]|\([^()]*\)/g, '').replaceAll(/  +/g, ' ');
 }
 
-function getPersonDisplayString(p)
+function getPersonExtendedDisplayString(p)
 {
   let b = splitDate(p.b)[0];
   let d = splitDate(p.d)[0];
@@ -1285,14 +1286,6 @@ function movePersons(n_id, toData, toServer, toGraph, refreshGraph, alignNodesTo
   if (toServer) {
     restartEditingStopTimer();
   }
-}
-
-function hoverPersons(e)
-{
-  // console.log(e);
-  e.data.enter.nodes.forEach(n => n.label = getPersonDisplayString(getDataPerson(n.id)));
-  e.data.leave.nodes.forEach(n => n.label = getPersonRufname(getDataPerson(n.id).n));
-  s.refresh();
 }
 
 
