@@ -1038,7 +1038,9 @@ function startNewPerson(e)
     t: PERSON_PREVIEW,
     x: newPersonPosition.x,
     y: newPersonPosition.y,
-    n: '',
+    f: '',
+    l: '',
+    m: '',
     o: ''},
     false, false, true, true);
   let fn = () =>
@@ -1208,6 +1210,20 @@ approveDeleteOrCancelKeys(
 let logAddPerson = true;
 function addPerson(p, toData, toServer, toGraph, refreshGraph, doneCallback = null)
 {
+  if ('n' in p) {
+    p.f = '';
+    p.l = '';
+    p.m = '';
+    if (p.n.includes(',')) {
+      let i = p.n.indexOf(',');
+      p.f = p.n.substr(0, i).trim();
+      p.l = p.n.substr(i + 1).trim();
+    }
+    else {
+      p.f = p.n;
+    }
+    delete p.n;
+  }
   toServerDataGraph('addPerson', p, {
       toServer: !toServer ? null : response =>
       {
