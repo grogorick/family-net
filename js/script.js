@@ -340,33 +340,40 @@ function getGraphPositionFromEvent(e)
   return getGraphPositionFromScreenPosition(e.data.captor.x, e.data.captor.y);
 }
 
-function getPersonRufname(d_n)
+function getPersonDisplayFirstName(p)
 {
-  let n = d_n.match(/\(([^ ,-?()]+)\)/);
+  return p.f.replaceAll(/[*?]|\([^()]*\)/g, '').replaceAll(/  +/g, ' ');
+}
+
+function getPersonFullName(p)
+{
+  return [getPersonDisplayFirstName(p), p.l].join(', ') + (p.m.length ? ' geb. ' + p.m : '');
+}
+
+function getPersonRufname(p)
+{
+  let p_n = p.f;
+  let n = p_n.match(/\(([^ ,-?()]+)\)/);
   if (!n) {
-    n = d_n.match(/[*]\s*([^ ,-?()]+)(,|-|\s|$)/);
+    n = p_n.match(/[*]\s*([^ ,-?()]+)(,|-|\s|$)/);
     if (!n) {
-      n = d_n.match(/^([^ ,-?()]+)(,|-|\s|$)/);
+      n = p_n.match(/^([^ ,-?()]+)(,|-|\s|$)/);
     }
   }
   return n ? n[1] : '';
 }
 
-function getPersonDisplayFullName(d_n)
-{
-  return d_n.replaceAll(/[,*?]|\([^()]*\)/g, '').replaceAll(/  +/g, ' ');
-}
-
 function getPersonExtendedDisplayString(p)
 {
+  let n = [getPersonDisplayFirstName(p), p.l].join(' ') + (p.m.length ? ' geb. ' + p.m : '');
   let b = splitDate(p.b)[0];
   let d = splitDate(p.d)[0];
-  return getPersonDisplayFullName(p.n) + ((b || d) ? ' \n ' + b + ' — ' + d : '');
+  return n + ((b || d) ? ' \n ' + b + ' — ' + d : '');
 }
 
 function getNodeColorFromPerson(p)
 {
-  return 'color' in p ? p.color : (p.t === PERSON_PREVIEW ? settings.nodeColorPreview : ([p.n, p.o].some(v => v.includes('???')) ? settings.nodeColorWarning : ''));
+  return 'color' in p ? p.color : (p.t === PERSON_PREVIEW ? settings.nodeColorPreview : ([p.f, p.l, p.m, p.o].some(v => (typeof v === 'string') && v.includes('???')) ? settings.nodeColorWarning : ''));
 }
 
 function getEdgeColorFromConnection(c)
@@ -475,7 +482,8 @@ function loadData(previewHash = null)
       'Das Netz wird gesponnen...',
       'Die Alten werden mit Fragen gelöchert...',
       'Uralte Aufzeichnungen werden entstaubt...',
-      'Die Ahnen werden erforscht...'
+      'Die Ahnen werden erforscht...',
+      'Altdeutsch wird entziffert...'
     ]), {});
   }, 500);
 
@@ -1006,7 +1014,9 @@ function deselectConnections(e = null, refreshGraph = true, except = [])
 // persons
 // ------------------------------------
 let personMenuForm = document.getElementById('person-form');
-let personMenuName = document.getElementById('person-form-name');
+let personMenuFirstName = document.getElementById('person-form-first-name');
+let personMenuLastName = document.getElementById('person-form-last-name');
+let personMenuBirthName = document.getElementById('person-form-birth-name');
 let personMenuBirthDay = document.getElementById('person-form-birth-day');
 let personMenuBirthMonth = document.getElementById('person-form-birth-month');
 let personMenuBirthYear = document.getElementById('person-form-birth-year');
@@ -1048,7 +1058,9 @@ function startNewPerson(e)
 
 function clearPersonMenu()
 {
-  personMenuName.value = '';
+  personMenuFirstName.value = '';
+  personMenuLastName.value = '';
+  personMenuBirthName.value = '';
   personMenuBirthDay.value = '';
   personMenuBirthMonth.value = '';
   personMenuBirthYear.value = '';
@@ -1065,7 +1077,9 @@ function showPersonInfo(t)
     console.log(['showPersonInfo', t]);
     let p = getDataPerson(t);
     let db = splitDate(p.b);
-    personMenuName.value = p.n;
+    personMenuFirstName.value = p.f;
+    personMenuLastName.value = p.l;
+    personMenuBirthName.value = p.m;
     personMenuBirthDay.value = db[2];
     personMenuBirthMonth.value = db[1];
     personMenuBirthYear.value = db[0];
@@ -1079,7 +1093,9 @@ function showPersonInfo(t)
     if (currentUserCanEdit()) {
       personMenuDelete.classList.toggle('hidden', getDataPersonConnections(t).length > 0)
       personMenuEdit.classList.remove('hidden');
-      personMenuName.disabled = false;
+      personMenuFirstName.disabled = false;
+      personMenuLastName.disabled = false;
+      personMenuBirthName.disabled = false;
       personMenuBirthDay.disabled = false;
       personMenuBirthMonth.disabled = false;
       personMenuBirthYear.disabled = false;
@@ -1091,7 +1107,9 @@ function showPersonInfo(t)
     else {
       personMenuDelete.classList.add('hidden');
       personMenuEdit.classList.add('hidden');
-      personMenuName.disabled = true;
+      personMenuFirstName.disabled = true;
+      personMenuLastName.disabled = true;
+      personMenuBirthName.disabled = true;
       personMenuBirthDay.disabled = true;
       personMenuBirthMonth.disabled = true;
       personMenuBirthYear.disabled = true;
@@ -1122,7 +1140,9 @@ personMenuAdd.addEventListener('click', e =>
     addPerson({
         x: x,
         y: y,
-        n: personMenuName.value.trim(),
+        f: personMenuFirstName.value.trim(),
+        l: personMenuLastName.value.trim(),
+        m: personMenuBirthName.value.trim(),
         b: personMenuBirthDay.getAttribute('data-value'),
         d: personMenuDeathDay.getAttribute('data-value'),
         o: personMenuNote.value.trim()
@@ -1144,7 +1164,9 @@ personMenuEdit.addEventListener('click', e =>
     hideForm(personMenuForm);
     editPerson({
         t: activeState.nodes()[0].id,
-        n: personMenuName.value.trim(),
+        f: personMenuFirstName.value.trim(),
+        l: personMenuLastName.value.trim(),
+        m: personMenuBirthName.value.trim(),
         b: personMenuBirthDay.getAttribute('data-value'),
         d: personMenuDeathDay.getAttribute('data-value'),
         o: personMenuNote.value.trim()
@@ -1178,7 +1200,7 @@ personMenuCancel.addEventListener('click', e =>
 });
 
 approveDeleteOrCancelKeys(
-  [ personMenuName, personMenuBirthDay, personMenuBirthMonth, personMenuBirthYear, personMenuDeathDay, personMenuDeathMonth, personMenuDeathYear, personMenuNote, personMenuCancel ],
+  [ personMenuFirstName, personMenuLastName, personMenuBirthName, personMenuBirthDay, personMenuBirthMonth, personMenuBirthYear, personMenuDeathDay, personMenuDeathMonth, personMenuDeathYear, personMenuNote, personMenuCancel ],
   [ personMenuAdd, personMenuEdit ],
   personMenuDelete,
   personMenuCancel);
@@ -1192,14 +1214,14 @@ function addPerson(p, toData, toServer, toGraph, refreshGraph, doneCallback = nu
         response = addLogItemFromServerResponse(response);
         p.t = response[0].substr(2);
       },
-      toData: !toData ? null : () => data.graph.persons.push(p),
+      toData: !toData ? null : p => data.graph.persons.push(p),
       toGraph: !toGraph ? null : () =>
       {
         s.graph.addNode({
             id: p.t,
             x: p.x,
             y: p.y,
-            label: getPersonRufname(p.n),
+            label: getPersonRufname(p),
             size: settings.nodeSize,
             color: getNodeColorFromPerson(p),
             labelAlignment: (p.y < nodeCenterY) ? 'top' : 'bottom' });
@@ -1235,7 +1257,7 @@ function editPerson(p, toData = true, toServer = true, toGraph = true, refreshGr
       toGraph: !toGraph ? null : () =>
       {
         let n = s.graph.nodes(p.t);
-        n.label = getPersonRufname(p.n);
+        n.label = getPersonRufname(p);
         n.color = getNodeColorFromPerson(p);
       },
       refreshGraph: refreshGraph
@@ -1393,13 +1415,13 @@ function showConnectionInfo(t)
       let p1 = getParentTsFromChildConnectionNode(c.p1);
       let p1_1 = getDataPerson(p1[0]);
       let p1_2 = getDataPerson(p1[1]);
-      p1_n = getPersonRufname(p1_1.n) + ' & ' + getPersonRufname(p1_2.n);
+      p1_n = getPersonRufname(p1_1) + ' & ' + getPersonRufname(p1_2);
     }
     else {
-      p1_n = getPersonRufname(getDataPerson(c.p1).n);
+      p1_n = getPersonRufname(getDataPerson(c.p1));
     }
     let p2 = getDataPerson(c.p2);
-    connectionMenuPersons.innerHTML = escapeHtml(p1_n) + ' &mdash; ' + escapeHtml(getPersonRufname(p2.n));
+    connectionMenuPersons.innerHTML = escapeHtml(p1_n) + ' &mdash; ' + escapeHtml(getPersonRufname(p2));
     connectionMenuRelation.value = c.r;
     connectionMenuDesc.value = c.d;
     if (currentUserCanEdit()) {

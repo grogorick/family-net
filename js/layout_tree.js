@@ -28,7 +28,7 @@ function TreeLayout()
       console.log('prepare');
       this.prepare();
 
-      console.log('layout for "' + this.p0.n + '"');
+      console.log('layout for "' + getPersonFullName(this.p0) + '"');
       console.log(this.p0);
       this.p0._graphNode.hidden = false;
       this.layout(this.p0);
@@ -233,7 +233,8 @@ function TreeLayout()
       right: 0,
       childrenLeft: 0,
       childrenRight: 0,
-      partners: 0,
+      partnersLeft: 0,
+      partnersRight: 0,
       children: minus1(p._children.length),
       width: 0,
       reversePartnersAndChildren: reversePartnersAndChildren
@@ -285,21 +286,21 @@ function TreeLayout()
   this.layoutDown = p =>
   {
     // p._graphNode.label += '\n' + p.layout_tree.down.left + ' + ' + p.layout_tree.down.right + '\n' + p.layout_tree.down.childrenLeft + ' + ' + p.layout_tree.down.childrenRight + '\n' + p.layout_tree.down.width + ' / ' + p.layout_tree.down.children;
-    // p._graphNode.label = getPersonRufname(p.n) + '\n' + p.layout_tree.down.childIdx + ' ' + p.layout_tree.down.reversePartnersAndChildren;
+    // p._graphNode.label = getPersonRufname(p) + '\n' + p.layout_tree.down.childIdx + ' ' + p.layout_tree.down.reversePartnersAndChildren;
     p._partners.forEach((pp, i) =>
     {
       pp.p._graphNode.x = p._graphNode.x + (p.layout_tree.down.reversePartnersAndChildren ? -1 : 1) * (i + 1) * 2 * this.settings.nodeSpacingX;
       pp.p._graphNode.y = p._graphNode.y + (this.yearBasedOffsetY(p.b, pp.p.b) || 0);
       pp.p._graphNode.hidden = false;
       pp.c._graphEdge.hidden = false;
-      // pp.p._graphNode.label = getPersonRufname(pp.p.n) + '\n' + i;
+      // pp.p._graphNode.label = getPersonRufname(pp.p) + '\n' + i;
 
       let tmpParents = pp.p._parents.filter(ppp => !('layout_tree' in ppp.p) || !('down' in ppp.p.layout_tree));
       if (tmpParents.length) {
-        addTmpLine(pp.p, 'parents', { x: 0, y: -this.settings.nodeSpacingY / 2 }, 'Stammbaum von ' + getPersonRufname(pp.p.n));
+        addTmpLine(pp.p, 'parents', { x: 0, y: -this.settings.nodeSpacingY / 2 }, 'Stammbaum von ' + getPersonRufname(pp.p));
       }
       if (pp.p._partners.length > 1) {
-        addTmpLine(pp.p, 'partners', { x: (p.layout_tree.down.reversePartnersAndChildren ? -1 : 1) * this.settings.nodeSpacingY / 2, y: 0 }, 'Weitere Partner von ' + getPersonRufname(pp.p.n));
+        addTmpLine(pp.p, 'partners', { x: (p.layout_tree.down.reversePartnersAndChildren ? -1 : 1) * this.settings.nodeSpacingY / 2, y: 0 }, 'Weitere Partner von ' + getPersonRufname(pp.p));
       }
     });
     let x = p._graphNode.x - p.layout_tree.down.childrenLeft * 2 * this.settings.nodeSpacingX;

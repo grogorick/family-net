@@ -138,9 +138,22 @@ button {
 }
 
 #person-form.box label,
-#connection-form.box label{
+#connection-form.box label {
   width: 30%;
   display: inline-block;
+}
+
+#person-form.box input,
+#person-form.box select,
+#person-form.box textarea,
+#connection-form.box input,
+#connection-form.box select,
+#connection-form.box textarea {
+  width: 60%;
+}
+#person-form.box input#person-form-last-name,
+#person-form.box input#person-form-birth-name {
+  width: 27%;
 }
 
 .box hr {
@@ -484,7 +497,8 @@ button.selected, .button.selected {
 .desktop-client #connection-form.box {
   right: 10pt;
   bottom: 10pt;
-  width: 280pt;
+  width: 30%;
+  min-width: 280pt;
 }
 #connection-form-persons {
   display: block;

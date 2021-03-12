@@ -2,7 +2,7 @@
 //phpinfo();
 
 // browser cache fix for scripts and styles
-define('V', 21);
+define('V', 21.2);
 define('V_', '?v=' . V);
 
 define('RUNTIME_DIR', 'runtime');
@@ -816,8 +816,12 @@ if ($_SESSION[TYPE] === ADMIN_) {
     <h2 class="opt opt-new">Neue Person</h2>
     <h2 class="opt opt-edit"><?=($_SESSION[EDITING] ? 'Person bearbeiten' : 'Personendetails')?></h2>
     <div class="box-row">
-      <label for="person-form-name">Name: </label>
-      <input id="person-form-name" type="text" autocomplete="off" placeholder="(Spitzname) Vorname/n, Nachname/n" <?=($_SESSION[EDITING] ? '' : 'disabled')?> />
+      <label for="person-form-first-name">Vorname/n: </label>
+      <input id="person-form-first-name" type="text" autocomplete="off" placeholder="(Spitzname) Vorname/n" <?=($_SESSION[EDITING] ? '' : 'disabled')?> />
+    </div><div class="box-row">
+      <label for="person-form-last-name">Familienname/n: </label>
+      <input id="person-form-last-name" type="text" autocomplete="off" placeholder="Nachname/n" <?=($_SESSION[EDITING] ? '' : 'disabled')?> />
+      <input id="person-form-birth-name" type="text" autocomplete="off" placeholder="Geburtsname/n" <?=($_SESSION[EDITING] ? '' : 'disabled')?> />
     </div><div class="box-row">
       <label for="person-form-birth-day">Geburtstag: </label>
       <input id="person-form-birth-day" type="text" autocomplete="off" placeholder="tt" <?=($_SESSION[EDITING] ? '' : 'disabled')?> />
