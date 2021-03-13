@@ -137,6 +137,10 @@ button {
   color: #aaa;
 }
 
+#person-form.box #person-form-clone-add {
+  width: 100%
+}
+
 #person-form.box label,
 #connection-form.box label {
   width: 30%;

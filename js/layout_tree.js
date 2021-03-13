@@ -133,10 +133,10 @@ function TreeLayout()
 
   this.layout = p =>
   {
-    tmpEdges.forEach(e => s.graph.dropEdge(e));
-    tmpNodes.forEach(n => s.graph.dropNode(n));
-    tmpEdges = [];
-    tmpNodes = [];
+    extensionEdges.forEach(e => s.graph.dropEdge(e));
+    extensionNodes.forEach(n => s.graph.dropNode(n));
+    extensionEdges = [];
+    extensionNodes = [];
     this.layoutUp(p);
     this.layoutDown(p);
   };
@@ -217,10 +217,10 @@ function TreeLayout()
       // pp.p._graphNode.label += '\n' + pp.p.layout_tree.up.left + '/' + pp.p.layout_tree.up.right + '\n' + pp.p._graphNode.x;
 
       if (pp.p._partners.length > 1) {
-        addTmpLine(pp.p, 'partners', { x: (i * 2 - 1) * this.settings.nodeSpacingY / 2, y: 0 }, 'Weitere Partner von ' + getPersonRufname(pp.p));
+        addExtension(pp.p, 'partners', { x: (i * 2 - 1) * this.settings.nodeSpacingY / 2, y: 0 }, 'Weitere Partner von ' + getPersonRufname(pp.p));
       }
       if (pp.p._children.length > 1) {
-        addTmpLine(pp.p, 'children', { x: 0, y: this.settings.nodeSpacingY / 2 }, 'Weitere Kinder von ' + getPersonRufname(pp.p));
+        addExtension(pp.p, 'children', { x: 0, y: this.settings.nodeSpacingY / 2 }, 'Weitere Kinder von ' + getPersonRufname(pp.p));
       }
     });
     if (bothParents) {
@@ -303,13 +303,13 @@ function TreeLayout()
       // pp.p._graphNode.label = getPersonRufname(pp.p) + '\n' + i;
 
       if (pp.p._parents.length) {
-        addTmpLine(pp.p, 'parents', { x: 0, y: -this.settings.nodeSpacingY / 2 }, 'Eltern von ' + getPersonRufname(pp.p));
+        addExtension(pp.p, 'parents', { x: 0, y: -this.settings.nodeSpacingY / 2 }, 'Eltern von ' + getPersonRufname(pp.p));
       }
       if (pp.p._partners.length > 1) {
-        addTmpLine(pp.p, 'partners', { x: (p.layout_tree.down.reversePartnersAndChildren ? -1 : 1) * this.settings.nodeSpacingY / 2, y: 0 }, 'Weitere Partner von ' + getPersonRufname(pp.p));
+        addExtension(pp.p, 'partners', { x: (p.layout_tree.down.reversePartnersAndChildren ? -1 : 1) * this.settings.nodeSpacingY / 2, y: 0 }, 'Weitere Partner von ' + getPersonRufname(pp.p));
       }
       if (pp.p._children.length > pp.c._children.length) {
-        addTmpLine(pp.p, 'children', { x: 0, y: this.settings.nodeSpacingY / 2 }, 'Weitere Kinder von ' + getPersonRufname(pp.p));
+        addExtension(pp.p, 'children', { x: 0, y: this.settings.nodeSpacingY / 2 }, 'Weitere Kinder von ' + getPersonRufname(pp.p));
       }
     });
     let x = p._graphNode.x - p.layout_tree.down.childrenLeft * 2 * this.settings.nodeSpacingX;

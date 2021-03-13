@@ -38,6 +38,7 @@ define('CAMERA_MOBILE', 'm');
 define('STORAGE_DIR', 'storage');
 define('STORAGE_FILE', 'storage.yml');
 define('PERSONS', 'persons');
+define('DOPPELGANGERS', 'doppelgangers');
 define('CONNECTIONS', 'connections');
 
 define('COMMIT_MERGE_TIME_THRESH', 3600);
@@ -47,7 +48,7 @@ define('CD_STORAGE_DIR', 'cd ' . STORAGE_DIR . '; ');
 
 $accounts = []; $first_login = false; $account_upgraded = false;
 $settings = [ CAMERA => ['default' => [ 'x' => 0, 'y' => 0, 'z' => 1] ] ];
-$data = [ PERSONS => [], CONNECTIONS => [] ];
+$data = [ PERSONS => [], DOPPELGANGERS => [], CONNECTIONS => [] ];
 
 $server_url = substr($_SERVER["PHP_SELF"], 0, 1 + strrpos($_SERVER["PHP_SELF"], '/'));
 
@@ -364,6 +365,14 @@ if (isset($_GET[ACTION])) {
         $ret = 'm ' . implode(', ', $ts);
       }
       break;
+
+		  case 'addDoppelganger':
+			{
+				$d['t'] = $t;
+				$data[DOPPELGANGERS][] = $d;
+				$ret = 'p ' . $t;
+			}
+			break;
 
       case 'addConnection':
       {
@@ -845,6 +854,10 @@ if ($_SESSION[TYPE] === ADMIN_) {
   </div>
 
   <div id="person-form" class="box box-padding hidden">
+    <div id="person-form-doppelganger" class="box-row opt opt-new BETA">
+      <h2>Doppelgänger</h2>
+      <button id="person-form-doppelganger-add" class="button-border-full">Einen Doppelgänger von <span></span> erstellen</button>
+    </div>
     <h2 class="opt opt-new">Neue Person</h2>
     <h2 class="opt opt-edit"><?=($_SESSION[EDITING] ? 'Person bearbeiten' : 'Personendetails')?></h2>
     <div class="box-row">
@@ -909,9 +922,18 @@ if ($_SESSION[TYPE] === ADMIN_) {
     </div>
   </div>
 
+<?php
+  if ($_SESSION[TYPE] !== ADMIN_) {
+?>
+  <style type="text/css">
+    .BETA { display: none; }
+  </style>
+<?php
+}
+?>
   <script>
     let currentUser = '<?=$_SESSION[USER]?>';
-    let currentUserIsAdmin = <?=($_SESSION[TYPE] === ADMIN_) ? 'true' : 'false'?>;
+    let currentUserIsAdmin = BETA = <?=($_SESSION[TYPE] === ADMIN_) ? 'true' : 'false'?>;
     let currentUserIsViewer = <?=($_SESSION[TYPE] === VIEWER_) ? 'true' : 'false'?>;
     let currentUserIsEditing = <?=$_SESSION[EDITING] ? 'true' : 'false'?>;
     let editingTimeout = <?=$_SESSION[EDITING] ?: '0'?>;

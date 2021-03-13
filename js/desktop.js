@@ -4,14 +4,28 @@ s.bind('hovers', e =>
   // console.log(e);
   e.data.enter.nodes.forEach(n =>
   {
-    if (!isTmpGraphElement(n.id)) {
-      n.label = getPersonExtendedDisplayString(getDataPerson(n.id));
+    let p = null;
+    if (isPerson(n)) {
+      p = n._my.p;
+    }
+    if (isDoppelganger(n)) {
+      p = n._my.d._p;
+    }
+    if (p !== null) {
+      n.label = getPersonExtendedDisplayString(p);
     }
   });
   e.data.leave.nodes.forEach(n =>
   {
-    if (!isTmpGraphElement(n.id)) {
-      n.label = getPersonRufname(getDataPerson(n.id));
+    let p = null;
+    if (isPerson(n)) {
+      p = n._my.p;
+    }
+    if (isDoppelganger(n)) {
+      p = n._my.d._p;
+    }
+    if (p !== null) {
+      n.label = getPersonRufname(p);
     }
   });
 
@@ -129,7 +143,6 @@ let cdcStage = clickDoubleClick(
   e =>
   {
     console.log(['doubleClick', e]);
-    deselectAll();
     startNewPerson(e);
   });
 

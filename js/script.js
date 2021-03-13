@@ -139,7 +139,7 @@ let CONNECTION_PREVIEW = 'connection-preview';
 
 let data = {
   settings: { camera: { x: 0, y: 0, z: 0 }},
-  graph: { persons: [], connections: [] },
+  graph: { persons: [], doppelgangers: [], connections: [] },
   log: [],
   currentHash: '' };
 
@@ -237,22 +237,26 @@ function restartEditingStopTimer(timestamp = null)
 function getDataPerson(t)
 {
   let person = null;
-  data.graph.persons.forEach(d => { if (d.t == t) person = d; });
+  data.graph.persons.forEach(p => { if (p.t == t) person = p; });
   return person;
 }
 function getDataPersonIndex(t)
 {
-  return data.graph.persons.findIndex(d => d.t == t);
+  return data.graph.persons.findIndex(p => p.t == t);
+}
+function getDataDoppelganger(t)
+{
+  return data.graph.doppelgangers.findIndex(d => d.t == t);
 }
 function getDataConnection(t)
 {
   let connection = null;
-  data.graph.connections.forEach(d => { if (d.t == t) connection = d; });
+  data.graph.connections.forEach(c => { if (c.t == t) connection = c; });
   return connection;
 }
 function getDataConnectionIndex(t)
 {
-  return data.graph.connections.findIndex(d => d.t == t);
+  return data.graph.connections.findIndex(c => c.t == t);
 }
 
 function deleteDataPerson(t)
@@ -407,10 +411,29 @@ function isChildConnectionNode(p_t)
 {
   return (typeof p_t === 'string') && p_t.includes('-');
 }
-function isTmpGraphElement(p_t)
+
+function isPerson(n)
 {
-  return (typeof p_t === 'string') && p_t[0] === '*';
+  return 'isPerson' in n._my;
 }
+function isDoppelganger(n)
+{
+  return 'isDoppelganger' in n._my;
+}
+function isPersonConnection(e)
+{
+  return 'isPersonConnection' in e._my;
+}
+function isChildConnection(e)
+{
+  return 'isChildConnection' in e._my;
+}
+function isExtension(n_or_e)
+{
+  return 'isExtension' in n_or_e._my;
+  // return (typeof n_or_e === 'string') && graphElement[0] === '*';
+}
+
 function getDataChildConnections(c)
 {
   return getDataPersonConnections(createChildConnectionNodeId(c.p1, c.p2));
@@ -535,6 +558,20 @@ function applyLoadedData(loadedData, addLogItems, adjustCamera)
     }
   });
   logAddPerson = true;
+
+  logAddDoppelganger = addLogItems ? 3 : false;
+  data.graph.doppelgangers.forEach(d =>
+  {
+    addDoppelganger(d, false, false, true, false);
+    if (logAddDoppelganger) {
+      --logAddDoppelganger;
+      if (!logAddDoppelganger) {
+        console.log('...');
+      }
+    }
+  });
+  logAddDoppelganger = true;
+
   logAddConnection = addLogItems ? 3 : false;
   data.graph.connections.forEach(c =>
   {
@@ -592,9 +629,15 @@ function prepareGraphData()
     p._children = [];
     p._partners = [];
     p._other = [];
+    p._doppelgangers = [];
     nodeCenterY += p.y;
   });
   nodeCenterY /= data.graph.persons.length;
+  data.graph.doppelgangers.forEach(d =>
+  {
+    d._p = getDataPerson(d.p);
+    d._p._doppelgangers.push(d);
+  });
   data.graph.connections.forEach(c =>
   {
     c._persons = [];
@@ -1053,6 +1096,13 @@ function startNewPerson(e)
     updateDateValue(personMenuBirthDay, personMenuBirthMonth, personMenuBirthYear);
     updateDateValue(personMenuDeathDay, personMenuDeathMonth, personMenuDeathYear);
     showForm(personMenuForm, 'opt-new', true);
+    if (activeState.nodes().length === 1 && activeState.edges().length === 0) {
+      personMenuDoppelgangerPerson.innerHTML = activeState.nodes()[0].label;
+      personMenuDoppelganger.classList.remove('hidden');
+    }
+    else {
+      personMenuDoppelganger.classList.add('hidden');
+    }
   };
   if (isMobile) {
     setTimeout(fn, settings.mobileGraphClickDelay);
@@ -1124,6 +1174,7 @@ function showPersonInfo(t)
       personMenuDeathYear.disabled = true;
       personMenuNote.disabled = true;
     }
+    personMenuDoppelganger.classList.add('hidden');
     showForm(personMenuForm, 'opt-edit', currentUserCanEdit());
   };
   if (isMobile) {
@@ -1239,6 +1290,10 @@ function addPerson(p, toData, toServer, toGraph, refreshGraph, doneCallback = nu
       toGraph: !toGraph ? null : () =>
       {
         s.graph.addNode({
+            _my: {
+              isPerson: true,
+              p: p
+            },
             id: p.t,
             x: p.x,
             y: p.y,
@@ -1330,6 +1385,79 @@ function movePersons(n_id, toData, toServer, toGraph, refreshGraph, alignNodesTo
       toGraph: null,
       refreshGraph: refreshGraph
     }, log);
+  if (toServer) {
+    restartEditingStopTimer();
+  }
+}
+
+
+// doppelgangers
+// ------------------------------------
+let personMenuDoppelganger = document.getElementById('person-form-doppelganger');
+let personMenuDoppelgangerAdd = document.getElementById('person-form-doppelganger-add');
+let personMenuDoppelgangerPerson = personMenuDoppelgangerAdd.querySelector('span');
+
+personMenuDoppelgangerAdd.addEventListener('click', e =>
+{
+  if (currentUserCanEdit()) {
+    console.log('click person-form-doppelganger-add');
+    hideForm(personMenuForm);
+    let personPreview = s.graph.nodes(PERSON_PREVIEW);
+    let x = personPreview.x;
+    let y = personPreview.y;
+    deletePerson(PERSON_PREVIEW, false, false, true, false);
+    addDoppelganger({
+        x: x,
+        y: y,
+        p: activeState.nodes()[0].id
+      },
+      true, true, true, true,
+      (p) =>
+      {
+        deselectAll(e, false);
+        activeState.addNodes(p.t);
+        s.refresh();
+      });
+  }
+});
+
+let logAddDoppelganger = true;
+function addDoppelganger(d, toData, toServer, toGraph, refreshGraph, doneCallback = null)
+{
+  toServerDataGraph('addDoppelganger', d, {
+    toServer: !toServer ? null : response =>
+    {
+      response = addLogItemFromServerResponse(response);
+      d.t = response[0].substr(2);
+    },
+    toData: !toData ? null : d => data.graph.doppelgangers.push(d),
+    toGraph: !toGraph ? null : () =>
+    {
+      let p = getDataPerson(d.p);
+      s.graph.addNode({
+          _my: {
+            isDoppelganger: true,
+            d: d
+          },
+          id: d.t,
+          x: d.x,
+          y: d.y,
+          label: getPersonRufname(p),
+          size: settings.nodeSize * .7,
+          color: getNodeColorFromPerson(p),
+          labelAlignment: (d.y < nodeCenterY) ? 'top' : 'bottom' });
+    },
+    refreshGraph: refreshGraph,
+    doneCallback: d =>
+    {
+      if (toGraph) {
+        d._graphNode = s.graph.nodes(d.t);
+      }
+      if (doneCallback) {
+        doneCallback(d);
+      }
+    }
+  }, logAddDoppelganger);
   if (toServer) {
     restartEditingStopTimer();
   }
@@ -1565,13 +1693,18 @@ approveDeleteOrCancelKeys(
 let logAddConnection = true;
 function addConnection(c, toData, toServer, toGraph, refreshGraph, doneCallback = null)
 {
-  if (toGraph && isChildConnectionNode(c.p1)) {
+  let isChildConnection = isChildConnectionNode(c.p1);
+  if (toGraph && isChildConnection) {
     if (!s.graph.nodes(c.p1)) {
       let p1 = getParentTsFromChildConnectionNode(c.p1);
       let p1_1 = getDataPerson(p1[0]);
       let p1_2 = getDataPerson(p1[1]);
       let p12 = getChildConnectionNodePosition(p1_1, p1_2);
       s.graph.addNode({
+          _my: {
+            isChildConnectionNode: true,
+            c: c
+          },
           id: c.p1,
           x: p12.x,
           y: p12.y,
@@ -1589,14 +1722,22 @@ function addConnection(c, toData, toServer, toGraph, refreshGraph, doneCallback 
       toData: !toData ? null : () => data.graph.connections.push(c),
       toGraph: !toGraph ? null : () =>
       {
+        let _my = { c: c };
+        if (isChildConnection) {
+          _my.isChildConnection = true;
+        }
+        else {
+          _my.isPersonConnection = true;
+        }
         s.graph.addEdge({
+            _my: _my,
             id: c.t,
             source: c.p1,
             target: c.p2,
             label: c.r,
             size: settings.edgeSize,
             type: getConnectionRelationSettings(c.r).lineType,
-            color: getEdgeColorFromConnection(c) });
+            color: getEdgeColorFromConnection(c)});
       },
       refreshGraph: refreshGraph,
       doneCallback: c =>
@@ -1656,30 +1797,38 @@ function deleteConnection(c_t, toData = true, toServer = true, toGraph = true, r
   }
 }
 
-tmpNodes = [];
-tmpEdges = [];
+let extensionNodes = [];
+let extensionEdges = [];
 
-function addTmpLine(p, id, offset_xy, label)
+function addExtension(p, id, offset_xy, label)
 {
   let t_p = '*' + p.t + '-' + id + '-p';
   let t_c = '*' + p.t + '-' + id + '-c';
-  tmpNodes.push(t_p);
-  tmpEdges.push(t_c);
+  extensionNodes.push(t_p);
+  extensionEdges.push(t_c);
   s.graph.addNode({
-    id: t_p,
-    x: p._graphNode.x + offset_xy.x,
-    y: p._graphNode.y + offset_xy.y,
-    size: .01 * settings.nodeSize,
-    color: '#ddd'
+      _my: {
+        isExtension: true,
+        p: p
+      },
+      id: t_p,
+      x: p._graphNode.x + offset_xy.x,
+      y: p._graphNode.y + offset_xy.y,
+      size: .01 * settings.nodeSize,
+      color: '#ddd'
   });
   s.graph.addEdge({
-    id: t_c,
-    source: p.t,
-    target: t_p,
-    label: label,
-    size: settings.edgeSize,
-    type: 'extension',
-    color: '#ddd'
+      _my: {
+        isExtension: true,
+        p: p
+      },
+      id: t_c,
+      source: p.t,
+      target: t_p,
+      label: label,
+      size: settings.edgeSize,
+      type: 'extension',
+      color: '#ddd'
   });
 }
 
@@ -1698,7 +1847,7 @@ function bindDefaultViewerEvents()
   {
     let n_id = e.data.node.id;
     deselectAll(null, false, [n_id]);
-    if (isChildConnectionNode(n_id) || isTmpGraphElement(n_id)) {
+    if (!isPerson(e.data.node)) {
       return;
     }
     activeState.addNodes(n_id);
@@ -1707,8 +1856,7 @@ function bindDefaultViewerEvents()
   },
   e =>
   {
-    let n_id = e.data.node.id;
-    if (isChildConnectionNode(n_id) || isTmpGraphElement(n_id)) {
+    if (!isPerson(e.data.node)) {
       return;
     }
     if (!currentLayoutId) {
@@ -1716,7 +1864,7 @@ function bindDefaultViewerEvents()
     }
     else {
       deselectAll();
-      layouts[currentLayoutId].apply(n_id);
+      layouts[currentLayoutId].apply(e.data.node.id);
     }
   });
   s.bind('clickNode', cdcNode.click.bind(cdcNode));
@@ -1726,7 +1874,7 @@ function bindDefaultViewerEvents()
   {
     let e_id = e.data.edge.id;
     deselectAll(null, false, [e_id]);
-    if (isTmpGraphElement(e_id)) {
+    if (isExtension(e.data.edge)) {
       // activeState.addNodes(e.data.edge.source);
       // s.refresh();
       layouts[currentLayoutId].apply(e.data.edge.source);
