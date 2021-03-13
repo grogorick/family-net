@@ -436,13 +436,16 @@ html_start();
     --><div id="mobile-action-new-person" class="button mobile-action-new-person" style=""></div><!--
     --><div id="mobile-action-new-connection" class="button mobile-action-new-connection" style=""><span></span></div><!--
     --><div id="mobile-action-move-person" class="button mobile-action-move-person" style=""></div><!--
-    --><div id="mobile-action-select-tree" class="button" style="">tree</div><!--
     <?php } ?>-->
   </div>
 
   <div id="account" class="box mobile-inverse-hidden">
     <div id="mobile-menu-close" class="button mobile-only hidden-toggle" data-hidden-toggle-target="#account">X</div><!--
     --><span id="account-name"><?=$_SESSION[USER]?></span><!--
+    --><hr class="mobile-only" /><!--
+    --><div id="mobile-switch-layout-net" class="button mobile-only">Netz</div><!--
+    --><div id="mobile-switch-layout-tree" class="button mobile-only">Baum</div><!--
+    --><div id="mobile-switch-layout-treeYearBased" class="button mobile-only">Jahresbaum</div><!--
     --><hr class="mobile-only" /><!--
     <?php
       if ($_SESSION[TYPE] !== VIEWER_ && !$useLayout) {
@@ -472,12 +475,12 @@ $tmpLayout = isset($_GET['layout']) ? $_GET['layout'] . (isset($_GET['yearBased'
 ?>
   <div id="layouts" class="box box-minimized">
     <div class="box-minimize-buttons">
-      <button class="box-restore desktop-only" title="Layouts">L</button>
+      <button class="box-restore desktop-only" title="Layouts">D</button>
       <button class="box-minimize"><?=$box_close_minimize_symbol?></button>
     </div>
-    <button class="<?=$layout_class_netz?>" data-url="<?=$server_url?>">Netz</button>
-    <button class="<?=$layout_class_tree?>" data-url="<?=$server_url?>?layout=tree">Baum</button>
-    <button class="<?=$layout_class_tree_yearBased?>" data-url="<?=$server_url?>?layout=tree&yearBased">Jahresbaum</button>
+    <button id="switch-layout-net" class="<?=$layout_class_netz?>" data-url="<?=$server_url?>">Netz</button>
+    <button id="switch-layout-tree" class="<?=$layout_class_tree?>" data-url="<?=$server_url?>?layout=tree">Baum</button>
+    <button id="switch-layout-treeYearBased" class="<?=$layout_class_tree_yearBased?>" data-url="<?=$server_url?>?layout=tree&yearBased">Jahresbaum</button>
   </div>
 <?php
 
@@ -678,31 +681,45 @@ if ($_SESSION[TYPE] === ADMIN_) {
             <li>Das Detailfenster wird angezeigt</li>
           </ul>
         </li>
-        <li>Stammbaum einer Person hervorheben:
+        <li>Darstellungen:
           <ul>
-          <?php if (!$is_mobile) { ?>
-            <li><i>Doppelklick</i> auf die gewünschte Person</li>
+            <li>Netz
+              <ul>
+                <li>Zeigt alle eingetragenen Personen und die Verbindungen zwischen ihnen.</li>
+                <li>Nur in dieser Darstellung kann das Netz bearbeitet werden.</li>
+              </ul>
+            </li>
+            <li>Baum
+              <ul>
+                <li>Zeigt den Stammbaum einer Person, inklusive Partner der Kinder.</li>
+                <li>Nicht dargestellte, weitere Personen werden durch angedeutete (graue) Verbindungen angezeigt.</li>
+              </ul>
+            </li>
+            <li>Jahresbaum
+              <ul>
+                <li>Wie die <i>Baum</i>-Darstellung, aber die vertikale Position wird durch das Geburtsjahr bestimmt.</li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+        <li>Darstellung wechseln:
+          <ul>
+        <?php if (!$is_mobile) { ?>
+            <li>Oben auf <span class="help-button">D</span> klicken, um die Auswahl zu öffnen</li>
+            <li>Die gewünschte Darstellung auswählen</li>
           <?php } else { ?>
-            <li>Oben <span class="help-button">tree</span> auswählen</li>
-            <li>Die gewünschte Person antippen</li>
+            <li>Oben aus dem Menü die gewünschte Darstellung auswählen</li>
           <?php } ?>
-            <li>In direkter Linie verwandte Personen werden markiert</li>
           </ul>
         </li>
-		  <?php if (!$is_mobile) { ?>
-        <li>Mehrere Personen auswählen:
+        <li>Stammbaum einer Person auswählen/hervorheben:
           <ul>
-            <li><?=$modKeys?> gedrückt halten</li>
-            <li>Personen nacheinander anklicken</li>
-          </ul>
-          oder
-          <ul>
-            <li><?=$bothModKeys?> gedrückt halten</li>
-            <li>Personen mit der gedrückter Maustaste einkreisen</li>
+            <li><i>Doppel<?=$klickenTippen?></i> auf die gewünschte Person</li>
+            <li>In direkter Linie verwandte Personen werden angezeigt/markiert</li>
           </ul>
         </li>
-	    <?php } ?>
       </ul>
+
       <?php if ($_SESSION[TYPE] !== VIEWER_) { ?>
       <h2 class="collapse-trigger collapsed">Bearbeiten</h2>
       <ul>
@@ -741,7 +758,20 @@ if ($_SESSION[TYPE] === ADMIN_) {
             <li><span class="help-button">Hinzufügen</span> <?=$klickenTippen?></li>
           </ul>
         </li>
-        <li>Eine Person verschieben:
+      <?php if (!$is_mobile) { ?>
+        <li>Person/en auswählen:
+          <ul>
+            <li><?=$modKeys?> gedrückt halten</li>
+            <li>Eine oder mehrere Personen nacheinander anklicken</li>
+          </ul>
+          oder
+          <ul>
+            <li><?=$bothModKeys?> gedrückt halten</li>
+            <li>Personen mit der gedrückter Maustaste einkreisen</li>
+          </ul>
+        </li>
+      <?php } ?>
+        <li>Person/en verschieben:
           <ul>
           <?php if (!$is_mobile) { ?>
             <li><?=$modKeys?> gedrückt halten</li>

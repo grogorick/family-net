@@ -1,9 +1,26 @@
 
 let mainMenu = document.getElementById('account');
 
+document.getElementById('mobile-switch-layout-net').addEventListener('click', () =>
+{
+  mainMenu.classList.toggle('hidden');
+  document.querySelector('#switch-layout-net').click();
+});
+
+document.getElementById('mobile-switch-layout-tree').addEventListener('click', () =>
+{
+  mainMenu.classList.toggle('hidden');
+  document.querySelector('#switch-layout-tree').click();
+});
+
+document.getElementById('mobile-switch-layout-treeYearBased').addEventListener('click', () =>
+{
+  mainMenu.classList.toggle('hidden');
+  document.querySelector('#switch-layout-treeYearBased').click();
+});
+
 document.getElementById('mobile-help').addEventListener('click', () =>
 {
-  console.log('mobile-help');
   mainMenu.classList.toggle('hidden');
   document.querySelector('#help .box-restore').click();
 });
