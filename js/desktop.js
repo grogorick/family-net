@@ -2,8 +2,19 @@
 s.bind('hovers', e =>
 {
   // console.log(e);
-  e.data.enter.nodes.forEach(n => n.label = getPersonExtendedDisplayString(getDataPerson(n.id)));
-  e.data.leave.nodes.forEach(n => n.label = getPersonRufname(getDataPerson(n.id)));
+  e.data.enter.nodes.forEach(n =>
+  {
+    if (!isTmpGraphElement(n.id)) {
+      n.label = getPersonExtendedDisplayString(getDataPerson(n.id));
+    }
+  });
+  e.data.leave.nodes.forEach(n =>
+  {
+    if (!isTmpGraphElement(n.id)) {
+      n.label = getPersonRufname(getDataPerson(n.id));
+    }
+  });
+
   if (e.data.current.nodes.length) {
     s.settings('enableEdgeHovering', false);
   }

@@ -422,6 +422,8 @@ html_start();
   <script src="js/linkurious/lasso/sigma.plugins.lasso.js<?=V_?>"></script>
   <script src="js/edges.dashedarrow.js<?=V_?>"></script>
   <script src="js/edgehovers.dashedarrow.js<?=V_?>"></script>
+  <script src="js/edges.extension.js<?=V_?>"></script>
+  <script src="js/edgehovers.extension.js<?=V_?>"></script>
 </head>
 <body class="<?=$is_mobile ? 'mobile-client' : 'desktop-client'?>">
   <div id="graph"></div>

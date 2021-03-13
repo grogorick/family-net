@@ -88,6 +88,7 @@ let s = new sigma({
     labelHoverShadow: true,
     labelHoverShadowColor: '#ddd',
     labelSize: 'proportional',
+    defaultLabelSize: 12,
     labelSizeRatio: isMobile ? 1.5 : 1.7,
     labelThreshold: isMobile ? 3 : 5,
 
@@ -113,7 +114,10 @@ let s = new sigma({
     // connection label
     edgeLabelThreshold: 10,
     edgeLabelHoverShadow: true,
-    edgeLabelHoverShadowColor: '#ddd'
+    edgeLabelHoverShadowColor: '#ddd',
+    edgeLabelSize: 'proportional',
+    defaultEdgeLabelSize: 12,
+    edgeLabelSizePowRatio: 5
   }
 });
 
@@ -1211,6 +1215,7 @@ let logAddPerson = true;
 function addPerson(p, toData, toServer, toGraph, refreshGraph, doneCallback = null)
 {
   if ('n' in p) {
+    // console.log('convert ' + p.n);
     p.f = '';
     p.l = '';
     p.m = '';
@@ -1664,7 +1669,7 @@ function addTmpLine(p, id, offset_xy, label)
     id: t_p,
     x: p._graphNode.x + offset_xy.x,
     y: p._graphNode.y + offset_xy.y,
-    size: .1,
+    size: .01 * settings.nodeSize,
     color: '#ddd'
   });
   s.graph.addEdge({
@@ -1673,7 +1678,7 @@ function addTmpLine(p, id, offset_xy, label)
     target: t_p,
     label: label,
     size: settings.edgeSize,
-    type: 'line',
+    type: 'extension',
     color: '#ddd'
   });
 }
@@ -1722,8 +1727,9 @@ function bindDefaultViewerEvents()
     let e_id = e.data.edge.id;
     deselectAll(null, false, [e_id]);
     if (isTmpGraphElement(e_id)) {
-      activeState.addNodes(e.data.edge.source);
-      s.refresh();
+      // activeState.addNodes(e.data.edge.source);
+      // s.refresh();
+      layouts[currentLayoutId].apply(e.data.edge.source);
       return;
     }
     activeState.addEdges(e_id);

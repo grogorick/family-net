@@ -209,17 +209,24 @@ function TreeLayout()
     if (bothParents) {
       p._parents[0].pc._graphEdge.hidden = false;
     }
-    p._parents.forEach(pp =>
+    p._parents.forEach((pp, i) =>
     {
       pp.p._graphNode.hidden = false;
       pp.c._graphEdge.hidden = false;
       this.layoutUp(pp.p);
       // pp.p._graphNode.label += '\n' + pp.p.layout_tree.up.left + '/' + pp.p.layout_tree.up.right + '\n' + pp.p._graphNode.x;
+
+      if (pp.p._partners.length > 1) {
+        addTmpLine(pp.p, 'partners', { x: (i * 2 - 1) * this.settings.nodeSpacingY / 2, y: 0 }, 'Weitere Partner von ' + getPersonRufname(pp.p));
+      }
+      if (pp.p._children.length > 1) {
+        addTmpLine(pp.p, 'children', { x: 0, y: this.settings.nodeSpacingY / 2 }, 'Weitere Kinder von ' + getPersonRufname(pp.p));
+      }
     });
     if (bothParents) {
       moveChildConnectionNodes([p._parents[0].p._graphNode]);
-      // p._graphNode.x = p._parents[0].c._graphCCNode.x;
-      p._parents[0].c._graphCCNode.x = p._graphNode.x;
+      p._graphNode.x = p._parents[0].c._graphCCNode.x;
+      // p._parents[0].c._graphCCNode.x = p._graphNode.x;
     }
   };
 
@@ -295,12 +302,14 @@ function TreeLayout()
       pp.c._graphEdge.hidden = false;
       // pp.p._graphNode.label = getPersonRufname(pp.p) + '\n' + i;
 
-      let tmpParents = pp.p._parents.filter(ppp => !('layout_tree' in ppp.p) || !('down' in ppp.p.layout_tree));
-      if (tmpParents.length) {
-        addTmpLine(pp.p, 'parents', { x: 0, y: -this.settings.nodeSpacingY / 2 }, 'Stammbaum von ' + getPersonRufname(pp.p));
+      if (pp.p._parents.length) {
+        addTmpLine(pp.p, 'parents', { x: 0, y: -this.settings.nodeSpacingY / 2 }, 'Eltern von ' + getPersonRufname(pp.p));
       }
       if (pp.p._partners.length > 1) {
         addTmpLine(pp.p, 'partners', { x: (p.layout_tree.down.reversePartnersAndChildren ? -1 : 1) * this.settings.nodeSpacingY / 2, y: 0 }, 'Weitere Partner von ' + getPersonRufname(pp.p));
+      }
+      if (pp.p._children.length > pp.c._children.length) {
+        addTmpLine(pp.p, 'children', { x: 0, y: this.settings.nodeSpacingY / 2 }, 'Weitere Kinder von ' + getPersonRufname(pp.p));
       }
     });
     let x = p._graphNode.x - p.layout_tree.down.childrenLeft * 2 * this.settings.nodeSpacingX;
@@ -320,7 +329,7 @@ function TreeLayout()
       ? pp.c._children.slice(0).reverse().forEach(layoutChild)
       : pp.c._children.forEach(layoutChild));
     tmpChildren.forEach(layoutChild);
-    moveChildConnectionNodes(p._partners.map(pp => pp.p._graphNode));
+    moveChildConnectionNodes([p._graphNode]);
   };
 
   this.yearBasedOffsetY = (p1_date, p2_date) =>
