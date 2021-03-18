@@ -322,6 +322,19 @@ button.selected, .button.selected {
   display: inline-block;
 }
 
+.search-button::before {
+  content: '\26B2';
+  display: inline-block;
+  -webkit-transform: rotate(-45deg);
+  -moz-transform: rotate(-45deg);
+  -o-transform: rotate(-45deg);
+  transform: rotate(-45deg);
+}
+#search-input {
+  border-top: none;
+  border-bottom: none;
+}
+
 .desktop-client #layouts.box {
   top: 40pt;
   left: 10pt;

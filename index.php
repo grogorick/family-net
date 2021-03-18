@@ -469,7 +469,15 @@ html_start();
     --><div id="mobile-help" class="button mobile-only">Hilfe</div><!--
     --><hr class="mobile-only" /><!--
     --><div id="mobile-admin" class="button mobile-only">Admin</div><!--
-    --><a href="<?=$server_url?>?logout" class="button" id="logout">Abmelden</a>
+    --><a id="logout" href="<?=$server_url?>?logout" class="button">Abmelden</a><!--
+
+    --><div id="search-desktop" class="desktop-only">
+        <span id="search-toggle-show" class="button search-button hidden-toggle focus-toggle" data-hidden-toggle-target="#search-toggle-show,#search-box" data-focus-toggle-target="#search-input" title="Suchen"></span>
+        <div id="search-box" class="hidden" style="display: inline">
+          <input id="search-input" placeholder="Suchen nach..." />
+          <span id="search-toggle-hide" class="button hidden-toggle" data-hidden-toggle-target="#search-toggle-show,#search-box" title="Suche schließen">&lt;</span>
+        </div>
+    </div>
   </div>
 <?php
 

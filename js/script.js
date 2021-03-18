@@ -1897,6 +1897,21 @@ function bindDefaultViewerEvents()
   s.bind('coordinatesUpdated', () => { s.camera.angle = 0; });
 }
 
+let searchInput = document.querySelector('#search-input');
+searchInput.addEventListener('input', e =>
+{
+  let search = searchInput.value;
+  activeState.dropNodes();
+  activeState.dropEdges();
+  if (search.includes('*')) {
+    let re = new RegExp(search.replaceAll(/[.+?|()]/g, '\\$0').replaceAll('*', '.+'));
+    activeState.addNodes(data.graph.persons.filter(p => (p.f + p.l + p.m + p.o).match(re)).map(p => p.t));
+  }
+  else {
+    activeState.addNodes(data.graph.persons.filter(p => (p.f + p.l + p.m + p.o).includes(search)).map(p => p.t));
+  }
+});
+
 document.querySelectorAll('#layouts > button').forEach(btn =>
 {
   btn.addEventListener('click', e =>

@@ -223,9 +223,21 @@ document.querySelectorAll('.hidden-toggle').forEach(el =>
   {
     let targetSelector = el.getAttribute('data-hidden-toggle-target');
     if (targetSelector) {
+      let targets = document.querySelectorAll(targetSelector);
+      targets.forEach(target => target.classList.toggle('hidden'));
+    }
+  });
+});
+
+document.querySelectorAll('.focus-toggle').forEach(el =>
+{
+  el.addEventListener('click', e =>
+  {
+    let targetSelector = el.getAttribute('data-focus-toggle-target');
+    if (targetSelector) {
       let target = document.querySelector(targetSelector);
       if (target) {
-        target.classList.toggle('hidden');
+        target.focus();
       }
     }
   });
