@@ -858,8 +858,11 @@ if ($_SESSION[TYPE] === ADMIN_) {
       <h2>Doppelgänger</h2>
       <button id="person-form-doppelganger-add" class="button-border-full">Einen Doppelgänger von <span></span> erstellen</button>
     </div>
-    <h2 class="opt opt-new">Neue Person</h2>
-    <h2 class="opt opt-edit"><?=($_SESSION[EDITING] ? 'Person bearbeiten' : 'Personendetails')?></h2>
+    <h2>
+      <span class="opt opt-new">Neue Person</span>
+      <span class="opt opt-edit"><?=($_SESSION[EDITING] ? 'Person bearbeiten' : 'Personendetails')?></span>
+    </h2>
+    <span id="person-form-person-url" class="box-row"></span>
     <div class="box-row">
       <label for="person-form-first-name">Vorname/n: </label>
       <input id="person-form-first-name" type="text" autocomplete="off" placeholder="(Spitzname) Vorname/n" <?=($_SESSION[EDITING] ? '' : 'disabled')?> />
@@ -888,8 +891,10 @@ if ($_SESSION[TYPE] === ADMIN_) {
   </div>
 
   <div id="connection-form" class="box box-padding hidden">
-    <h2 class="opt opt-new opt-new-child">Neue Verbindung</h2>
-    <h2 class="opt opt-edit"><?=($_SESSION[EDITING] ? 'Verbindung bearbeiten' : 'Verbindungsdetails')?></h2>
+    <h2>
+      <span class="opt opt-new opt-new-child">Neue Verbindung</span>
+      <span class="opt opt-edit"><?=($_SESSION[EDITING] ? 'Verbindung bearbeiten' : 'Verbindungsdetails')?></span>
+    </h2>
     <i id="connection-form-persons" class="opt opt-edit"></i>
     <div class="box-row">
       <label for="connection-form-relation">Art: </label>
@@ -932,6 +937,7 @@ if ($_SESSION[TYPE] === ADMIN_) {
 }
 ?>
   <script>
+    let serverURL = '<?=$server_url?>';
     let currentUser = '<?=$_SESSION[USER]?>';
     let currentUserIsAdmin = BETA = <?=($_SESSION[TYPE] === ADMIN_) ? 'true' : 'false'?>;
     let currentUserIsViewer = <?=($_SESSION[TYPE] === VIEWER_) ? 'true' : 'false'?>;

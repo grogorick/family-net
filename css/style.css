@@ -141,6 +141,15 @@ button {
   width: 100%
 }
 
+#person-form.box h2 {
+  display: inline-block;
+}
+#person-form.box #person-form-person-url > a {
+  margin-left: 20pt;
+  text-decoration: none;
+  opacity: .5;
+}
+
 #person-form.box label,
 #connection-form.box label {
   width: 30%;
@@ -200,6 +209,7 @@ button, .button {
   color: black;
   text-decoration: none;
   background: transparent;
+  user-select: none;
 }
 button.selected, .button.selected {
   background: radial-gradient(circle, #fff 70%, #eee 90%) !important; /* #f8f8f8 */

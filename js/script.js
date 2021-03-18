@@ -1061,6 +1061,7 @@ function deselectConnections(e = null, refreshGraph = true, except = [])
 // persons
 // ------------------------------------
 let personMenuForm = document.getElementById('person-form');
+let personMenuPersonURL = document.getElementById('person-form-person-url');
 let personMenuFirstName = document.getElementById('person-form-first-name');
 let personMenuLastName = document.getElementById('person-form-last-name');
 let personMenuBirthName = document.getElementById('person-form-birth-name');
@@ -1114,6 +1115,7 @@ function startNewPerson(e)
 
 function clearPersonMenu()
 {
+  personMenuPersonURL.innerHTML = '';
   personMenuFirstName.value = '';
   personMenuLastName.value = '';
   personMenuBirthName.value = '';
@@ -1133,6 +1135,11 @@ function showPersonInfo(t)
     console.log(['showPersonInfo', t]);
     let p = getDataPerson(t);
     let db = splitDate(p.b);
+    let url = document.createElement('a');
+    url.innerHTML = '&#x1F517;';
+    url.href = serverURL + (serverURL.endsWith('/') ? '?' : '&') + 'show=' + p.t;
+    personMenuPersonURL.innerHTML = '';
+    personMenuPersonURL.appendChild(url);
     personMenuFirstName.value = p.f;
     personMenuLastName.value = p.l;
     personMenuBirthName.value = p.m;
@@ -1265,7 +1272,7 @@ approveDeleteOrCancelKeys(
 let logAddPerson = true;
 function addPerson(p, toData, toServer, toGraph, refreshGraph, doneCallback = null)
 {
-  if ('n' in p) {
+  if ('n' in p) {// backward compatibility for old log items with only one name attribute
     // console.log('convert ' + p.n);
     p.f = '';
     p.l = '';
