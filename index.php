@@ -2,7 +2,7 @@
 //phpinfo();
 
 // browser cache fix for scripts and styles
-define('V', 22);
+define('V', 22.5);
 define('V_', '?v=' . V);
 
 define('RUNTIME_DIR', 'runtime');
@@ -38,7 +38,6 @@ define('CAMERA_MOBILE', 'm');
 define('STORAGE_DIR', 'storage');
 define('STORAGE_FILE', 'storage.yml');
 define('PERSONS', 'persons');
-define('DOPPELGANGERS', 'doppelgangers');
 define('CONNECTIONS', 'connections');
 
 define('COMMIT_MERGE_TIME_THRESH', 3600);
@@ -48,7 +47,7 @@ define('CD_STORAGE_DIR', 'cd ' . STORAGE_DIR . '; ');
 
 $accounts = []; $first_login = false; $account_upgraded = false;
 $settings = [ CAMERA => ['default' => [ 'x' => 0, 'y' => 0, 'z' => 1] ] ];
-$data = [ PERSONS => [], DOPPELGANGERS => [], CONNECTIONS => [] ];
+$data = [ PERSONS => [], CONNECTIONS => [] ];
 
 $server_url = substr($_SERVER["PHP_SELF"], 0, 1 + strrpos($_SERVER["PHP_SELF"], '/'));
 
@@ -365,14 +364,6 @@ if (isset($_GET[ACTION])) {
         $ret = 'm ' . implode(', ', $ts);
       }
       break;
-
-		  case 'addDoppelganger':
-			{
-				$d['t'] = $t;
-				$data[DOPPELGANGERS][] = $d;
-				$ret = 'p ' . $t;
-			}
-			break;
 
       case 'addConnection':
       {

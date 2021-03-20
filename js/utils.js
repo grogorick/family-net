@@ -360,3 +360,30 @@ function splitDate(str)
   return d.map(v => parseInt(v) || '');
 }
 
+function debounce(func, wait, immediate = true)
+{
+  let timeout;
+  return function() {
+    let context = this,
+        args = arguments;
+    let later = function() {
+      timeout = null;
+      if (!immediate) func.apply(context, args);
+    };
+    let callNow = immediate && !timeout;
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+    if (callNow) func.apply(context, args);
+  };
+}
+
+function intersect(a1, a2, ...rest)
+{
+  const a12 = a1.filter(value => a2.includes(value));
+  return rest.length === 0 ? a12 : intersect(a12, ...rest);
+}
+
+function diff(a1, a2)
+{
+  return a1.filter(value => !a2.includes(value));
+}

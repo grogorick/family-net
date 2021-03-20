@@ -152,7 +152,7 @@ let CONNECTION_PREVIEW = 'connection-preview';
 
 let data = {
   settings: { camera: { x: 0, y: 0, z: 0 }},
-  graph: { persons: [], doppelgangers: [], connections: [] },
+  graph: { persons: [], connections: [] },
   log: [],
   currentHash: '' };
 
@@ -257,10 +257,12 @@ function getDataPersonIndex(t)
 {
   return data.graph.persons.findIndex(p => p.t == t);
 }
-function getDataDoppelganger(t)
+
+function isDataPersonDoppelganger(p)
 {
-  return data.graph.doppelgangers.findIndex(d => d.t == t);
+  return 'p' in p;
 }
+
 function getDataConnection(t)
 {
   let connection = null;
@@ -374,11 +376,11 @@ function getPersonFullName(p)
 function getPersonRufname(p)
 {
   let p_n = p.f;
-  let n = p_n.match(/\(([^ ,-?()]+)\)/);
+  let n = p_n.match(/\(([^()]+)\)/);
   if (!n) {
-    n = p_n.match(/[*]\s*([^ ,-?()]+)(,|-|\s|$)/);
+    n = p_n.match(/[*]\s*(([^-,?()]|\s)+)([^-,?()]|\s|$)/);
     if (!n) {
-      n = p_n.match(/^([^ ,-?()]+)(,|-|\s|$)/);
+      n = p_n.match(/^([^ ,?()]+)(,|-|\s|$)/);
     }
   }
   return n ? n[1] : '';
@@ -394,7 +396,7 @@ function getPersonExtendedDisplayString(p)
 
 function getNodeColorFromPerson(p)
 {
-  return 'color' in p ? p.color : (p.t === PERSON_PREVIEW ? settings.nodeColorPreview : ([p.f, p.l, p.m, p.o].some(v => (typeof v === 'string') && v.includes('???')) ? settings.nodeColorWarning : ''));
+  return 'color' in p ? p.color : (p.t === PERSON_PREVIEW ? settings.nodeColorPreview : ([p.f, p.l, p.m, p.o].some(v => (typeof v === 'string') && v.includes('???')) ? settings.nodeColorWarning : settings.nodeColor));
 }
 
 function getEdgeColorFromConnection(c)
@@ -572,19 +574,6 @@ function applyLoadedData(loadedData, addLogItems, adjustCamera)
   });
   logAddPerson = true;
 
-  logAddDoppelganger = addLogItems ? 3 : false;
-  data.graph.doppelgangers.forEach(d =>
-  {
-    addDoppelganger(d, false, false, true, false);
-    if (logAddDoppelganger) {
-      --logAddDoppelganger;
-      if (!logAddDoppelganger) {
-        console.log('...');
-      }
-    }
-  });
-  logAddDoppelganger = true;
-
   logAddConnection = addLogItems ? 3 : false;
   data.graph.connections.forEach(c =>
   {
@@ -638,58 +627,70 @@ function prepareGraphData()
 {
   data.graph.persons.forEach(p =>
   {
-    p._parents = [];
-    p._children = [];
-    p._partners = [];
-    p._other = [];
-    p._doppelgangers = [];
+    preparePerson(p);
     nodeCenterY += p.y;
   });
   nodeCenterY /= data.graph.persons.length;
-  data.graph.doppelgangers.forEach(d =>
-  {
-    d._p = getDataPerson(d.p);
-    d._p._doppelgangers.push(d);
-  });
-  data.graph.connections.forEach(c =>
-  {
-    c._persons = [];
-    c._children = [];
-    let p2 = getDataPerson(c.p2);
-    let isChildConnection = isChildConnectionNode(c.p1);
-    let level = getConnectionRelationSettings(c.r).level;
-    if (isChildConnection || level === 'v') {
-      if (isChildConnection) {
-        let pc = getParentConnectionFromChildConnectionNode(c.p1);
-        getParentTsFromChildConnectionNode(c.p1).map(getDataPerson).forEach(p1 =>
-        {
-          p1._children.push({ p: p2, c: c, pc: pc });
-          p2._parents.push({ p: p1, c: c, pc: pc });
-          c._persons.push(p1);
-        });
-        pc._children.push({ p: p2, c: c });
-      }
-      else {
-        let p1 = getDataPerson(c.p1);
-        p1._children.push({ p: p2, c: c });
-        p2._parents.push({ p: p1, c: c });
+  data.graph.connections.forEach(prepareConnection);
+}
+
+function preparePerson(p)
+{
+  if ('_parents' in p) {
+    return;
+  }
+  p._parents = [];
+  p._children = [];
+  p._partners = [];
+  p._other = [];
+  p._doppelgangers = [];
+  if (isDataPersonDoppelganger(p)) {
+    p._p = getDataPerson(p.p);
+    p._p._doppelgangers.push(p);
+  }
+}
+
+function prepareConnection(c)
+{
+  if ('_persons' in c) {
+    return;
+  }
+  c._persons = [];
+  c._children = [];
+  let p2 = getDataPerson(c.p2);
+  let isChildConnection = isChildConnectionNode(c.p1);
+  let level = getConnectionRelationSettings(c.r).level;
+  if (isChildConnection || level === 'v') {
+    if (isChildConnection) {
+      let pc = getParentConnectionFromChildConnectionNode(c.p1);
+      getParentTsFromChildConnectionNode(c.p1).map(getDataPerson).forEach(p1 =>
+      {
+        p1._children.push({ p: p2, c: c, pc: pc });
+        p2._parents.push({ p: p1, c: c, pc: pc });
         c._persons.push(p1);
-      }
+      });
+      pc._children.push({ p: p2, c: c });
     }
     else {
       let p1 = getDataPerson(c.p1);
-      if (level === 'h') {
-        p1._partners.push({ p: p2, c: c });
-        p2._partners.push({ p: p1, c: c });
-      }
-      else {
-        p1._other.push({ p: p2, c: c });
-        p2._other.push({ p: p1, c: c });
-      }
+      p1._children.push({ p: p2, c: c });
+      p2._parents.push({ p: p1, c: c });
       c._persons.push(p1);
     }
-    c._persons.push(p2);
-  });
+  }
+  else {
+    let p1 = getDataPerson(c.p1);
+    if (level === 'h') {
+      p1._partners.push({ p: p2, c: c });
+      p2._partners.push({ p: p1, c: c });
+    }
+    else {
+      p1._other.push({ p: p2, c: c });
+      p2._other.push({ p: p1, c: c });
+    }
+    c._persons.push(p1);
+  }
+  c._persons.push(p2);
 }
 
 
@@ -1147,6 +1148,12 @@ function showPersonInfo(t)
   {
     console.log(['showPersonInfo', t]);
     let p = getDataPerson(t);
+    if (isDataPersonDoppelganger(p)) {
+      p = p._p;
+    }
+    if (p === null) {
+      console.error('person not found');
+    }
     let db = splitDate(p.b);
     let url = document.createElement('a');
     url.innerHTML = '&#x1F517;';
@@ -1306,32 +1313,38 @@ function addPerson(p, toData, toServer, toGraph, refreshGraph, doneCallback = nu
         response = addLogItemFromServerResponse(response);
         p.t = response[0].substr(2);
       },
-      toData: !toData ? null : p => data.graph.persons.push(p),
+      toData: !toData ? null : () =>
+      {
+        preparePerson(p);
+        data.graph.persons.push(p);
+      },
       toGraph: !toGraph ? null : () =>
       {
+        preparePerson(p);
+        let pp = p;
+        let my = {};
+        if (isDataPersonDoppelganger(p)) {
+          my.isDoppelganger = true;
+          my.d = p;
+          pp = p._p;
+        }
+        else if (p.t !== PERSON_PREVIEW) {
+          my.isPerson = true;
+          my.p = p;
+        }
         s.graph.addNode({
-            _my: {
-              isPerson: true,
-              p: p
-            },
+            _my: my,
             id: p.t,
             x: p.x,
             y: p.y,
-            label: getPersonRufname(p),
+            label: getPersonRufname(pp),
             size: settings.nodeSize,
-            color: getNodeColorFromPerson(p),
+            color: getNodeColorFromPerson(pp),
             labelAlignment: (p.y < nodeCenterY) ? 'top' : 'bottom' });
+        p._graphNode = s.graph.nodes(p.t);
         },
       refreshGraph: refreshGraph,
-      doneCallback: p =>
-      {
-        if (toGraph) {
-          p._graphNode = s.graph.nodes(p.t);
-        }
-        if (doneCallback) {
-          doneCallback(p);
-        }
-      }
+      doneCallback: doneCallback
     }, logAddPerson);
   if (toServer) {
     restartEditingStopTimer();
@@ -1426,7 +1439,7 @@ personMenuDoppelgangerAdd.addEventListener('click', e =>
     let x = personPreview.x;
     let y = personPreview.y;
     deletePerson(PERSON_PREVIEW, false, false, true, false);
-    addDoppelganger({
+    addPerson({
         x: x,
         y: y,
         p: activeState.nodes()[0].id
@@ -1440,48 +1453,6 @@ personMenuDoppelgangerAdd.addEventListener('click', e =>
       });
   }
 });
-
-let logAddDoppelganger = true;
-function addDoppelganger(d, toData, toServer, toGraph, refreshGraph, doneCallback = null)
-{
-  toServerDataGraph('addDoppelganger', d, {
-    toServer: !toServer ? null : response =>
-    {
-      response = addLogItemFromServerResponse(response);
-      d.t = response[0].substr(2);
-    },
-    toData: !toData ? null : d => data.graph.doppelgangers.push(d),
-    toGraph: !toGraph ? null : () =>
-    {
-      let p = getDataPerson(d.p);
-      s.graph.addNode({
-          _my: {
-            isDoppelganger: true,
-            d: d
-          },
-          id: d.t,
-          x: d.x,
-          y: d.y,
-          label: getPersonRufname(p),
-          size: settings.nodeSize * .7,
-          color: getNodeColorFromPerson(p),
-          labelAlignment: (d.y < nodeCenterY) ? 'top' : 'bottom' });
-    },
-    refreshGraph: refreshGraph,
-    doneCallback: d =>
-    {
-      if (toGraph) {
-        d._graphNode = s.graph.nodes(d.t);
-      }
-      if (doneCallback) {
-        doneCallback(d);
-      }
-    }
-  }, logAddDoppelganger);
-  if (toServer) {
-    restartEditingStopTimer();
-  }
-}
 
 
 // connections
@@ -1729,8 +1700,8 @@ function addConnection(c, toData, toServer, toGraph, refreshGraph, doneCallback 
           x: p12.x,
           y: p12.y,
           size: .1,
-          color: settings.edgeColor
-      });
+          color: settings.edgeColor});
+      c._graphCCNode = s.graph.nodes(c.p1);
     }
   }
   toServerDataGraph('addConnection', c, {
@@ -1739,9 +1710,14 @@ function addConnection(c, toData, toServer, toGraph, refreshGraph, doneCallback 
         response = addLogItemFromServerResponse(response);
         c.t = response[0].substr(2);
       },
-      toData: !toData ? null : () => data.graph.connections.push(c),
+      toData: !toData ? null : () =>
+      {
+        prepareConnection(c);
+        data.graph.connections.push(c);
+      },
       toGraph: !toGraph ? null : () =>
       {
+        prepareConnection(c);
         let _my = { c: c };
         if (isChildConnection) {
           _my.isChildConnection = true;
@@ -1758,20 +1734,10 @@ function addConnection(c, toData, toServer, toGraph, refreshGraph, doneCallback 
             size: settings.edgeSize,
             type: getConnectionRelationSettings(c.r).lineType,
             color: getEdgeColorFromConnection(c)});
+        c._graphEdge = s.graph.edges(c.t);
       },
       refreshGraph: refreshGraph,
-      doneCallback: c =>
-      {
-        if (toGraph) {
-          c._graphEdge = s.graph.edges(c.t);
-          if (isChildConnectionNode(c.p1)) {
-            c._graphCCNode = s.graph.nodes(c.p1);
-          }
-        }
-        if (doneCallback) {
-          doneCallback(c);
-        }
-      }
+      doneCallback: doneCallback
     }, logAddConnection);
   if (toServer) {
     restartEditingStopTimer();
@@ -1860,23 +1826,60 @@ if (!currentUserCanEdit()) {
   dragListener.disable();
 }
 
+let tmpActiveNodes = [];
+activeState.bind('activeNodes', e =>
+{
+  let activeNodes = activeState.nodes();
+  let addedNodes = diff(activeNodes, tmpActiveNodes);
+  let droppedNodes = diff(tmpActiveNodes, activeNodes);
+  tmpActiveNodes = activeNodes;
+  let getDoppelgangers = n =>
+  {
+    let ds = [];
+    if (isPerson(n)) {
+      ds = n._my.p._doppelgangers;
+    }
+    else if (isDoppelganger(n)) {
+      ds = n._my.d._p._doppelgangers.slice(0);
+      ds.splice(ds.indexOf(n._my.d), 1);
+      ds.push(n._my.d._p);
+    }
+    return ds;
+  };
+  droppedNodes.forEach(n =>
+  {
+    getDoppelgangers(n).forEach(d =>
+    {
+      delete d._graphNode.outer_border_size;
+    });
+  });
+  addedNodes.forEach(n =>
+  {
+    getDoppelgangers(n).forEach(d =>
+    {
+      d._graphNode.outer_border_size = 1;
+    });
+  });
+  s.refresh();
+});
+
 function bindDefaultViewerEvents()
 {
   let cdcNode = clickDoubleClick(
   e =>
   {
-    let n_id = e.data.node.id;
-    deselectAll(null, false, [n_id]);
-    if (!isPerson(e.data.node)) {
-      return;
+    let n = e.data.node;
+    deselectAll(null, false, [n.id]);
+    if (isPerson(n) || isDoppelganger(n)) {
+      activeState.addNodes(n.id);
+      s.refresh();
+      showPersonInfo(n.id);
     }
-    activeState.addNodes(n_id);
-    s.refresh();
-    showPersonInfo(n_id);
   },
   e =>
   {
-    if (!isPerson(e.data.node)) {
+    let n = e.data.node;
+    if (!isPerson(n) && !isDoppelganger(n)) {
       return;
     }
     if (!currentLayoutId) {
@@ -1884,7 +1887,7 @@ function bindDefaultViewerEvents()
     }
     else {
       deselectAll();
-      layouts[currentLayoutId].apply(e.data.node.id);
+      layouts[currentLayoutId].apply(n.id);
     }
   });
   s.bind('clickNode', cdcNode.click.bind(cdcNode));
@@ -1892,17 +1895,17 @@ function bindDefaultViewerEvents()
 
   s.bind('clickEdge', e =>
   {
-    let e_id = e.data.edge.id;
-    deselectAll(null, false, [e_id]);
+    let ed = e.data.edge;
+    deselectAll(null, false, [ed.id]);
     if (isExtension(e.data.edge)) {
       // activeState.addNodes(e.data.edge.source);
       // s.refresh();
-      layouts[currentLayoutId].apply(e.data.edge.source);
+      layouts[currentLayoutId].apply(ed.source);
       return;
     }
-    activeState.addEdges(e_id);
+    activeState.addEdges(ed.id);
     s.refresh();
-    showConnectionInfo(e_id);
+    showConnectionInfo(ed.id);
   });
 
   s.bind('clickStage', deselectAll);

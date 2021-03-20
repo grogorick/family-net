@@ -4,26 +4,14 @@ s.bind('hovers', e =>
   // console.log(e);
   e.data.enter.nodes.forEach(n =>
   {
-    let p = null;
-    if (isPerson(n)) {
-      p = n._my.p;
-    }
-    if (isDoppelganger(n)) {
-      p = n._my.d._p;
-    }
+    let p = isPerson(n) ? n._my.p : isDoppelganger(n) ? n._my.d._p : null;
     if (p !== null) {
       n.label = getPersonExtendedDisplayString(p);
     }
   });
   e.data.leave.nodes.forEach(n =>
   {
-    let p = null;
-    if (isPerson(n)) {
-      p = n._my.p;
-    }
-    if (isDoppelganger(n)) {
-      p = n._my.d._p;
-    }
+    let p = isPerson(n) ? n._my.p : isDoppelganger(n) ? n._my.d._p : null;
     if (p !== null) {
       n.label = getPersonRufname(p);
     }
@@ -53,11 +41,12 @@ let cdcNode = clickDoubleClick(
     }
 
     console.log(['clickNode', e]);
-    let n_id = e.data.node.id;
-    if (isChildConnectionNode(n_id)) {
+    let n = e.data.node;
+    if (!isPerson(n) && !isDoppelganger(n)) {
       return;
     }
 
+    let n_id = n.id;
     if (!multipleKeyPressed(e)) {
       deselectAll(null, false, [n_id]);
       activeState.addNodes(n_id);
@@ -83,7 +72,8 @@ let cdcNode = clickDoubleClick(
   e =>
   {
     console.log(['doubleClickNode', e]);
-    if (isChildConnectionNode(e.data.node.id)) {
+    let n = e.data.node;
+    if (!isPerson(n) && !isDoppelganger(n)) {
       return;
     }
     if (!currentLayoutId) {
@@ -91,7 +81,7 @@ let cdcNode = clickDoubleClick(
     }
     else {
       deselectAll();
-      layouts[currentLayoutId].apply(e.data.node.id);
+      layouts[currentLayoutId].apply(n.id);
     }
   });
 
