@@ -23,24 +23,37 @@
         e,
         fontStyle = settings('hoverFontStyle') || settings('fontStyle'),
         prefix = settings('prefix') || '',
+
+
         size = node[prefix + 'size'] || 1,
-        defaultNodeColor = settings('defaultNodeColor'),
-        borderSize = node.active ?
-          node.border_size || settings('nodeActiveBorderSize') || settings('nodeBorderSize') :
-          node.border_size || settings('nodeHoverBorderSize') || settings('nodeBorderSize'),
-        outerBorderSize = node.active ?
-          settings('nodeActiveOuterBorderSize') || settings('nodeOuterBorderSize') :
-          settings('nodeOuterBorderSize'),
+        borderSize = node.hover_border_size || settings('nodeHoverBorderSize') || 0,
+        activeBorderSize = node.active_hover_border_size || settings('nodeActiveHoverBorderSize') || borderSize,
+        outerBorderSize = node.hover_outer_border_size || settings('nodeHoverOuterBorderSize') || 0,
+        activeOuterBorderSize = node.active_hover_outer_border_size || settings('nodeActiveHoverOuterBorderSize') || outerBorderSize,
+        color = settings('nodeHoverColor') === 'default'
+          ? settings('defaultNodeHoverColor')
+          : (node.hover_color || settings('defaultNodeHoverColor')),
+        activeColor = settings('nodeActiveHoverColor') === 'default'
+          ? settings('defaultNodeActiveHoverColor')
+          : (node.active_hover_color || settings('defaultNodeActiveHoverColor') || color),
+	      borderColor = settings('nodeHoverBorderColor') === 'default'
+          ? settings('defaultNodeHoverBorderColor')
+          : (node.hover_border_color || settings('defaultNodeHoverBorderColor') || color),
+	      outerBorderColor = settings('nodeHoverOuterBorderColor') === 'default'
+          ? settings('defaultNodeHoverOuterBorderColor')
+          : (node.hover_outer_border_color || settings('defaultNodeHoverOuterBorderColor') || borderColor),
+	      activeBorderColor = settings('nodeActiveHoverBorderColor') === 'default'
+          ? settings('defaultNodeActiveHoverBorderColor')
+          : (node.active_hover_border_color || settings('defaultNodeActiveHoverBorderColor') || borderColor),
+	      activeOuterBorderColor = settings('nodeActiveHoverOuterBorderColor') === 'default'
+          ? settings('defaultNodeActiveHoverOuterBorderColor')
+          : (node.active_hover_outer_border_color || settings('defaultNodeActiveHoverOuterBorderColor') || activeBorderColor || outerBorderColor),
+
+
         alignment = node.labelAlignment || settings('labelAlignment'),
         fontSize = (settings('labelSize') === 'fixed') ?
           settings('defaultLabelSize') :
           settings('labelSizeRatio') * size,
-        color = settings('nodeHoverColor') === 'node' ?
-          (node.color || defaultNodeColor) :
-          settings('defaultNodeHoverColor'),
-        borderColor = settings('nodeHoverBorderColor') === 'default'
-          ? (settings('defaultNodeHoverBorderColor') || settings('defaultNodeBorderColor'))
-          : (node.border_color || defaultNodeColor),
         maxLineLength = settings('maxNodeLabelLineLength') || 0,
         level = settings('nodeHoverLevel'),
         lines = getLines(node.label, maxLineLength);
@@ -50,65 +63,30 @@
       drawLabelBackground(alignment, context, fontSize, node, lines, maxLineLength);
     }
 
-    // Level:
+    // Shadow:
     if (level) {
-      context.shadowOffsetX = 0;
-      // inspired by Material Design shadows, level from 1 to 5:
-      switch(level) {
-        case 1:
-          context.shadowOffsetY = 1.5;
-          context.shadowBlur = 4;
-          context.shadowColor = 'rgba(0,0,0,0.36)';
-          break;
-        case 2:
-          context.shadowOffsetY = 3;
-          context.shadowBlur = 12;
-          context.shadowColor = 'rgba(0,0,0,0.39)';
-          break;
-        case 3:
-          context.shadowOffsetY = 6;
-          context.shadowBlur = 12;
-          context.shadowColor = 'rgba(0,0,0,0.42)';
-          break;
-        case 4:
-          context.shadowOffsetY = 10;
-          context.shadowBlur = 20;
-          context.shadowColor = 'rgba(0,0,0,0.47)';
-          break;
-        case 5:
-          context.shadowOffsetY = 15;
-          context.shadowBlur = 24;
-          context.shadowColor = 'rgba(0,0,0,0.52)';
-          break;
-      }
-    }
-
-    // Border:
-    if (borderSize > 0) {
-      context.beginPath();
-      context.fillStyle = settings('nodeHoverBorderColor') === 'node'
-        ? borderColor
-        : (settings('defaultNodeHoverBorderColor') || settings('defaultNodeBorderColor'));
-      context.arc(
-        node[prefix + 'x'],
-        node[prefix + 'y'],
-        size + borderSize,
-        0,
-        Math.PI * 2,
-        true
-      );
-      context.closePath();
-      context.fill();
+      sigma.utils.canvas.setLevel(level, context);
     }
 
     // Node:
     var nodeRenderer = sigma.canvas.nodes[node.type] || sigma.canvas.nodes.def;
-    nodeRenderer(node, context, settings, { color: color });
+    nodeRenderer(node, context, settings,
+      {
+        borderSize: borderSize,
+        activeBorderSize: activeBorderSize,
+        outerBorderSize: outerBorderSize,
+        activeOuterBorderSize: activeOuterBorderSize,
+        color: color,
+        activeColor: activeColor,
+        borderColor: borderColor,
+        outerBorderColor: outerBorderColor,
+        activeBorderColor: activeBorderColor,
+        activeOuterBorderColor: activeOuterBorderColor,
+      });
 
     // reset shadow
     if (level) {
-      context.shadowOffsetY = 0;
-      context.shadowBlur = 0;
+      sigma.utils.canvas.resetLevel(context);
     }
 
     if (alignment === 'center') {
@@ -261,8 +239,7 @@
       context.closePath();
       context.fill();
 
-      context.shadowOffsetY = 0;
-      context.shadowBlur = 0;
+      sigma.utils.canvas.resetLevel(context);
     }
 
     /**

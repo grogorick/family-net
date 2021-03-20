@@ -3,6 +3,7 @@ const settings = {
   nodeColor: '#78D384',
   nodeColorWarning: '#D0D480',
   nodeColorHighlight: '#3BAA49',
+  nodeColorDoppelganger: '#4499DD',
   nodeColorPreview: '#ddd',
 
   edgeSize: .25,
@@ -62,26 +63,37 @@ let s = new sigma({
     zoomMax: 10,
 
     // person
+    nodeColor: 'node',
+    defaultNodeColor: null,
     minNodeSize: .1,
     maxNodeSize: 10,
-    nodeBorderColor: 'default',
+    // nodeBorderColor: 'default',
+    defaultNodeBorderColor: null,
+    nodeBorderSize: 0,
     nodeOuterBorderColor: 'default',
-    defaultNodeColor: settings.nodeColor,
-    defaultNodeBorderColor: 'transparent',
-    nodeBorderSize: 2,
+    defaultNodeOuterBorderColor: settings.nodeColorDoppelganger,
     nodeOuterBorderSize: 0,
 
     // person hover
-    nodeHoverBorderColor: 'default',
-    defaultNodeHoverBorderColor: settings.nodeColor,
-    nodeHoverBorderSize: 2,
+    nodeHoverColor: 'node',
+    defaultNodeHoverColor: null,
+    nodeHoverBorderColor: 'node',
+    defaultNodeHoverBorderColor: null,
+    nodeHoverBorderSize: 3,
+    defaultNodeHoverOuterBorderColor: null,
+    nodeHoverOuterBorderSize: 0,
 
     // person selected
     nodeActiveColor: 'default',
-    nodeActiveBorderColor: 'default',
     defaultNodeActiveColor: settings.nodeColorHighlight,
-    defaultNodeActiveBorderColor: 'transparent',
-    nodeActiveBorderSize: 2,
+    // nodeActiveBorderColor: 'default',
+    // defaultNodeActiveBorderColor: 'transparent',
+    // nodeActiveBorderSize: 0,
+
+    // person selected hover
+    nodeActiveHoverBorderColor: 'default',
+    defaultNodeActiveHoverBorderColor: settings.nodeColorHighlight,
+    nodeActiveHoverBorderSize: 3,
 
     // person label
     labelAlignment: 'bottom',
@@ -91,6 +103,7 @@ let s = new sigma({
     defaultLabelSize: 12,
     labelSizeRatio: isMobile ? 1.5 : 1.7,
     labelThreshold: isMobile ? 3 : 5,
+
 
     // connection
     edgeColor: 'default',
