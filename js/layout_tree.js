@@ -30,8 +30,8 @@ function TreeLayout()
 
       console.log('layout for "' + getPersonFullName(this.p0) + '"');
       console.log(this.p0);
-      this.p0._graphNode.hidden = false;
       this.layout(this.p0);
+      this.showNode(this.p0);
 
       if (this.useYearBasedY) {
         console.log('year grid');
@@ -124,6 +124,28 @@ function TreeLayout()
     s.refresh();
   };
 
+  this.showNode = p =>
+  {
+    console.log('showNode');
+    console.log(p);
+    p._._graphNode.hidden = false;
+    p._._graphNode.x = p._graphNode.x;
+    p._._graphNode.y = p._graphNode.y;
+    p._._doppelgangers.forEach((d, i) =>
+    {
+      console.log(d);
+      d._graphNode.hidden = false;
+      d._graphNode.x = p._graphNode.x;
+      d._graphNode.y = p._graphNode.y;
+    });
+    console.log('showNode/');
+  }
+
+  this.showEdge = c =>
+  {
+    c._graphEdge.hidden = false;
+  }
+
   this.prepare = () =>
   {
     data.graph.persons.forEach(p => p.layout_tree = {});
@@ -211,8 +233,6 @@ function TreeLayout()
     }
     p._parents.forEach((pp, i) =>
     {
-      pp.p._graphNode.hidden = false;
-      pp.c._graphEdge.hidden = false;
       this.layoutUp(pp.p);
       // pp.p._graphNode.label += '\n' + pp.p.layout_tree.up.left + '/' + pp.p.layout_tree.up.right + '\n' + pp.p._graphNode.x;
 
@@ -222,6 +242,8 @@ function TreeLayout()
       if (pp.p._children.length > 1) {
         addExtension(pp.p, 'children', { x: 0, y: this.settings.nodeSpacingY / 2 }, 'Weitere Kinder von ' + getPersonRufname(pp.p));
       }
+      this.showNode(pp.p);
+      this.showEdge(pp.c);
     });
     if (bothParents) {
       moveChildConnectionNodes([p._parents[0].p._graphNode]);
@@ -298,9 +320,6 @@ function TreeLayout()
     {
       pp.p._graphNode.x = p._graphNode.x + (p.layout_tree.down.reversePartnersAndChildren ? -1 : 1) * (i + 1) * 2 * this.settings.nodeSpacingX;
       pp.p._graphNode.y = p._graphNode.y + (this.yearBasedOffsetY(p.b, pp.p.b) || 0);
-      pp.p._graphNode.hidden = false;
-      pp.c._graphEdge.hidden = false;
-      // pp.p._graphNode.label = getPersonRufname(pp.p) + '\n' + i;
 
       if (pp.p._parents.length) {
         addExtension(pp.p, 'parents', { x: 0, y: -this.settings.nodeSpacingY / 2 }, 'Eltern von ' + getPersonRufname(pp.p));
@@ -311,6 +330,9 @@ function TreeLayout()
       if (pp.p._children.length > pp.c._children.length) {
         addExtension(pp.p, 'children', { x: 0, y: this.settings.nodeSpacingY / 2 }, 'Weitere Kinder von ' + getPersonRufname(pp.p));
       }
+      this.showNode(pp.p);
+      this.showEdge(pp.c);
+      // pp.p._graphNode.label = getPersonRufname(pp.p) + '\n' + i;
     });
     let x = p._graphNode.x - p.layout_tree.down.childrenLeft * 2 * this.settings.nodeSpacingX;
     let tmpChildren = p._children.slice(0);
@@ -320,9 +342,9 @@ function TreeLayout()
       cp.p._graphNode.x = x + cp.p.layout_tree.down.left * 2 * this.settings.nodeSpacingX;
       x += (cp.p.layout_tree.down.width + 1) * 2 * this.settings.nodeSpacingX;
       cp.p._graphNode.y = p._graphNode.y + (this.yearBasedOffsetY(p.b, cp.p.b) || this.settings.nodeSpacingY);
-      cp.p._graphNode.hidden = false;
-      cp.c._graphEdge.hidden = false;
       this.layoutDown(cp.p);
+      this.showNode(cp.p);
+      this.showEdge(cp.c);
     };
     let tmpPartners = p.layout_tree.down.reversePartnersAndChildren ? p._partners.slice(0).reverse() : p._partners;
     tmpPartners.forEach(pp => p.layout_tree.down.reversePartnersAndChildren

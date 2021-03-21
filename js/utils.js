@@ -387,3 +387,5 @@ function diff(a1, a2)
 {
   return a1.filter(value => !a2.includes(value));
 }
+
+Array.prototype.joinNotEmpty = separator => this.filter(_ => _.length).join(separator);

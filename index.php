@@ -1,8 +1,9 @@
 <?php
 //phpinfo();
+define('MAINTENANCE', false);
 
 // browser cache fix for scripts and styles
-define('V', 22.5);
+define('V', 23);
 define('V_', '?v=' . V);
 
 define('RUNTIME_DIR', 'runtime');
@@ -180,6 +181,18 @@ if (!isset($_SESSION[USER])) {
 	html_min_end();
   exit;
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+if (MAINTENANCE && $_SESSION[TYPE] !== ADMIN_) {
+  $admins = array_filter($accounts, function($a) { return $a[TYPE_] === ADMIN_; });
+  $admins = array_map(function($a) { return $a[USER_]; }, $admins);
+  $admins = implode(', ', $admins);
+  echo 'Im Moment laufen Umbauarbeiten. Schau\' bitte später nochmal vorbei.<br /><br /><i>' . $admins . '</i>';
+  exit;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 
 $login_date = time();
 if (!isset($_SESSION['last-login']) || $login_date > ($_SESSION['last-login'] + 12/*hours*/ * 60/*min*/ * 60/*sec*/)) {
@@ -950,6 +963,8 @@ if ($_SESSION[TYPE] === ADMIN_) {
     let currentLayoutId = '<?=$_GET['layout'] ?? ''?>';
   </script>
   <script src="js/utils.js<?=V_?>"></script>
+  <script src="js/person.js<?=V_?>"></script>
+  <script src="js/connection.js<?=V_?>"></script>
   <script src="js/script.js<?=V_?>"></script>
   <script src="js/tutorial.js<?=V_?>"></script>
 <?php

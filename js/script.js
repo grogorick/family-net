@@ -3,7 +3,8 @@ const settings = {
   nodeColor: '#78D384',
   nodeColorWarning: '#D0D480',
   nodeColorHighlight: '#3BAA49',
-  nodeColorDoppelganger: '#4499DD',
+  nodeBorderColorDoppelganger: '#4499DD',
+  nodeBorderSizeDoppelganger: 2,
   nodeColorPreview: '#ddd',
 
   edgeSize: .25,
@@ -71,7 +72,7 @@ let s = new sigma({
     defaultNodeBorderColor: null,
     nodeBorderSize: 0,
     nodeOuterBorderColor: 'default',
-    defaultNodeOuterBorderColor: settings.nodeColorDoppelganger,
+    defaultNodeOuterBorderColor: settings.nodeBorderColorDoppelganger,
     nodeOuterBorderSize: 0,
 
     // person hover
@@ -548,11 +549,11 @@ if (!firstLogin && !accountUpgraded) {
   loadData();
 }
 
+let nodeCenterY = 0;
 function applyLoadedData(loadedData, addLogItems, adjustCamera)
 {
   data = loadedData;
   // console.log(data);
-  prepareGraphData();
   if (adjustCamera) {
     moveCamera({
         x: parseFloat(data.settings.camera.x),
@@ -561,10 +562,16 @@ function applyLoadedData(loadedData, addLogItems, adjustCamera)
       },
       false, false, true, false);
   }
+
+  data.graph.persons.forEach(p => { nodeCenterY += p.y; });
+  nodeCenterY /= data.graph.persons.length;
+
   logAddPerson = addLogItems ? 3 : false;
-  data.graph.persons.forEach(p =>
+  let persons = data.graph.persons;
+  data.graph.persons = [];
+  persons.forEach(p =>
   {
-    addPerson(p, false, false, true, false);
+    addPerson(p, true, false, true, false);
     if (logAddPerson) {
       --logAddPerson;
       if (!logAddPerson) {
@@ -575,9 +582,11 @@ function applyLoadedData(loadedData, addLogItems, adjustCamera)
   logAddPerson = true;
 
   logAddConnection = addLogItems ? 3 : false;
-  data.graph.connections.forEach(c =>
+  let connections = data.graph.connections;
+  data.graph.connections = [];
+  connections.forEach(c =>
   {
-    addConnection(c, false, false, true, false);
+    addConnection(c, true, false, true, false);
     if (logAddConnection) {
       --logAddConnection;
       if (!logAddConnection) {
@@ -620,77 +629,6 @@ function applyLoadedData(loadedData, addLogItems, adjustCamera)
       logButton.addEventListener('click', fn);
     }
   }
-}
-
-let nodeCenterY = 0;
-function prepareGraphData()
-{
-  data.graph.persons.forEach(p =>
-  {
-    preparePerson(p);
-    nodeCenterY += p.y;
-  });
-  nodeCenterY /= data.graph.persons.length;
-  data.graph.connections.forEach(prepareConnection);
-}
-
-function preparePerson(p)
-{
-  if ('_parents' in p) {
-    return;
-  }
-  p._parents = [];
-  p._children = [];
-  p._partners = [];
-  p._other = [];
-  p._doppelgangers = [];
-  if (isDataPersonDoppelganger(p)) {
-    p._p = getDataPerson(p.p);
-    p._p._doppelgangers.push(p);
-  }
-}
-
-function prepareConnection(c)
-{
-  if ('_persons' in c) {
-    return;
-  }
-  c._persons = [];
-  c._children = [];
-  let p2 = getDataPerson(c.p2);
-  let isChildConnection = isChildConnectionNode(c.p1);
-  let level = getConnectionRelationSettings(c.r).level;
-  if (isChildConnection || level === 'v') {
-    if (isChildConnection) {
-      let pc = getParentConnectionFromChildConnectionNode(c.p1);
-      getParentTsFromChildConnectionNode(c.p1).map(getDataPerson).forEach(p1 =>
-      {
-        p1._children.push({ p: p2, c: c, pc: pc });
-        p2._parents.push({ p: p1, c: c, pc: pc });
-        c._persons.push(p1);
-      });
-      pc._children.push({ p: p2, c: c });
-    }
-    else {
-      let p1 = getDataPerson(c.p1);
-      p1._children.push({ p: p2, c: c });
-      p2._parents.push({ p: p1, c: c });
-      c._persons.push(p1);
-    }
-  }
-  else {
-    let p1 = getDataPerson(c.p1);
-    if (level === 'h') {
-      p1._partners.push({ p: p2, c: c });
-      p2._partners.push({ p: p1, c: c });
-    }
-    else {
-      p1._other.push({ p: p2, c: c });
-      p2._other.push({ p: p1, c: c });
-    }
-    c._persons.push(p1);
-  }
-  c._persons.push(p2);
 }
 
 
@@ -1290,24 +1228,15 @@ approveDeleteOrCancelKeys(
   personMenuCancel);
 
 let logAddPerson = true;
-function addPerson(p, toData, toServer, toGraph, refreshGraph, doneCallback = null)
+function addPerson(p_raw, toData, toServer, toGraph, refreshGraph, doneCallback = null)
 {
-  if ('n' in p) {// backward compatibility for old log items with only one name attribute
-    // console.log('convert ' + p.n);
-    p.f = '';
-    p.l = '';
-    p.m = '';
-    if (p.n.includes(',')) {
-      let i = p.n.indexOf(',');
-      p.f = p.n.substr(0, i).trim();
-      p.l = p.n.substr(i + 1).trim();
-    }
-    else {
-      p.f = p.n;
-    }
-    delete p.n;
+  let p = p_raw;
+  if (!(p instanceof PersonFunctions)) {
+    p = convertPerson(p);
+    p.prepare();
   }
-  toServerDataGraph('addPerson', p, {
+
+  toServerDataGraph('addPerson', p_raw, {
       toServer: !toServer ? null : response =>
       {
         response = addLogItemFromServerResponse(response);
@@ -1315,18 +1244,14 @@ function addPerson(p, toData, toServer, toGraph, refreshGraph, doneCallback = nu
       },
       toData: !toData ? null : () =>
       {
-        preparePerson(p);
         data.graph.persons.push(p);
       },
       toGraph: !toGraph ? null : () =>
       {
-        preparePerson(p);
-        let pp = p;
         let my = {};
         if (isDataPersonDoppelganger(p)) {
           my.isDoppelganger = true;
           my.d = p;
-          pp = p._p;
         }
         else if (p.t !== PERSON_PREVIEW) {
           my.isPerson = true;
@@ -1337,9 +1262,9 @@ function addPerson(p, toData, toServer, toGraph, refreshGraph, doneCallback = nu
             id: p.t,
             x: p.x,
             y: p.y,
-            label: getPersonRufname(pp),
+            label: getPersonRufname(p._),
             size: settings.nodeSize,
-            color: getNodeColorFromPerson(pp),
+            color: getNodeColorFromPerson(p._),
             labelAlignment: (p.y < nodeCenterY) ? 'top' : 'bottom' });
         p._graphNode = s.graph.nodes(p.t);
         },
@@ -1378,6 +1303,9 @@ function editPerson(p, toData = true, toServer = true, toGraph = true, refreshGr
 
 function deletePerson(p_t, toData = true, toServer = true, toGraph = true, refreshGraph = true)
 {
+  if (toData) {
+    resetPerson(getDataPerson(p_t));
+  }
   toServerDataGraph('deletePerson', p_t, {
       toServer: !toServer ? null : addLogItemFromServerResponse,
       toData: !toData ? null : () => deleteDataPerson(p_t),
@@ -1682,8 +1610,14 @@ approveDeleteOrCancelKeys(
   connectionMenuCancel);
 
 let logAddConnection = true;
-function addConnection(c, toData, toServer, toGraph, refreshGraph, doneCallback = null)
+function addConnection(c_raw, toData, toServer, toGraph, refreshGraph, doneCallback = null)
 {
+  let c = c_raw;
+  if (!(c instanceof Connection)) {
+    c = convertConnection(c);
+    c.prepare();
+  }
+
   let isChildConnection = isChildConnectionNode(c.p1);
   if (toGraph && isChildConnection) {
     if (!s.graph.nodes(c.p1)) {
@@ -1694,17 +1628,17 @@ function addConnection(c, toData, toServer, toGraph, refreshGraph, doneCallback 
       s.graph.addNode({
           _my: {
             isChildConnectionNode: true,
-            c: c
+            c: [c]
           },
           id: c.p1,
           x: p12.x,
           y: p12.y,
           size: .1,
           color: settings.edgeColor});
-      c._graphCCNode = s.graph.nodes(c.p1);
     }
   }
-  toServerDataGraph('addConnection', c, {
+
+  toServerDataGraph('addConnection', c_raw, {
       toServer: !toServer ? null : response =>
       {
         response = addLogItemFromServerResponse(response);
@@ -1712,15 +1646,15 @@ function addConnection(c, toData, toServer, toGraph, refreshGraph, doneCallback 
       },
       toData: !toData ? null : () =>
       {
-        prepareConnection(c);
         data.graph.connections.push(c);
       },
       toGraph: !toGraph ? null : () =>
       {
-        prepareConnection(c);
         let _my = { c: c };
         if (isChildConnection) {
           _my.isChildConnection = true;
+          c._graphCCNode = s.graph.nodes(c.p1);
+          c._graphCCNode._my.c.push(c);
         }
         else {
           _my.isPersonConnection = true;
@@ -1772,6 +1706,9 @@ function editConnection(c, toData = true, toServer = true, toGraph = true, refre
 
 function deleteConnection(c_t, toData = true, toServer = true, toGraph = true, refreshGraph = true)
 {
+  if (toData) {
+    resetConnection(getDataConnection(c_t));
+  }
   toServerDataGraph('deleteConnection', c_t, {
       toServer: !toServer ? null : addLogItemFromServerResponse,
       toData: !toData ? null : () => deleteDataConnection(c_t),
@@ -1857,7 +1794,7 @@ activeState.bind('activeNodes', e =>
   {
     getDoppelgangers(n).forEach(d =>
     {
-      d._graphNode.outer_border_size = 1;
+      d._graphNode.outer_border_size = settings.nodeBorderSizeDoppelganger;
     });
   });
   s.refresh();
