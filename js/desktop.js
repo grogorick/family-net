@@ -4,16 +4,14 @@ s.bind('hovers', e =>
   // console.log(e);
   e.data.enter.nodes.forEach(n =>
   {
-    let p = isPerson(n) ? n._my.p : isDoppelganger(n) ? n._my.d._p : null;
-    if (p !== null) {
-      n.label = getPersonExtendedDisplayString(p);
+    if (isPerson(n) || isDoppelganger(n))  {
+      n.label = getPersonExtendedDisplayString(n._my.p._);
     }
   });
   e.data.leave.nodes.forEach(n =>
   {
-    let p = isPerson(n) ? n._my.p : isDoppelganger(n) ? n._my.d._p : null;
-    if (p !== null) {
-      n.label = getPersonRufname(p);
+    if (isPerson(n) || isDoppelganger(n))  {
+      n.label = getPersonRufname(n._my.p._);
     }
   });
 
@@ -51,7 +49,7 @@ let cdcNode = clickDoubleClick(
       deselectAll(null, false, [n_id]);
       activeState.addNodes(n_id);
       s.refresh();
-      showPersonInfo(n_id);
+      showPersonInfo(n);
     }
     else {
       activeState.addNodes(n_id);
@@ -95,7 +93,7 @@ s.bind('clickEdge', e =>
     deselectAll(null, false, [e_id]);
     activeState.addEdges(e_id);
     s.refresh();
-    showConnectionInfo(e_id);
+    showConnectionInfo(e.data.edge);
   }
   else {
     deselectConnections(null, false, [e_id]);
@@ -117,6 +115,7 @@ let cdcStage = clickDoubleClick(
   {
     if (startedWith_coordinatesUpdated) {
       console.log('skip clickStage during coordinatesUpdated');
+      startedWith_coordinatesUpdated = false;
       return;
     }
     if (startedWith_drag || e.data.captor.isDragging) {

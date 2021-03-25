@@ -3,7 +3,7 @@
 define('MAINTENANCE', false);
 
 // browser cache fix for scripts and styles
-define('V', 23);
+define('V', 23.3);
 define('V_', '?v=' . V);
 
 define('RUNTIME_DIR', 'runtime');

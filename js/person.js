@@ -96,6 +96,7 @@ class Person extends PersonFunctions
   _partners = [];
   _other = [];
   _doppelgangers = [];
+  _all_connections = [];
 
   constructor(p)
   {
@@ -131,8 +132,6 @@ class Doppelganger extends PersonFunctions
   t = null;
   p = null;
 
-  _p = null;
-
   constructor(p)
   {
     super();
@@ -142,7 +141,7 @@ class Doppelganger extends PersonFunctions
 
   prepare()
   {
-    this._ = this._p = getDataPerson(this.p);
+    this._ = getDataPerson(this.p);
     this._._doppelgangers.push(this);
   }
 

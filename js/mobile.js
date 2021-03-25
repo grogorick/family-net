@@ -123,7 +123,7 @@ s.bind('clickNode', e =>
     deselectAll(null, false, [n_id]);
     activeState.addNodes(n_id);
     s.refresh();
-    showPersonInfo(n_id);
+    showPersonInfo(e.data.node);
   }
 });
 
@@ -152,7 +152,7 @@ s.bind('clickEdge', e =>
     deselectAll(null, false, [e_id]);
     activeState.addEdges(e_id);
     s.refresh();
-    showConnectionInfo(e_id);
+    showConnectionInfo(e.data.edge);
   }
 });
 

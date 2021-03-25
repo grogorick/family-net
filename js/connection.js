@@ -25,33 +25,50 @@ class Connection
     let p2 = getDataPerson(this.p2)._;
     let isChildConnection = isChildConnectionNode(this.p1);
     let level = getConnectionRelationSettings(this.r).level;
+    let tmp = null;
     if (isChildConnection || level === 'v') {
       if (isChildConnection) {
         this._parentConnection = getParentConnectionFromChildConnectionNode(this.p1);
         this._parentConnection._children.push({ p: p2, c: this });
         getParentTsFromChildConnectionNode(this.p1).map(p_t => getDataPerson(p_t)._).forEach(p1 =>
         {
-          p1._children.push({ p: p2, c: this, pc: this._parentConnection });
-          p2._parents.push({ p: p1, c: this, pc: this._parentConnection });
+          tmp = { p: p2, c: this, pc: this._parentConnection };
+          p1._children.push(tmp);
+          p1._all_connections.push(tmp);
+          tmp = { p: p1, c: this, pc: this._parentConnection };
+          p2._parents.push(tmp);
+          p2._all_connections.push(tmp);
           this._persons.push(p1);
         });
       }
       else {
         let p1 = getDataPerson(this.p1)._;
-        p1._children.push({ p: p2, c: this });
-        p2._parents.push({ p: p1, c: this });
+        tmp = { p: p2, c: this };
+        p1._children.push(tmp);
+        p1._all_connections.push(tmp);
+        tmp = { p: p1, c: this };
+        p2._parents.push(tmp);
+        p2._all_connections.push(tmp);
         this._persons.push(p1);
       }
     }
     else {
       let p1 = getDataPerson(this.p1)._;
       if (level === 'h') {
-        p1._partners.push({ p: p2, c: this });
-        p2._partners.push({ p: p1, c: this });
+        tmp = { p: p2, c: this };
+        p1._partners.push(tmp);
+        p1._all_connections.push(tmp);
+        tmp = { p: p1, c: this };
+        p2._partners.push(tmp);
+        p2._all_connections.push(tmp);
       }
       else {
-        p1._other.push({ p: p2, c: this });
-        p2._other.push({ p: p1, c: this });
+        tmp = { p: p2, c: this };
+        p1._other.push(tmp);
+        p1._all_connections.push(tmp);
+        tmp = { p: p1, c: this };
+        p2._other.push(tmp);
+        p2._all_connections.push(tmp);
       }
       this._persons.push(p1);
     }

@@ -114,7 +114,7 @@ let s = new sigma({
     minArrowSize: 5,
 
     // connection hover
-    enableEdgeHovering: !isMobile,
+    enableEdgeHovering: true,
     edgeHoverPrecision: 5,
     // edgeHoverSizeRatio: 5
     // edgeHoverExtremities: true,
@@ -945,48 +945,38 @@ function deselectPersons(e = null, refreshGraph = true, except = [])
 function selectDirectRelatives(e)
 {
   console.log('select direct relatives of ' + e.data.node.id);
-  let recurseUp = p_t =>
+  let recurseUp = p =>
   {
-    // console.log('p ' + p_t);
-    activeState.addNodes(p_t);
-    getDataPersonConnections(p_t).forEach(c =>
+    // console.log('p ' + p.t);
+    activeState.addNodes(p.t);
+    activeState.addNodes(p._doppelgangers.map(pd => pd.t));
+    p._parents.forEach(pp =>
     {
-      // console.log('c ' + c.r);
-      if (c.p2 == p_t && getConnectionRelationSettings(c.r).level === 'v') {
-        activeState.addEdges(c.t);
-        if (isChildConnectionNode(c.p1)) {
-          activeState.addEdges(getParentConnectionFromChildConnectionNode(c.p1).t);
-          getParentTsFromChildConnectionNode(c.p1).forEach(recurseUp);
-        }
-        else {
-          recurseUp(c.p1);
-        }
+      activeState.addEdges(pp.c.t);
+      if ('pc' in pp) {
+        activeState.addEdges(pp.pc.t);
       }
-      // else {
-      //   console.log('-');
-      // }
+      recurseUp(pp.p);
     });
   };
-  let recurseDown = p_t =>
+  let recurseDown = p =>
   {
-    // console.log('p ' + p_t);
-    activeState.addNodes(p_t);
-    getDataPersonConnections(p_t).forEach(c =>
+    // console.log('p ' + p.t);
+    activeState.addNodes(p.t);
+    activeState.addNodes(p._doppelgangers.map(pd => pd.t));
+    p._children.forEach(pc =>
     {
-      // console.log('c ' + c.r);
-      if (compareTs(c.p1, p_t) && getConnectionRelationSettings(c.r).level === 'v') {
-        activeState.addEdges(c.t);
-        recurseDown(c.p2);
+      activeState.addEdges(pc.c.t);
+      if ('pc' in pc) {
+        activeState.addEdges(pc.pc.t);
       }
-      // else {
-      //   console.log('-');
-      // }
+      recurseDown(pc.p);
     });
   };
   deselectAll();
-  recurseUp(e.data.node.id);
+  recurseUp(e.data.node._my.p);
   // console.log('---');
-  recurseDown(e.data.node.id);
+  recurseDown(e.data.node._my.p);
   s.refresh();
 }
 
@@ -1080,35 +1070,44 @@ function clearPersonMenu()
   personMenuNote.value = '';
 }
 
-function showPersonInfo(t)
+function showPersonInfo(n)
 {
   let fn = () =>
   {
-    console.log(['showPersonInfo', t]);
-    let p = getDataPerson(t);
-    if (isDataPersonDoppelganger(p)) {
-      p = p._p;
+    console.log(['showPersonInfo', n]);
+    let n_p = null;
+    let t = typeof n;
+    switch (t) {
+      case 'object':
+        n_p = n._my.p;
+        break;
+      case 'string':
+      case 'number':
+        n_p = getDataPerson(n);
+        break;
     }
-    if (p === null) {
+    if (n_p === null) {
       console.error('person not found');
+      return;
     }
-    let db = splitDate(p.b);
+    let p = n_p._;
+    let pb = splitDate(p.b);
     let url = document.createElement('a');
     url.innerHTML = '&#x1F517;';
-    url.href = serverURL + (serverURL.endsWith('/') ? '?' : '&') + 'show=' + p.t;
+    url.href = serverURL + (serverURL.endsWith('/') ? '?' : '&') + 'show=' + n_p.t;
     personMenuPersonURL.innerHTML = '';
     personMenuPersonURL.appendChild(url);
     personMenuFirstName.value = p.f;
     personMenuLastName.value = p.l;
     personMenuBirthName.value = p.m;
-    personMenuBirthDay.value = db[2];
-    personMenuBirthMonth.value = db[1];
-    personMenuBirthYear.value = db[0];
+    personMenuBirthDay.value = pb[2];
+    personMenuBirthMonth.value = pb[1];
+    personMenuBirthYear.value = pb[0];
     updateDateValue(personMenuBirthDay, personMenuBirthMonth, personMenuBirthYear);
-    let dd = splitDate(p.d);
-    personMenuDeathDay.value = dd[2];
-    personMenuDeathMonth.value = dd[1];
-    personMenuDeathYear.value = dd[0];
+    let pd = splitDate(p.d);
+    personMenuDeathDay.value = pd[2];
+    personMenuDeathMonth.value = pd[1];
+    personMenuDeathYear.value = pd[0];
     updateDateValue(personMenuDeathDay, personMenuDeathMonth, personMenuDeathYear);
     personMenuNote.value = p.o;
     if (currentUserCanEdit()) {
@@ -1248,14 +1247,12 @@ function addPerson(p_raw, toData, toServer, toGraph, refreshGraph, doneCallback 
       },
       toGraph: !toGraph ? null : () =>
       {
-        let my = {};
+        let my = { p: p };
         if (isDataPersonDoppelganger(p)) {
           my.isDoppelganger = true;
-          my.d = p;
         }
         else if (p.t !== PERSON_PREVIEW) {
           my.isPerson = true;
-          my.p = p;
         }
         s.graph.addNode({
             _my: my,
@@ -1471,29 +1468,39 @@ function clearConnectionMenu(relationValue = '???')
   connectionMenuDesc.value = '';
 }
 
-function showConnectionInfo(t)
+function showConnectionInfo(e)
 {
   let fn = () =>
   {
-    console.log(['showConnectionInfo', t]);
-    let c = getDataConnection(t);
+    console.log(['showConnectionInfo', e]);
+    let c = null;
+    let t = typeof e;
+    switch (t) {
+      case 'object':
+        c = e._my.c;
+        break;
+      case 'string':
+      case 'number':
+        c = getDataConnection(e);
+        break;
+    }
+    if (c === null) {
+      console.error('connection not found');
+      return;
+    }
     let p1_n = '';
     let isChildConnection = isChildConnectionNode(c.p1);
     if (isChildConnection) {
-      let p1 = getParentTsFromChildConnectionNode(c.p1);
-      let p1_1 = getDataPerson(p1[0]);
-      let p1_2 = getDataPerson(p1[1]);
-      p1_n = getPersonRufname(p1_1) + ' & ' + getPersonRufname(p1_2);
+      p1_n = getPersonRufname(c._persons[0]) + ' & ' + getPersonRufname(c._persons[1]);
     }
     else {
-      p1_n = getPersonRufname(getDataPerson(c.p1));
+      p1_n = getPersonRufname(c._persons[0]);
     }
-    let p2 = getDataPerson(c.p2);
-    connectionMenuPersons.innerHTML = escapeHtml(p1_n) + ' &mdash; ' + escapeHtml(getPersonRufname(p2));
+    connectionMenuPersons.innerHTML = escapeHtml(p1_n) + ' &mdash; ' + escapeHtml(getPersonRufname(c._persons[c._persons.length - 1]));
     connectionMenuRelation.value = c.r;
     connectionMenuDesc.value = c.d;
     if (currentUserCanEdit()) {
-      connectionMenuDelete.classList.toggle('hidden', getDataChildConnections(c).length > 0);
+      connectionMenuDelete.classList.toggle('hidden', c._children.length > 0);
       connectionMenuEdit.classList.remove('hidden');
       connectionMenuRelation.disabled = false;
       connectionMenuDesc.disabled = false;
@@ -1628,7 +1635,7 @@ function addConnection(c_raw, toData, toServer, toGraph, refreshGraph, doneCallb
       s.graph.addNode({
           _my: {
             isChildConnectionNode: true,
-            c: [c]
+            c: []
           },
           id: c.p1,
           x: p12.x,
@@ -1777,9 +1784,9 @@ activeState.bind('activeNodes', e =>
       ds = n._my.p._doppelgangers;
     }
     else if (isDoppelganger(n)) {
-      ds = n._my.d._p._doppelgangers.slice(0);
-      ds.splice(ds.indexOf(n._my.d), 1);
-      ds.push(n._my.d._p);
+      ds = n._my.p._._doppelgangers.slice(0);
+      ds.splice(ds.indexOf(n._my.p), 1);
+      ds.push(n._my.p._);
     }
     return ds;
   };
@@ -1810,7 +1817,7 @@ function bindDefaultViewerEvents()
     if (isPerson(n) || isDoppelganger(n)) {
       activeState.addNodes(n.id);
       s.refresh();
-      showPersonInfo(n.id);
+      showPersonInfo(n);
     }
   },
   e =>
@@ -1835,19 +1842,34 @@ function bindDefaultViewerEvents()
     let ed = e.data.edge;
     deselectAll(null, false, [ed.id]);
     if (isExtension(e.data.edge)) {
-      // activeState.addNodes(e.data.edge.source);
-      // s.refresh();
       layouts[currentLayoutId].apply(ed.source);
+      // s.refresh();
       return;
     }
     activeState.addEdges(ed.id);
     s.refresh();
-    showConnectionInfo(ed.id);
+    showConnectionInfo(ed);
   });
 
-  s.bind('clickStage', deselectAll);
+  s.bind('clickStage', () =>
+  {
+    if (startedWith_coordinatesUpdated) {
+      startedWith_coordinatesUpdated = false;
+    }
+    else {
+      deselectAll(null);
+    }
+  });
 
-  s.bind('coordinatesUpdated', () => { s.camera.angle = 0; });
+  s.bind('coordinatesUpdated', () =>
+  {
+    clearTimeout(startedWith_coordinatesUpdated);
+    startedWith_coordinatesUpdated = setTimeout(() => { startedWith_coordinatesUpdated = false; }, 1000);
+
+    s.camera.angle = 0;
+  });
+
+  let startedWith_coordinatesUpdated = false;
 }
 
 let searchInput = document.querySelector('#search-input');
@@ -1897,21 +1919,24 @@ if (fromURL) {
     let p = getDataPerson(fromURL);
     if (p) {
       activeState.addNodes(fromURL);
-      if (currentLayoutId) {
+      if (!currentUserCanEdit()) {
         s.camera.goTo({
             x: p._graphNode.x,
             y: p._graphNode.y });
       }
       s.refresh();
       if (showFromURL === fromURL) {
-        showPersonInfo(showFromURL);
+        showPersonInfo(p._graphNode);
       }
     }
-    else if (getDataConnection(fromURL)) {
-      activeState.addEdges(fromURL);
-      s.refresh();
-      if (showFromURL === fromURL) {
-        showConnectionInfo(showFromURL);
+    else {
+      let c = getDataConnection(fromURL);
+      if (c) {
+        activeState.addEdges(fromURL);
+        s.refresh();
+        if (showFromURL === fromURL) {
+          showConnectionInfo(c._graphEdge);
+        }
       }
     }
   });
