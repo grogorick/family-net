@@ -11,7 +11,8 @@ const settings = {
   edgeColor: '#DDD',
   edgeColorWarning: '#E6AD92',
   edgeColorHighlight: '#000',
-  edgeColorPreview: '#ddd',
+  edgeColorPreview: '#DDD',
+  edgeColorDoppelganger: '#EEE',
 
   gridStep: 20,
   mobileGraphClickDelay: 500,
@@ -19,6 +20,7 @@ const settings = {
   checkOtherEditorInterval: 10000,
   stopEditWarningCountdown: 60,
   logPlaybackDelay: 200,
+  selectDirectRelativesDelay: 200,
 
   relations: {
     Kind: { lineType: 'arrow', level: 'v' },
@@ -27,6 +29,7 @@ const settings = {
     geschieden: { lineType: 'dashed', level: 'h' },
     verwitwet: { lineType: 'dashed', level: 'h' },
     unverheiratet: { lineType: 'dotted', level: 'h' },
+    Doppelganger: { lineType: 'curve', level: 'h' },
     unknown: { lineType: 'dotted', level: 'h' } }
 };
 
@@ -286,7 +289,7 @@ function deleteDataConnection(t)
 
 function compareTs(c_p_t, p_t)
 {
-  return isChildConnectionNode(c_p_t) ? c_p_t.includes(p_t) : (c_p_t == p_t);
+  return isChildConnectionNodeId(c_p_t) ? c_p_t.includes(p_t) : (c_p_t == p_t);
 }
 
 function getDataPersonConnections(t)
@@ -307,7 +310,7 @@ function getDataPersonParents(p_t)
   getDataPersonConnections(p_t).forEach(c =>
   {
     if (c.p2 == p_t && getConnectionRelationSettings(c.r).level === 'v') {
-      if (isChildConnectionNode(c.p1)) {
+      if (isChildConnectionNodeId(c.p1)) {
         getParentTsFromChildConnectionNode(c.p1).forEach(pp_t => parents.push(getDataPerson(pp_t)));
       }
       else {
@@ -423,32 +426,46 @@ function createChildConnectionNodeId(p1_t, p2_t)
 {
   return p1_t + '-' + p2_t;
 }
-function isChildConnectionNode(p_t)
+function isChildConnectionNodeId(p_t)
 {
   return (typeof p_t === 'string') && p_t.includes('-');
 }
 
-function isPerson(n)
+
+function isPersonNode(n)
 {
   return 'isPerson' in n._my;
 }
-function isDoppelganger(n)
+function isDoppelgangerNode(n)
 {
   return 'isDoppelganger' in n._my;
 }
-function isPersonConnection(e)
+function isPersonConnectionEdge(e)
 {
   return 'isPersonConnection' in e._my;
 }
-function isChildConnection(e)
+function isDoppelgangerConnectionEdge(e)
+{
+  return 'isDoppelgangerConnection' in e._my;
+}
+function isChildConnectionEdge(e)
 {
   return 'isChildConnection' in e._my;
 }
-function isExtension(n_or_e)
+function isExtensionEdge(e)
 {
-  return 'isExtension' in n_or_e._my;
-  // return (typeof n_or_e === 'string') && graphElement[0] === '*';
+  return 'isExtension' in e._my;
 }
+
+function isNodeSelected(n_id)
+{
+  return activeState.nodes(n_id).length > 0;
+}
+function isEdgeSelected(e_id)
+{
+  return activeState.edges(e_id).length > 0;
+}
+
 
 function getDataChildConnections(c)
 {
@@ -482,7 +499,7 @@ function moveChildConnectionNodes(nodes)
     {
       [c.p1, c.p2].forEach(p_t =>
       {
-        if (isChildConnectionNode(p_t) && c.p2 != n1.id) {
+        if (isChildConnectionNodeId(p_t) && c.p2 != n1.id) {
           if (alreadyDone.includes(p_t)) {
             // console.log('child ' + childConnectionNodeId + ' already moved');
             return;
@@ -956,7 +973,7 @@ function selectDirectRelatives(e)
       if ('pc' in pp) {
         activeState.addEdges(pp.pc.t);
       }
-      recurseUp(pp.p);
+      setTimeout(() => recurseUp(pp.p), settings.selectDirectRelativesDelay);
     });
   };
   let recurseDown = p =>
@@ -970,7 +987,7 @@ function selectDirectRelatives(e)
       if ('pc' in pc) {
         activeState.addEdges(pc.pc.t);
       }
-      recurseDown(pc.p);
+      setTimeout(() => recurseDown(pc.p), settings.selectDirectRelativesDelay);
     });
   };
   deselectAll();
@@ -1264,7 +1281,25 @@ function addPerson(p_raw, toData, toServer, toGraph, refreshGraph, doneCallback 
             color: getNodeColorFromPerson(p._),
             labelAlignment: (p.y < nodeCenterY) ? 'top' : 'bottom' });
         p._graphNode = s.graph.nodes(p.t);
-        },
+
+        if (my.isDoppelganger) {
+          let d_id = '*' + p.t + '-doppelganger-' + p._.t;
+          s.graph.addEdge({
+            _my: {
+              isDoppelgangerConnection: true,
+              p: p
+            },
+            id: d_id,
+            source: p.t,
+            target: p._.t,
+            label: 'Doppelganger',
+            size: settings.edgeSize,
+            type: getConnectionRelationSettings('Doppelganger').lineType,
+            color: settings.edgeColorDoppelganger,
+            hidden: true });
+          p._graphEdge = s.graph.edges(d_id);
+        }
+      },
       refreshGraph: refreshGraph,
       doneCallback: doneCallback
     }, logAddPerson);
@@ -1427,7 +1462,7 @@ function startNewConnection()
 function startNewChildConnection()
 {
   let c = activeState.edges()[0];
-  if (isChildConnectionNode(c.source)) {
+  if (isChildConnectionNodeId(c.source)) {
     console.log('no child connection possible - selected connection is already a child connection');
     return;
   }
@@ -1488,8 +1523,12 @@ function showConnectionInfo(e)
       console.error('connection not found');
       return;
     }
+    if (c === undefined) {
+      console.log('no info available for this connection');
+      return;
+    }
     let p1_n = '';
-    let isChildConnection = isChildConnectionNode(c.p1);
+    let isChildConnection = isChildConnectionNodeId(c.p1);
     if (isChildConnection) {
       p1_n = getPersonRufname(c._persons[0]) + ' & ' + getPersonRufname(c._persons[1]);
     }
@@ -1625,7 +1664,7 @@ function addConnection(c_raw, toData, toServer, toGraph, refreshGraph, doneCallb
     c.prepare();
   }
 
-  let isChildConnection = isChildConnectionNode(c.p1);
+  let isChildConnection = isChildConnectionNodeId(c.p1);
   if (toGraph && isChildConnection) {
     if (!s.graph.nodes(c.p1)) {
       let p1 = getParentTsFromChildConnectionNode(c.p1);
@@ -1727,6 +1766,9 @@ function deleteConnection(c_t, toData = true, toServer = true, toGraph = true, r
   }
 }
 
+
+// extensions
+// ------------------------------------
 let extensionNodes = [];
 let extensionEdges = [];
 
@@ -1763,6 +1805,16 @@ function addExtension(p, id, offset_xy, label)
 }
 
 
+// other
+// ------------------------------------
+function getPersonAndDoppelgangers(n)
+{
+  let ds = n._my.p._._doppelgangers.slice(0);
+  ds.push(n._my.p._);
+  return ds;
+}
+
+
 // events
 // ------------------------------------
 
@@ -1777,31 +1829,24 @@ activeState.bind('activeNodes', e =>
   let addedNodes = diff(activeNodes, tmpActiveNodes);
   let droppedNodes = diff(tmpActiveNodes, activeNodes);
   tmpActiveNodes = activeNodes;
-  let getDoppelgangers = n =>
-  {
-    let ds = [];
-    if (isPerson(n)) {
-      ds = n._my.p._doppelgangers;
-    }
-    else if (isDoppelganger(n)) {
-      ds = n._my.p._._doppelgangers.slice(0);
-      ds.splice(ds.indexOf(n._my.p), 1);
-      ds.push(n._my.p._);
-    }
-    return ds;
-  };
   droppedNodes.forEach(n =>
   {
-    getDoppelgangers(n).forEach(d =>
+    getPersonAndDoppelgangers(n).forEach(d =>
     {
       delete d._graphNode.outer_border_size;
+      if ('_graphEdge' in d) {
+        d._graphEdge.hidden = true;
+      }
     });
   });
   addedNodes.forEach(n =>
   {
-    getDoppelgangers(n).forEach(d =>
+    getPersonAndDoppelgangers(n).forEach(d =>
     {
       d._graphNode.outer_border_size = settings.nodeBorderSizeDoppelganger;
+      if ('_graphEdge' in d) {
+        d._graphEdge.hidden = false;
+      }
     });
   });
   s.refresh();
@@ -1814,7 +1859,7 @@ function bindDefaultViewerEvents()
   {
     let n = e.data.node;
     deselectAll(null, false, [n.id]);
-    if (isPerson(n) || isDoppelganger(n)) {
+    if (isPersonNode(n) || isDoppelgangerNode(n)) {
       activeState.addNodes(n.id);
       s.refresh();
       showPersonInfo(n);
@@ -1823,7 +1868,7 @@ function bindDefaultViewerEvents()
   e =>
   {
     let n = e.data.node;
-    if (!isPerson(n) && !isDoppelganger(n)) {
+    if (!isPersonNode(n) && !isDoppelgangerNode(n)) {
       return;
     }
     if (!currentLayoutId) {
@@ -1840,8 +1885,11 @@ function bindDefaultViewerEvents()
   s.bind('clickEdge', e =>
   {
     let ed = e.data.edge;
+    if (isDoppelgangerConnectionEdge(ed)) {
+      return;
+    }
     deselectAll(null, false, [ed.id]);
-    if (isExtension(e.data.edge)) {
+    if (isExtensionEdge(e.data.edge)) {
       layouts[currentLayoutId].apply(ed.source);
       // s.refresh();
       return;

@@ -2,16 +2,30 @@
 s.bind('hovers', e =>
 {
   // console.log(e);
+  let showHideDoppelgangerEdges = (n, hidden) =>
+  {
+    if (isDoppelgangerNode(n) && !isNodeSelected(n.id)) {
+      n._my.p._graphEdge.hidden = hidden;
+    }
+    else if (isPersonNode(n) && !isNodeSelected(n.id)) {
+      n._my.p._doppelgangers.forEach(d =>
+      {
+        d._graphEdge.hidden = hidden;
+      });
+    }
+  }
   e.data.enter.nodes.forEach(n =>
   {
-    if (isPerson(n) || isDoppelganger(n))  {
+    if (isPersonNode(n) || isDoppelgangerNode(n))  {
       n.label = getPersonExtendedDisplayString(n._my.p._);
+      showHideDoppelgangerEdges(n, false);
     }
   });
   e.data.leave.nodes.forEach(n =>
   {
-    if (isPerson(n) || isDoppelganger(n))  {
+    if (isPersonNode(n) || isDoppelgangerNode(n))  {
       n.label = getPersonRufname(n._my.p._);
+      showHideDoppelgangerEdges(n, true);
     }
   });
 
@@ -40,7 +54,7 @@ let cdcNode = clickDoubleClick(
 
     console.log(['clickNode', e]);
     let n = e.data.node;
-    if (!isPerson(n) && !isDoppelganger(n)) {
+    if (!isPersonNode(n) && !isDoppelgangerNode(n)) {
       return;
     }
 
@@ -71,7 +85,7 @@ let cdcNode = clickDoubleClick(
   {
     console.log(['doubleClickNode', e]);
     let n = e.data.node;
-    if (!isPerson(n) && !isDoppelganger(n)) {
+    if (!isPersonNode(n) && !isDoppelgangerNode(n)) {
       return;
     }
     if (!currentLayoutId) {
@@ -88,12 +102,16 @@ s.bind('doubleClickNode', cdcNode.doubleClick.bind(cdcNode));
 
 s.bind('clickEdge', e =>
 {
-  let e_id = e.data.edge.id;
+  let ed = e.data.edge;
+  if (isDoppelgangerConnectionEdge(ed)) {
+    return;
+  }
+  let e_id = ed.id;
   if (!multipleKeyPressed(e)) {
     deselectAll(null, false, [e_id]);
     activeState.addEdges(e_id);
     s.refresh();
-    showConnectionInfo(e.data.edge);
+    showConnectionInfo(ed);
   }
   else {
     deselectConnections(null, false, [e_id]);
@@ -207,7 +225,7 @@ lasso.bind('selectedNodes', (e) =>
 {
   let nodes = e.data;
   activeState.dropEdges();
-  activeState.addNodes(nodes.map(n => n.id).filter(n_id => !isChildConnectionNode(n_id)));
+  activeState.addNodes(nodes.map(n => n.id).filter(n_id => !isChildConnectionNodeId(n_id)));
   s.refresh();
 });
 

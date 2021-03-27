@@ -88,7 +88,7 @@ function clearMobileActionMode()
 s.bind('clickNode', e =>
 {
   let n_id = e.data.node.id;
-  if (isChildConnectionNode(n_id)) {
+  if (isChildConnectionNodeId(n_id)) {
     return;
   }
   if (mobileActionMode) {
@@ -129,7 +129,11 @@ s.bind('clickNode', e =>
 
 s.bind('clickEdge', e =>
 {
-  let e_id = e.data.edge.id;
+  let ed = e.data.edge;
+  if (isDoppelgangerConnectionEdge(ed)) {
+    return;
+  }
+  let e_id = ed.id;
   if (mobileActionMode) {
     switch (mobileActionMode) {
       case MOBILE_ACTION_NEW_CONNECTION:
@@ -152,7 +156,7 @@ s.bind('clickEdge', e =>
     deselectAll(null, false, [e_id]);
     activeState.addEdges(e_id);
     s.refresh();
-    showConnectionInfo(e.data.edge);
+    showConnectionInfo(ed);
   }
 });
 

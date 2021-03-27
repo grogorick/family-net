@@ -23,7 +23,7 @@ class Connection
   prepare()
   {
     let p2 = getDataPerson(this.p2)._;
-    let isChildConnection = isChildConnectionNode(this.p1);
+    let isChildConnection = isChildConnectionNodeId(this.p1);
     let level = getConnectionRelationSettings(this.r).level;
     let tmp = null;
     if (isChildConnection || level === 'v') {
