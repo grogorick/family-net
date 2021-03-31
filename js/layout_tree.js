@@ -28,7 +28,7 @@ function TreeLayout()
       console.log('prepare');
       this.prepare();
 
-      console.log('layout for "' + getPersonFullName(this.p0) + '"');
+      console.log('layout for "' + this.p0.get_fullName() + '"');
       console.log(this.p0);
       this.layout(this.p0);
       this.showNode(this.p0);
@@ -237,10 +237,10 @@ function TreeLayout()
       // pp.p._graphNode.label += '\n' + pp.p.layout_tree.up.left + '/' + pp.p.layout_tree.up.right + '\n' + pp.p._graphNode.x;
 
       if (pp.p._partners.length > 1) {
-        addExtension(pp.p, 'partners', { x: (i * 2 - 1) * this.settings.nodeSpacingY / 2, y: 0 }, 'Weitere Partner von ' + getPersonRufname(pp.p));
+        addExtension(pp.p, 'partners', { x: (i * 2 - 1) * this.settings.nodeSpacingY / 2, y: 0 }, 'Weitere Partner von ' + pp.p.get_shortDisplayString());
       }
       if (pp.p._children.length > 1) {
-        addExtension(pp.p, 'children', { x: 0, y: this.settings.nodeSpacingY / 2 }, 'Weitere Kinder von ' + getPersonRufname(pp.p));
+        addExtension(pp.p, 'children', { x: 0, y: this.settings.nodeSpacingY / 2 }, 'Weitere Kinder von ' + pp.p.get_shortDisplayString());
       }
       this.showNode(pp.p);
       this.showEdge(pp.c);
@@ -315,24 +315,24 @@ function TreeLayout()
   this.layoutDown = p =>
   {
     // p._graphNode.label += '\n' + p.layout_tree.down.left + ' + ' + p.layout_tree.down.right + '\n' + p.layout_tree.down.childrenLeft + ' + ' + p.layout_tree.down.childrenRight + '\n' + p.layout_tree.down.width + ' / ' + p.layout_tree.down.children;
-    // p._graphNode.label = getPersonRufname(p) + '\n' + p.layout_tree.down.childIdx + ' ' + p.layout_tree.down.reversePartnersAndChildren;
+    // p._graphNode.label = p.get_shortDisplayString() + '\n' + p.layout_tree.down.childIdx + ' ' + p.layout_tree.down.reversePartnersAndChildren;
     p._partners.forEach((pp, i) =>
     {
       pp.p._graphNode.x = p._graphNode.x + (p.layout_tree.down.reversePartnersAndChildren ? -1 : 1) * (i + 1) * 2 * this.settings.nodeSpacingX;
       pp.p._graphNode.y = p._graphNode.y + (this.yearBasedOffsetY(p.b, pp.p.b) || 0);
 
       if (pp.p._parents.length) {
-        addExtension(pp.p, 'parents', { x: 0, y: -this.settings.nodeSpacingY / 2 }, 'Eltern von ' + getPersonRufname(pp.p));
+        addExtension(pp.p, 'parents', { x: 0, y: -this.settings.nodeSpacingY / 2 }, 'Eltern von ' + pp.p.get_shortDisplayString());
       }
       if (pp.p._partners.length > 1) {
-        addExtension(pp.p, 'partners', { x: (p.layout_tree.down.reversePartnersAndChildren ? -1 : 1) * this.settings.nodeSpacingY / 2, y: 0 }, 'Weitere Partner von ' + getPersonRufname(pp.p));
+        addExtension(pp.p, 'partners', { x: (p.layout_tree.down.reversePartnersAndChildren ? -1 : 1) * this.settings.nodeSpacingY / 2, y: 0 }, 'Weitere Partner von ' + pp.p.get_shortDisplayString());
       }
       if (pp.p._children.length > pp.c._children.length) {
-        addExtension(pp.p, 'children', { x: 0, y: this.settings.nodeSpacingY / 2 }, 'Weitere Kinder von ' + getPersonRufname(pp.p));
+        addExtension(pp.p, 'children', { x: 0, y: this.settings.nodeSpacingY / 2 }, 'Weitere Kinder von ' + pp.p.get_shortDisplayString());
       }
       this.showNode(pp.p);
       this.showEdge(pp.c);
-      // pp.p._graphNode.label = getPersonRufname(pp.p) + '\n' + i;
+      // pp.p._graphNode.label = pp.p.get_shortDisplayString() + '\n' + i;
     });
     let x = p._graphNode.x - p.layout_tree.down.childrenLeft * 2 * this.settings.nodeSpacingX;
     let tmpChildren = p._children.slice(0);

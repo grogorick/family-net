@@ -367,42 +367,6 @@ function getGraphPositionFromEvent(e)
   return getGraphPositionFromScreenPosition(e.data.captor.x, e.data.captor.y);
 }
 
-function getPersonDisplayFirstName(p)
-{
-  return p.f.replaceAll(/[*?]|\([^()]*\)/g, '').replaceAll(/  +/g, ' ');
-}
-
-function getPersonFullName(p)
-{
-  return [getPersonDisplayFirstName(p), p.l].join(', ') + (p.m.length ? ' geb. ' + p.m : '');
-}
-
-function getPersonRufname(p)
-{
-  let p_n = p.f;
-  let n = p_n.match(/\(([^()]+)\)/);
-  if (!n) {
-    n = p_n.match(/[*]\s*(([^-,?()]|\s)+)([^-,?()]|\s|$)/);
-    if (!n) {
-      n = p_n.match(/^([^ ,?()]+)(,|-|\s|$)/);
-    }
-  }
-  return n ? n[1] : '';
-}
-
-function getPersonExtendedDisplayString(p)
-{
-  let n = [getPersonDisplayFirstName(p), p.l].join(' ') + (p.m.length ? ' geb. ' + p.m : '');
-  let b = splitDate(p.b)[0];
-  let d = splitDate(p.d)[0];
-  return n + ((b || d) ? ' \n ' + b + ' — ' + d : '');
-}
-
-function getNodeColorFromPerson(p)
-{
-  return 'color' in p ? p.color : (p.t === PERSON_PREVIEW ? settings.nodeColorPreview : ([p.f, p.l, p.m, p.o].some(v => (typeof v === 'string') && v.includes('???')) ? settings.nodeColorWarning : settings.nodeColor));
-}
-
 function getEdgeColorFromConnection(c)
 {
   return c.t === CONNECTION_PREVIEW ? settings.edgeColorPreview : (c.d.includes('???') ? settings.edgeColorWarning : '');
@@ -1276,9 +1240,9 @@ function addPerson(p_raw, toData, toServer, toGraph, refreshGraph, doneCallback 
             id: p.t,
             x: p.x,
             y: p.y,
-            label: getPersonRufname(p._),
+            label: p._.get_shortDisplayString(),
             size: settings.nodeSize,
-            color: getNodeColorFromPerson(p._),
+            color: p._.get_nodeColor(),
             labelAlignment: (p.y < nodeCenterY) ? 'top' : 'bottom' });
         p._graphNode = s.graph.nodes(p.t);
 
@@ -1323,8 +1287,8 @@ function editPerson(p, toData = true, toServer = true, toGraph = true, refreshGr
       toGraph: !toGraph ? null : () =>
       {
         let n = s.graph.nodes(p.t);
-        n.label = getPersonRufname(p);
-        n.color = getNodeColorFromPerson(p);
+        n.label = p.get_shortDisplayString();
+        n.color = p.get_nodeColor();
       },
       refreshGraph: refreshGraph
     });
@@ -1530,12 +1494,12 @@ function showConnectionInfo(e)
     let p1_n = '';
     let isChildConnection = isChildConnectionNodeId(c.p1);
     if (isChildConnection) {
-      p1_n = getPersonRufname(c._persons[0]) + ' & ' + getPersonRufname(c._persons[1]);
+      p1_n = c._persons[0].get_shortDisplayString() + ' & ' + c._persons[1].get_shortDisplayString();
     }
     else {
-      p1_n = getPersonRufname(c._persons[0]);
+      p1_n = c._persons[0].get_shortDisplayString();
     }
-    connectionMenuPersons.innerHTML = escapeHtml(p1_n) + ' &mdash; ' + escapeHtml(getPersonRufname(c._persons[c._persons.length - 1]));
+    connectionMenuPersons.innerHTML = escapeHtml(p1_n) + ' &mdash; ' + escapeHtml(c._persons[c._persons.length - 1].get_shortDisplayString());
     connectionMenuRelation.value = c.r;
     connectionMenuDesc.value = c.d;
     if (currentUserCanEdit()) {

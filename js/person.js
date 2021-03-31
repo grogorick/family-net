@@ -54,7 +54,7 @@ class PersonFunctions
 
   get_shortDisplayString()
   {
-    return this._.get_rufname() || this._.get_lastNames();
+    return this._.get_rufname() || this._.get_lastNames() || '???';
   }
 
   get_longDisplayString()

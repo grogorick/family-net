@@ -17,14 +17,14 @@ s.bind('hovers', e =>
   e.data.enter.nodes.forEach(n =>
   {
     if (isPersonNode(n) || isDoppelgangerNode(n))  {
-      n.label = getPersonExtendedDisplayString(n._my.p._);
+      n.label = n._my.p._.get_longDisplayString();
       showHideDoppelgangerEdges(n, false);
     }
   });
   e.data.leave.nodes.forEach(n =>
   {
     if (isPersonNode(n) || isDoppelgangerNode(n))  {
-      n.label = getPersonRufname(n._my.p._);
+      n.label = n._my.p._.get_shortDisplayString();
       showHideDoppelgangerEdges(n, true);
     }
   });
