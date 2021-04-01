@@ -104,10 +104,10 @@ function toServerDataGraph(action, d, cb = { toServer: null, toData: null, toGra
   let continueWhenServerIsDone = function()
   {
     if (cb.toData) {
-      cb.toData(d);
+      d = cb.toData(d) || d;
     }
     if (cb.toGraph) {
-      cb.toGraph(d);
+      d = cb.toGraph(d) || d;
     }
     if (cb.refreshGraph) {
       s.refresh();
@@ -120,7 +120,7 @@ function toServerDataGraph(action, d, cb = { toServer: null, toData: null, toGra
     xhRequest('?action=' + action + '&d=' + encodeURIComponent(JSON.stringify(d)), responseText =>
     {
       if (cb.toServer !== true) {
-        cb.toServer(responseText, d);
+        d = cb.toServer(responseText, d) || d;
       }
       continueWhenServerIsDone();
     });

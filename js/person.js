@@ -18,15 +18,28 @@ class PersonFunctions
 {
   _ = this;
 
-  get_rufname()
+  get_rufName()
+  {
+    return this.get_nickName() || this.get_firstName();
+  }
+
+  // ... (xxx) ...
+  get_nickName()
   {
     let f = this._.f.replaceAll('?', '').trim();
-    let n = f.match(/\(([^()]+)\)/);// ... (___) ...
+    let n = f.match(/\(([^()]+)\)/);
+    return n ? n[1] : '';
+  }
+
+  // ... *xxx ...<br>
+  // oder<br>
+  // xxx ... ...
+  get_firstName()
+  {
+    let f = this._.f.replaceAll('?', '').trim();
+    let n = f.match(/[*]\s*([^-,()\s]+)([-,()\s]|$)/);
     if (!n) {
-      n = f.match(/[*]\s*([^-,()\s]+)([-,()\s]|$)/);// ... *___ ...
-      if (!n) {
-        n = f.match(/^([^-,()\s]+)([-,()\s]|$)/);// ___ ... ...
-      }
+      n = f.match(/^([^-,()\s]+)([-,()\s]|$)/);
     }
     return n ? n[1] : '';
   }
@@ -52,9 +65,24 @@ class PersonFunctions
     return [this._.get_firstNames(), this._.get_lastNames()].joinNotEmpty(' ');
   }
 
+  get_birthYear()
+  {
+    return splitDate(this._.b)[0];
+  }
+
+  get_birthMonth()
+  {
+    return splitDate(this._.b)[1];
+  }
+
+  get_birthDay()
+  {
+    return splitDate(this._.b)[2];
+  }
+
   get_shortDisplayString()
   {
-    return this._.get_rufname() || this._.get_lastNames() || '???';
+    return this._.get_rufName() || this._.get_lastNames() || '???';
   }
 
   get_longDisplayString()
@@ -132,6 +160,8 @@ class Doppelganger extends PersonFunctions
   t = null;
   p = null;
 
+  _prepared = false;
+
   constructor(p)
   {
     super();
@@ -141,12 +171,19 @@ class Doppelganger extends PersonFunctions
 
   prepare()
   {
-    this._ = getDataPerson(this.p);
-    this._._doppelgangers.push(this);
+    if (!this._prepared) {
+      this._ = getDataPerson(this.p);
+      this._._doppelgangers.push(this);
+      this._prepared = true;
+    }
   }
 
   reset()
   {
-    this._._doppelgangers.splice(this._._doppelgangers.indexOf(this), 1);
+    if (this._prepared) {
+      this._._doppelgangers.splice(this._._doppelgangers.indexOf(this), 1);
+      this._ = this;
+      this._prepared = false;
+    }
   }
 }

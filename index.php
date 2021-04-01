@@ -1,10 +1,11 @@
 <?php
 //phpinfo();
-define('MAINTENANCE', false);
 
 // browser cache fix for scripts and styles
-define('V', 24);
+define('V', 25.2);
 define('V_', '?v=' . V);
+
+define('MAINTENANCE', false);
 
 define('RUNTIME_DIR', 'runtime');
 
@@ -943,7 +944,7 @@ if ($_SESSION[TYPE] === ADMIN_) {
   if ($_SESSION[TYPE] !== ADMIN_) {
 ?>
   <style type="text/css">
-    .BETA { display: none; }
+    .BETA { display: none !important; }
   </style>
 <?php
 }

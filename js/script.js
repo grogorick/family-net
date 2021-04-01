@@ -280,11 +280,15 @@ function getDataConnectionIndex(t)
 
 function deleteDataPerson(t)
 {
-  return data.graph.persons.splice(data.graph.persons.findIndex(d => d.t == t), 1);
+  let i = getDataPersonIndex(t);
+  data.graph.persons[i].reset();
+  return data.graph.persons.splice(i, 1);
 }
 function deleteDataConnection(t)
 {
-  data.graph.connections.splice(data.graph.connections.findIndex(d => d.t == t), 1);
+  let i = getDataConnectionIndex(t);
+  data.graph.connections[i].reset();
+  return data.graph.connections.splice(i, 1);
 }
 
 function compareTs(c_p_t, p_t)
@@ -365,11 +369,6 @@ function getGraphPositionFromScreenPosition(x, y)
 function getGraphPositionFromEvent(e)
 {
   return getGraphPositionFromScreenPosition(e.data.captor.x, e.data.captor.y);
-}
-
-function getEdgeColorFromConnection(c)
-{
-  return c.t === CONNECTION_PREVIEW ? settings.edgeColorPreview : (c.d.includes('???') ? settings.edgeColorWarning : '');
 }
 
 function getConnectionRelationSettings(r)
@@ -1213,7 +1212,6 @@ function addPerson(p_raw, toData, toServer, toGraph, refreshGraph, doneCallback 
   let p = p_raw;
   if (!(p instanceof PersonFunctions)) {
     p = convertPerson(p);
-    p.prepare();
   }
 
   toServerDataGraph('addPerson', p_raw, {
@@ -1225,6 +1223,7 @@ function addPerson(p_raw, toData, toServer, toGraph, refreshGraph, doneCallback 
       toData: !toData ? null : () =>
       {
         data.graph.persons.push(p);
+        p.prepare();
       },
       toGraph: !toGraph ? null : () =>
       {
@@ -1278,13 +1277,13 @@ function editPerson(p, toData = true, toServer = true, toGraph = true, refreshGr
       toServer: !toServer ? null : addLogItemFromServerResponse,
       toData: !toData ? null : () =>
       {
-        let i = getDataPersonIndex(p.t);
-        let old = data.graph.persons[i];
-        p.x = old.x;
-        p.y = old.y;
-        data.graph.persons[i] = p;
+        let dataP = getDataPerson(p.t);
+        for (let attr in p) {
+          dataP[attr] = p[attr];
+        }
+        return dataP;
       },
-      toGraph: !toGraph ? null : () =>
+      toGraph: !toGraph ? null : (p) =>
       {
         let n = s.graph.nodes(p.t);
         n.label = p.get_shortDisplayString();
@@ -1299,9 +1298,6 @@ function editPerson(p, toData = true, toServer = true, toGraph = true, refreshGr
 
 function deletePerson(p_t, toData = true, toServer = true, toGraph = true, refreshGraph = true)
 {
-  if (toData) {
-    resetPerson(getDataPerson(p_t));
-  }
   toServerDataGraph('deletePerson', p_t, {
       toServer: !toServer ? null : addLogItemFromServerResponse,
       toData: !toData ? null : () => deleteDataPerson(p_t),
@@ -1625,7 +1621,6 @@ function addConnection(c_raw, toData, toServer, toGraph, refreshGraph, doneCallb
   let c = c_raw;
   if (!(c instanceof Connection)) {
     c = convertConnection(c);
-    c.prepare();
   }
 
   let isChildConnection = isChildConnectionNodeId(c.p1);
@@ -1657,6 +1652,7 @@ function addConnection(c_raw, toData, toServer, toGraph, refreshGraph, doneCallb
       toData: !toData ? null : () =>
       {
         data.graph.connections.push(c);
+        c.prepare();
       },
       toGraph: !toGraph ? null : () =>
       {
@@ -1677,7 +1673,7 @@ function addConnection(c_raw, toData, toServer, toGraph, refreshGraph, doneCallb
             label: c.r,
             size: settings.edgeSize,
             type: getConnectionRelationSettings(c.r).lineType,
-            color: getEdgeColorFromConnection(c)});
+            color: c.get_edgeColor()});
         c._graphEdge = s.graph.edges(c.t);
       },
       refreshGraph: refreshGraph,
@@ -1696,16 +1692,28 @@ function editConnection(c, toData = true, toServer = true, toGraph = true, refre
       {
         let i = getDataConnectionIndex(c.t);
         let old = data.graph.connections[i];
-        c.p1 = old.p1;
-        c.p2 = old.p2;
-        data.graph.connections[i] = c;
+        if (old.r === c.r) {
+          for (let attr in c) {
+            old[attr] = c[attr];
+          }
+          return old;
+        }
+        else {
+          old.reset();
+          c = convertConnection(c);
+          c.p1 = old.p1;
+          c.p2 = old.p2;
+          c.prepare();
+          data.graph.connections[i] = c;
+          return c;
+        }
       },
-      toGraph: !toGraph ? null : () =>
+      toGraph: !toGraph ? null : (c) =>
       {
         let e = s.graph.edges(c.t);
         e.label = c.r;
         e.type = getConnectionRelationSettings(c.r).lineType;
-        e.color = getEdgeColorFromConnection(c);
+        e.color = c.get_edgeColor();
       },
       refreshGraph: refreshGraph
     });
@@ -1716,9 +1724,6 @@ function editConnection(c, toData = true, toServer = true, toGraph = true, refre
 
 function deleteConnection(c_t, toData = true, toServer = true, toGraph = true, refreshGraph = true)
 {
-  if (toData) {
-    resetConnection(getDataConnection(c_t));
-  }
   toServerDataGraph('deleteConnection', c_t, {
       toServer: !toServer ? null : addLogItemFromServerResponse,
       toData: !toData ? null : () => deleteDataConnection(c_t),

@@ -19,6 +19,22 @@ class Connection
 
   _persons = [];
   _children = [];
+  _prepared = false;
+
+  get_edgeColor()
+  {
+    if ('color' in this) {
+      return this._.color;
+    }
+    if (this.t === CONNECTION_PREVIEW)
+    {
+      return settings.edgeColorPreview;
+    }
+    if (this.d.includes('???')) {
+      return settings.edgeColorWarning;
+    }
+    return settings.edgeColor;
+  }
 
   prepare()
   {
@@ -73,6 +89,7 @@ class Connection
       this._persons.push(p1);
     }
     this._persons.push(p2);
+    this._prepared = true;
   }
 
   reset()
@@ -88,5 +105,6 @@ class Connection
       p._partners = p._partners.filter(pp => pp.c !== this);
       p._other = p._other.filter(po => pp.c !== this);
     });
+    this._prepared = false;
   }
 }
