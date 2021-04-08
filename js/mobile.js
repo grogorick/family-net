@@ -48,41 +48,65 @@ let mobileActionNewPerson = document.getElementById('mobile-action-new-person');
 let mobileActionNewConnection = document.getElementById('mobile-action-new-connection');
 let mobileActionMovePerson = document.getElementById('mobile-action-move-person');
 
-if (currentUserIsEditing) {
-  mobileActionNewPerson.addEventListener('click', () =>
-  {
-    mobileActionMode = mobileActionNewPerson.classList.toggle('selected') ? MOBILE_ACTION_NEW_PERSON : null;
-    mobileActionNewConnection.classList.remove('selected');
-    mobileActionMovePerson.classList.remove('selected');
-    if (mobileActionMode) {
-      deselectAll();
-    }
-  });
-  mobileActionNewConnection.addEventListener('click', () =>
-  {
-    mobileActionNewPerson.classList.remove('selected');
-    mobileActionMode = mobileActionNewConnection.classList.toggle('selected') ? MOBILE_ACTION_NEW_CONNECTION : null;
-    mobileActionMovePerson.classList.remove('selected');
-    if (mobileActionMode) {
-      deselectAll();
-    }
-  });
-  mobileActionMovePerson.addEventListener('click', () =>
-  {
-    mobileActionNewPerson.classList.remove('selected');
-    mobileActionNewConnection.classList.remove('selected');
-    mobileActionMode = mobileActionMovePerson.classList.toggle('selected') ? MOBILE_ACTION_MOVE_PERSON : null;
-    if (mobileActionMode) {
-      deselectAll();
-    }
-  });
+if (currentUserCanEdit()) {
+  if (permissions.CREATE_PERSONS) {
+    mobileActionNewPerson.addEventListener('click', () =>
+    {
+      mobileActionMode = mobileActionNewPerson.classList.toggle('selected') ? MOBILE_ACTION_NEW_PERSON : null;
+      if (mobileActionNewConnection) {
+        mobileActionNewConnection.classList.remove('selected');
+      }
+      if (mobileActionMovePerson) {
+        mobileActionMovePerson.classList.remove('selected');
+      }
+      if (mobileActionMode) {
+        deselectAll();
+      }
+    });
+  }
+  if (permissions.CREATE_CONNECTIONS) {
+    mobileActionNewConnection.addEventListener('click', () =>
+    {
+      if (mobileActionNewPerson) {
+        mobileActionNewPerson.classList.remove('selected');
+      }
+      mobileActionMode = mobileActionNewConnection.classList.toggle('selected') ? MOBILE_ACTION_NEW_CONNECTION : null;
+      if (mobileActionMovePerson) {
+        mobileActionMovePerson.classList.remove('selected');
+      }
+      if (mobileActionMode) {
+        deselectAll();
+      }
+    });
+  }
+  if (permissions.EDIT_PERSONS) {
+    mobileActionMovePerson.addEventListener('click', () =>
+    {
+      if (mobileActionNewPerson) {
+        mobileActionNewPerson.classList.remove('selected');
+      }
+      if (mobileActionNewConnection) {
+        mobileActionNewConnection.classList.remove('selected');
+      }
+      mobileActionMode = mobileActionMovePerson.classList.toggle('selected') ? MOBILE_ACTION_MOVE_PERSON : null;
+      if (mobileActionMode) {
+        deselectAll();
+      }
+    });
+  }
 }
 function clearMobileActionMode()
 {
   mobileActionMode = null;
-  mobileActionNewPerson.classList.remove('selected');
-  mobileActionNewConnection.classList.remove('selected');
-  mobileActionMovePerson.classList.remove('selected');
+  if (mobileActionNewPerson) {
+    mobileActionNewPerson.classList.remove('selected');
+  }
+  if (mobileActionNewConnection) {
+    mobileActionNewConnection.classList.remove('selected');
+  }
+  if (mobileActionMovePerson) {
+    mobileActionMovePerson.classList.remove('selected');
+  }
 }
 
 s.bind('clickNode', e =>

@@ -71,10 +71,14 @@ let cdcNode = clickDoubleClick(
       let numNodes = activeState.nodes().length;
       let numEdges = activeState.edges().length;
       if (numNodes === 2 && numEdges === 0) {
-        startNewConnection();
+        if (permissions.CREATE_CONNECTIONS) {
+          startNewConnection();
+        }
       }
       else if (numNodes === 1 && numEdges === 1) {
-        startNewChildConnection();
+        if (permissions.CREATE_CONNECTIONS) {
+          startNewChildConnection();
+        }
       }
       else if (numEdges > 0 && numNodes > 1) {
         deselectConnections();
@@ -119,8 +123,10 @@ s.bind('clickEdge', e =>
     s.refresh();
     let numNodes = activeState.nodes().length;
     let numEdges = activeState.edges().length;
-    if (numNodes === 1 && numEdges === 1) {
-      startNewChildConnection();
+    if (numNodes === 1) {
+      if (permissions.CREATE_CONNECTIONS) {
+        startNewChildConnection();
+      }
     }
     else if (numNodes > 1) {
       deselectPersons();
@@ -150,7 +156,9 @@ let cdcStage = clickDoubleClick(
   e =>
   {
     console.log(['doubleClick', e]);
-    startNewPerson(e);
+    if (permissions.CREATE_PERSONS) {
+      startNewPerson(e);
+    }
   });
 
 s.bind('clickStage', cdcStage.click.bind(cdcStage));
@@ -175,7 +183,7 @@ s.bind('coordinatesUpdated', e =>
 
 dragListener.bind('startdrag', e =>
 {
-  if (multipleKeyPressed(e)) {
+  if (multipleKeyPressed(e) && permissions.EDIT_PERSONS) {
     console.log(['startdrag', e]);
   }
   else {

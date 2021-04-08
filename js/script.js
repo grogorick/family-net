@@ -172,7 +172,7 @@ function durationToString(duration)
 
 let startEdit = document.getElementById('start-edit');
 if (startEdit) {
-  if (!currentUserIsViewer) {
+  if (permissions.EDIT) {
     let otherEditorDiv = document.getElementById('other-editor');
     let checkOtherEditor = () =>
     {
@@ -181,7 +181,7 @@ if (startEdit) {
       {
         let otherEditor = JSON.parse(responseText);
         if (otherEditor !== false) {
-          if (!currentUserIsViewer) {
+          if (permissions.EDIT) {
             startEdit.classList.add('hidden');
           }
           let otherEditorTimeout = otherEditor[0] + editingTimeoutDuration - Math.floor(new Date().getTime() / 1000);
@@ -190,7 +190,7 @@ if (startEdit) {
         }
         else {
           otherEditorDiv.classList.add('hidden');
-          if (!currentUserIsViewer) {
+          if (permissions.EDIT) {
             startEdit.classList.remove('hidden');
           }
         }
@@ -581,7 +581,10 @@ function applyLoadedData(loadedData, addLogItems, adjustCamera)
 
   if (addLogItems) {
     if (data.log.length > 0) {
-      let logItemRestorable = currentUserIsEditing && (data.log[0][2] === currentUser || currentUserIsAdmin);
+      let logItemRestorable =
+        currentUserIsEditing &&
+        (permissions.LOG_RESET_ALL ||
+        (permissions.LOG_RESET_OWN && data.log[0][2] === currentUser));
       logAddLogItem = 3;
       let i = 0;
       let addLog = (continueAdding = true) => {
@@ -589,7 +592,9 @@ function applyLoadedData(loadedData, addLogItems, adjustCamera)
         for (; i < j; ++i) {
           let l = data.log[i];
           addLogItem(l, false, logItemRestorable);
-          logItemRestorable = logItemRestorable && currentUserIsEditing && (l[2] === currentUser || currentUserIsAdmin);
+          logItemRestorable = logItemRestorable &&
+            (permissions.LOG_RESET_ALL ||
+            (permissions.LOG_RESET_OWN && l[2] === currentUser));
           if (logAddLogItem) --logAddLogItem;
         }
         if (continueAdding && i < data.log.length - 1) {
@@ -647,7 +652,7 @@ logListUL.addEventListener('mouseleave', e =>
   }
 });
 
-if (currentUserIsAdmin) {
+if (permissions.ADMIN) {
   document.getElementById('log-extended').addEventListener('change', () =>
   {
     xhRequest('?action=toggle-extended-log', () => window.location.reload());
@@ -1090,8 +1095,8 @@ function showPersonInfo(n)
     personMenuDeathYear.value = pd[0];
     updateDateValue(personMenuDeathDay, personMenuDeathMonth, personMenuDeathYear);
     personMenuNote.value = p.o;
-    if (currentUserCanEdit()) {
-      personMenuDelete.classList.toggle('hidden', getDataPersonConnections(t).length > 0)
+    personMenuDelete.classList.toggle('hidden', !currentUserCanEdit() || !permissions.DELETE_PERSONS || getDataPersonConnections(t).length > 0)
+    if (currentUserCanEdit() && permissions.EDIT_PERSONS) {
       personMenuEdit.classList.remove('hidden');
       personMenuFirstName.disabled = false;
       personMenuLastName.disabled = false;
@@ -1105,7 +1110,6 @@ function showPersonInfo(n)
       personMenuNote.disabled = false;
     }
     else {
-      personMenuDelete.classList.add('hidden');
       personMenuEdit.classList.add('hidden');
       personMenuFirstName.disabled = true;
       personMenuLastName.disabled = true;
@@ -1131,7 +1135,7 @@ function showPersonInfo(n)
 
 personMenuAdd.addEventListener('click', e =>
 {
-  if (currentUserCanEdit()) {
+  if (currentUserCanEdit() && permissions.CREATE_PERSONS) {
     console.log('click person-form-add');
     hideForm(personMenuForm);
     let personPreview = s.graph.nodes(PERSON_PREVIEW);
@@ -1160,7 +1164,7 @@ personMenuAdd.addEventListener('click', e =>
 
 personMenuEdit.addEventListener('click', e =>
 {
-  if (currentUserCanEdit()) {
+  if (currentUserCanEdit() && permissions.EDIT_PERSONS) {
     console.log('click person-form-edit');
     hideForm(personMenuForm);
     editPerson({
@@ -1177,7 +1181,7 @@ personMenuEdit.addEventListener('click', e =>
 
 personMenuDelete.addEventListener('click', e =>
 {
-  if (currentUserCanEdit()) {
+  if (currentUserCanEdit() && permissions.DELETE_PERSONS) {
     console.log('click person-form-delete');
     let t = activeState.nodes()[0].id;
     let connections = getDataPersonConnections(t);
@@ -1352,7 +1356,7 @@ let personMenuDoppelgangerPerson = personMenuDoppelgangerAdd.querySelector('span
 
 personMenuDoppelgangerAdd.addEventListener('click', e =>
 {
-  if (currentUserCanEdit()) {
+  if (currentUserCanEdit() && permissions.EDIT_PERSONS) {
     console.log('click person-form-doppelganger-add');
     hideForm(personMenuForm);
     let personPreview = s.graph.nodes(PERSON_PREVIEW);
@@ -1498,14 +1502,13 @@ function showConnectionInfo(e)
     connectionMenuPersons.innerHTML = escapeHtml(p1_n) + ' &mdash; ' + escapeHtml(c._persons[c._persons.length - 1].get_shortDisplayString());
     connectionMenuRelation.value = c.r;
     connectionMenuDesc.value = c.d;
-    if (currentUserCanEdit()) {
-      connectionMenuDelete.classList.toggle('hidden', c._children.length > 0);
+    connectionMenuDelete.classList.toggle('hidden', !currentUserCanEdit() || !permissions.DELETE_CONNECTIONS || c._children.length > 0);
+    if (currentUserCanEdit() && permissions.EDIT_CONNECTIONS) {
       connectionMenuEdit.classList.remove('hidden');
       connectionMenuRelation.disabled = false;
       connectionMenuDesc.disabled = false;
     }
     else {
-      connectionMenuDelete.classList.add('hidden');
       connectionMenuEdit.classList.add('hidden');
       connectionMenuRelation.disabled = true;
       connectionMenuDesc.disabled = true;
@@ -1526,7 +1529,7 @@ function showConnectionInfo(e)
 
 connectionMenuAdd.addEventListener('click', e =>
 {
-  if (currentUserCanEdit()) {
+  if (currentUserCanEdit() && permissions.CREATE_CONNECTIONS) {
     console.log('click connection-form-add');
     hideForm(connectionMenuForm);
     deleteConnection(CONNECTION_PREVIEW, false, false, true, false);
@@ -1548,7 +1551,7 @@ connectionMenuAdd.addEventListener('click', e =>
 
 connectionMenuAddChild.addEventListener('click', e =>
 {
-  if (currentUserCanEdit()) {
+  if (currentUserCanEdit() && permissions.CREATE_CONNECTIONS) {
     console.log('click connection-form-add-child');
     hideForm(connectionMenuForm);
     deleteConnection(CONNECTION_PREVIEW, false, false, true, false);
@@ -1573,7 +1576,7 @@ connectionMenuAddChild.addEventListener('click', e =>
 
 connectionMenuEdit.addEventListener('click', e =>
 {
-  if (currentUserCanEdit()) {
+  if (currentUserCanEdit() && permissions.EDIT_CONNECTIONS) {
     console.log('click connection-form-edit');
     hideForm(connectionMenuForm);
     editConnection({
@@ -1586,7 +1589,7 @@ connectionMenuEdit.addEventListener('click', e =>
 
 connectionMenuDelete.addEventListener('click', e =>
 {
-  if (currentUserCanEdit()) {
+  if (currentUserCanEdit() && permissions.DELETE_CONNECTIONS) {
     console.log('click connection-form-delete');
     let t = activeState.edges()[0].id;
     let childConnections = getDataChildConnections(getDataConnection(t));
@@ -1863,9 +1866,11 @@ function bindDefaultViewerEvents()
       // s.refresh();
       return;
     }
-    activeState.addEdges(ed.id);
-    s.refresh();
-    showConnectionInfo(ed);
+    if (isPersonConnectionEdge(ed) || isChildConnectionEdge(ed)) {
+      activeState.addEdges(ed.id);
+      s.refresh();
+      showConnectionInfo(ed);
+    }
   });
 
   s.bind('clickStage', () =>
@@ -1903,6 +1908,7 @@ searchInput.addEventListener('input', e =>
     activeState.addNodes(data.graph.persons.filter(p => (p.f + p.l + p.m + p.o).includes(search)).map(p => p.t));
   }
 });
+
 
 document.querySelectorAll('#layouts > button').forEach(btn =>
 {

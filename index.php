@@ -47,6 +47,47 @@ define('CD_STORAGE_DIR', 'cd ' . STORAGE_DIR . '; ');
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+define('PERMISSION_VIEW_PERSON_DETAILS_FIRST_NAMES', [ ADMIN_, NORMAL_, VIEWER_ ]);
+define('PERMISSION_VIEW_PERSON_DETAILS_LAST_NAMES', [ ADMIN_, NORMAL_, VIEWER_ ]);
+define('PERMISSION_VIEW_PERSON_DETAILS_BIRTH_NAMES', [ ADMIN_, NORMAL_, VIEWER_ ]);
+
+define('PERMISSION_VIEW_PERSON_DETAILS_BIRTH_DAY', [ ADMIN_, NORMAL_, VIEWER_ ]);
+define('PERMISSION_VIEW_PERSON_DETAILS_BIRTH_MONTH', [ ADMIN_, NORMAL_, VIEWER_ ]);
+define('PERMISSION_VIEW_PERSON_DETAILS_BIRTH_YEAR', [ ADMIN_, NORMAL_, VIEWER_ ]);
+
+define('PERMISSION_VIEW_PERSON_DETAILS_NOTES', [ ADMIN_, NORMAL_, VIEWER_ ]);
+
+define('PERMISSION_VIEW_PERSON_SHORT_NAMES', [ ADMIN_, NORMAL_, VIEWER_ ]);
+define('PERMISSION_VIEW_PERSON_LONG_NAMES', [ ADMIN_, NORMAL_, VIEWER_ ]);
+
+define('PERMISSION_VIEW_CONNECTION_RELATION', [ ADMIN_, NORMAL_, VIEWER_ ]);
+define('PERMISSION_VIEW_CONNECTION_NOTE', [ ADMIN_, NORMAL_, VIEWER_ ]);
+
+
+define('PERMISSION_CREATE_PERSONS', [ ADMIN_, NORMAL_ ]);
+define('PERMISSION_EDIT_PERSONS', [ ADMIN_, NORMAL_ ]);
+define('PERMISSION_DELETE_PERSONS', [ ADMIN_, NORMAL_ ]);
+
+define('PERMISSION_CREATE_CONNECTIONS', [ ADMIN_, NORMAL_ ]);
+define('PERMISSION_EDIT_CONNECTIONS', [ ADMIN_, NORMAL_ ]);
+define('PERMISSION_DELETE_CONNECTIONS', [ ADMIN_, NORMAL_ ]);
+
+define('PERMISSION_EDIT', array_unique(array_merge(
+  PERMISSION_CREATE_PERSONS,
+  PERMISSION_EDIT_PERSONS,
+  PERMISSION_DELETE_PERSONS,
+
+  PERMISSION_CREATE_CONNECTIONS,
+  PERMISSION_EDIT_CONNECTIONS,
+  PERMISSION_DELETE_CONNECTIONS )));
+
+define('PERMISSION_LOG_RESET_OWN', [ ADMIN_, NORMAL_ ]);
+define('PERMISSION_LOG_RESET_ALL', [ ADMIN_ ]);
+
+define('PERMISSION_ADMIN', [ ADMIN_ ]);
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
 $accounts = []; $first_login = false; $account_upgraded = false;
 $settings = [ CAMERA => ['default' => [ 'x' => 0, 'y' => 0, 'z' => 1] ] ];
 $data = [ PERSONS => [], CONNECTIONS => [] ];
@@ -106,7 +147,24 @@ if ($accounts) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-if ((!$accounts || $_SESSION[TYPE] === ADMIN_) && isset($_POST[ADMIN_ACTION])) {
+function current_user_can($permission)
+{
+  return in_array($_SESSION[TYPE], $permission);
+}
+
+function get_permissions()
+{
+  return array_filter(get_defined_constants(),
+    function($perm)
+    {
+      return strpos($perm, 'PERMISSION_') === 0;
+    },
+    ARRAY_FILTER_USE_KEY);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+if ((!$accounts || current_user_can(PERMISSION_ADMIN)) && isset($_POST[ADMIN_ACTION])) {
   switch ($_POST[ADMIN_ACTION]) {
     // admin
     case 'new': {
@@ -185,7 +243,7 @@ if (!isset($_SESSION[USER])) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-if (MAINTENANCE && $_SESSION[TYPE] !== ADMIN_) {
+if (MAINTENANCE && !current_user_can(PERMISSION_ADMIN)) {
   $admins = array_filter($accounts, function($a) { return $a[TYPE_] === ADMIN_; });
   $admins = array_map(function($a) { return $a[USER_]; }, $admins);
   $admins = implode(', ', $admins);
@@ -204,7 +262,7 @@ if (!isset($_SESSION['last-login']) || $login_date > ($_SESSION['last-login'] + 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 if (isset($_GET['start-edit'])) {
-  if ($_SESSION[TYPE] !== VIEWER_) {
+  if (current_user_can(PERMISSION_EDIT)) {
     startEditing();
   }
   header('Location: ' . $server_url);
@@ -218,7 +276,7 @@ else if (isset($_GET['stop-edit'])) {
 }
 
 else if ($_SESSION[EDITING]) {
-  if ($useLayout || time() > ($_SESSION[EDITING] + CURRENT_EDITOR_TIMEOUT)) {
+  if (!current_user_can(PERMISSION_EDIT) || $useLayout || time() > ($_SESSION[EDITING] + CURRENT_EDITOR_TIMEOUT)) {
     stopEditing();
   }
 }
@@ -295,7 +353,7 @@ if (isset($_GET[ACTION])) {
 
     case 'toggle-extended-log':
     {
-      if ($_SESSION[TYPE] === ADMIN_) {
+      if (current_user_can(PERMISSION_ADMIN)) {
         if (array_key_exists(EXTENDED_LOG, $_SESSION)) {
           unset($_SESSION[EXTENDED_LOG]);
           echo json_encode(false);
@@ -305,6 +363,14 @@ if (isset($_GET[ACTION])) {
           echo json_encode(true);
         }
       }
+      exit;
+    }
+
+    // settings
+    case 'moveCamera':
+    {
+      $settings[CAMERA][$_SESSION[USER]][$is_mobile ? CAMERA_MOBILE : CAMERA_DESKTOP] = $d;
+      save_settings();
       exit;
     }
   }
@@ -323,83 +389,91 @@ if (isset($_GET[ACTION])) {
       // log
       case 'reset':
       {
-        $hash = $_GET['hash'];
-        exec(CD_STORAGE_DIR . 'git log --author-date-order --format=format:\'%an\' ' . $hash . '..', $out);
-        $checkOwnCommits = function($ret, $name) { return $ret && ($name === $_SESSION[USER]); };
-        if ($_SESSION[TYPE] === ADMIN_ || array_reduce($out, $checkOwnCommits, true)) {
-          exec(CD_STORAGE_DIR . 'git tag reset-to-' . $hash . '-by-' . preg_replace('/\\s/', '_', $_SESSION[USER]) . '-at-' . $t . ';');
-          exec(CD_STORAGE_DIR . 'git reset --hard ' . $hash);
+        if (current_user_can(PERMISSION_LOG_RESET_OWN)) {
+          $hash = $_GET['hash'];
+          exec(CD_STORAGE_DIR . 'git log --author-date-order --format=format:\'%an\' ' . $hash . '..', $out);
+          $checkOwnCommits = function($ret, $name) { return $ret && ($name === $_SESSION[USER]); };
+          if (current_user_can(PERMISSION_LOG_RESET_ALL) || array_reduce($out, $checkOwnCommits, true)) {
+            exec(CD_STORAGE_DIR . 'git tag reset-to-' . $hash . '-by-' . preg_replace('/\\s/', '_', $_SESSION[USER]) . '-at-' . $t . ';');
+            exec(CD_STORAGE_DIR . 'git reset --hard ' . $hash);
+          }
+          header('Location: ' . $server_url);
         }
-        header('Location: ' . $server_url);
-        exit;
-      }
-
-      // settings
-      case 'moveCamera':
-      {
-        $settings[CAMERA][$_SESSION[USER]][$is_mobile ? CAMERA_MOBILE : CAMERA_DESKTOP] = $d;
-        save_settings();
         exit;
       }
 
       // data
       case 'addPerson':
       {
-        $d['t'] = $t;
-        $data[PERSONS][] = $d;
-        $ret = 'p ' . $t;
+        if (current_user_can(PERMISSION_CREATE_PERSONS)) {
+          $d['t'] = $t;
+          $data[PERSONS][] = $d;
+          $ret = 'p ' . $t;
+        }
       }
       break;
       case 'editPerson':
       {
-        $t = $d['t'];
-        $p = &get_data(PERSONS, $t);
-        $d['x'] = $p['x'];
-        $d['y'] = $p['y'];
-        $p = $d;
-        $ret = 'p ' . $t;
+        if (current_user_can(PERMISSION_EDIT_PERSONS)) {
+          $t = $d['t'];
+          $p = &get_data(PERSONS, $t);
+          $d['x'] = $p['x'];
+          $d['y'] = $p['y'];
+          $p = $d;
+          $ret = 'p ' . $t;
+        }
       }
       break;
       case 'deletePerson':
       {
-        delete_data(PERSONS, $d);
-        $ret = 'P ' . $d;
+        if (current_user_can(PERMISSION_DELETE_PERSONS)) {
+          delete_data(PERSONS, $d);
+          $ret = 'P ' . $d;
+        }
       }
       break;
       case 'movePersons':
       {
-        $ts = [];
-        foreach ($d as $d_) {
-          $p = &get_data(PERSONS, $d_['t']);
-          $p['x'] = $d_['x'];
-          $p['y'] = $d_['y'];
-          $ts[] = $d_['t'];
+        if (current_user_can(PERMISSION_EDIT_PERSONS)) {
+          $ts = [];
+          foreach ($d as $d_) {
+            $p = &get_data(PERSONS, $d_['t']);
+            $p['x'] = $d_['x'];
+            $p['y'] = $d_['y'];
+            $ts[] = $d_['t'];
+          }
+          $ret = 'm ' . implode(', ', $ts);
         }
-        $ret = 'm ' . implode(', ', $ts);
       }
       break;
 
       case 'addConnection':
       {
-        $d['t'] = $t;
-        $data[CONNECTIONS][] = $d;
-        $ret = 'c ' . $t;
+        if (current_user_can(PERMISSION_CREATE_CONNECTIONS)) {
+          $d['t'] = $t;
+          $data[CONNECTIONS][] = $d;
+          $ret = 'c ' . $t;
+        }
       }
       break;
       case 'editConnection':
       {
-        $t = $d['t'];
-        $c = &get_data(CONNECTIONS, $t);
-        $d['p1'] = $c['p1'];
-        $d['p2'] = $c['p2'];
-        $c = $d;
-        $ret = 'c ' . $t;
+        if (current_user_can(PERMISSION_EDIT_CONNECTIONS)) {
+          $t = $d['t'];
+          $c = &get_data(CONNECTIONS, $t);
+          $d['p1'] = $c['p1'];
+          $d['p2'] = $c['p2'];
+          $c = $d;
+          $ret = 'c ' . $t;
+        }
       }
       break;
       case 'deleteConnection':
       {
-        delete_data(CONNECTIONS, $d);
-        $ret = 'C ' . $d;
+        if (current_user_can(PERMISSION_DELETE_CONNECTIONS)) {
+          delete_data(CONNECTIONS, $d);
+          $ret = 'C ' . $d;
+        }
       }
       break;
 
@@ -446,11 +520,17 @@ html_start();
 
   <div id="mobile-actions" class="box mobile-only">
     <div id="mobile-menu-toggle" class="button hidden-toggle" data-hidden-toggle-target="#account" style="">&#9776;</div><!--
-	  <?php if ($_SESSION[EDITING]) { ?>
+	  <?php if ($_SESSION[EDITING]) {
+	          if (current_user_can(PERMISSION_CREATE_PERSONS)) { ?>
     --><div id="mobile-action-new-person" class="button mobile-action-new-person" style=""></div><!--
+      <?php }
+            if (current_user_can(PERMISSION_CREATE_CONNECTIONS)) { ?>
     --><div id="mobile-action-new-connection" class="button mobile-action-new-connection" style=""><span></span></div><!--
+      <?php }
+	          if (current_user_can(PERMISSION_EDIT_PERSONS)) { ?>
     --><div id="mobile-action-move-person" class="button mobile-action-move-person" style=""></div><!--
-    <?php } ?>-->
+      <?php }
+    } ?>-->
   </div>
 
   <div id="account" class="box mobile-inverse-hidden">
@@ -462,7 +542,7 @@ html_start();
     --><div id="mobile-switch-layout-treeYearBased" class="button mobile-only">Jahresbaum</div><!--
     --><hr class="mobile-only" /><!--
     <?php
-      if ($_SESSION[TYPE] !== VIEWER_ && !$useLayout) {
+      if (current_user_can(PERMISSION_EDIT) && !$useLayout) {
         if (!$_SESSION[EDITING]) {
     ?>
     --><a href="<?=$server_url?>?start-edit" class="button" id="start-edit" title="Bearbeitungsmodus starten">Bearbeiten</a><!--
@@ -506,7 +586,7 @@ $tmpLayout = isset($_GET['layout']) ? $_GET['layout'] . (isset($_GET['yearBased'
   </div>
 <?php
 
-if ($_SESSION[TYPE] === ADMIN_) {
+if (current_user_can(PERMISSION_ADMIN)) {
 ?>
   <div id="admin" class="box box-padding<?=isset($_POST[ADMIN_ACTION]) ? '' : ' box-minimized'?>">
     <div class="box-minimize-buttons negative-padding">
@@ -654,45 +734,45 @@ if ($_SESSION[TYPE] === ADMIN_) {
     </div>
     <h2>
       <span class="opt opt-new">Neue Person</span>
-      <span class="opt opt-edit"><?=($_SESSION[EDITING] ? 'Person bearbeiten' : 'Personendetails')?></span>
+      <span class="opt opt-edit"><?=($_SESSION[EDITING] && current_user_can(PERMISSION_EDIT_PERSONS)) ? 'Person bearbeiten' : 'Personendetails'?></span>
     </h2>
     <span id="person-form-person-url" class="box-row"></span>
     <div class="box-row">
       <label for="person-form-first-name">Vorname/n: </label>
-      <input id="person-form-first-name" type="text" autocomplete="off" placeholder="(Spitzname) Vorname/n" <?=($_SESSION[EDITING] ? '' : 'disabled')?> />
+      <input id="person-form-first-name" type="text" autocomplete="off" placeholder="(Spitzname) Vorname/n" />
     </div><div class="box-row">
       <label for="person-form-last-name">Familienname/n: </label>
-      <input id="person-form-last-name" type="text" autocomplete="off" placeholder="Nachname/n" <?=($_SESSION[EDITING] ? '' : 'disabled')?> />
-      <input id="person-form-birth-name" type="text" autocomplete="off" placeholder="Geburtsname/n" <?=($_SESSION[EDITING] ? '' : 'disabled')?> />
+      <input id="person-form-last-name" type="text" autocomplete="off" placeholder="Nachname/n" />
+      <input id="person-form-birth-name" type="text" autocomplete="off" placeholder="Geburtsname/n" />
     </div><div class="box-row">
       <label for="person-form-birth-day">Geburtstag: </label>
-      <input id="person-form-birth-day" type="text" autocomplete="off" placeholder="tt" <?=($_SESSION[EDITING] ? '' : 'disabled')?> />
-      <input id="person-form-birth-month" type="text" autocomplete="off" placeholder="mm" <?=($_SESSION[EDITING] ? '' : 'disabled')?> />
-      <input id="person-form-birth-year" type="text" autocomplete="off" placeholder="yyyy" <?=($_SESSION[EDITING] ? '' : 'disabled')?> />
+      <input id="person-form-birth-day" type="text" autocomplete="off" placeholder="tt" />
+      <input id="person-form-birth-month" type="text" autocomplete="off" placeholder="mm" />
+      <input id="person-form-birth-year" type="text" autocomplete="off" placeholder="yyyy" />
     </div><div class="box-row">
       <label for="person-form-death-day">Todestag: </label>
-      <input id="person-form-death-day" type="text" autocomplete="off" placeholder="tt" <?=($_SESSION[EDITING] ? '' : 'disabled')?> />
-      <input id="person-form-death-month" type="text" autocomplete="off" placeholder="mm" <?=($_SESSION[EDITING] ? '' : 'disabled')?> />
-      <input id="person-form-death-year" type="text" autocomplete="off" placeholder="yyyy" <?=($_SESSION[EDITING] ? '' : 'disabled')?> />
+      <input id="person-form-death-day" type="text" autocomplete="off" placeholder="tt" />
+      <input id="person-form-death-month" type="text" autocomplete="off" placeholder="mm" />
+      <input id="person-form-death-year" type="text" autocomplete="off" placeholder="yyyy" />
     </div><div class="box-row">
       <label for="person-form-note">Notiz: </label>
-      <textarea id="person-form-note" rows="3" <?=($_SESSION[EDITING] ? '' : 'disabled')?>></textarea>
+      <textarea id="person-form-note" rows="3"></textarea>
     </div>
     <button id="person-form-add" class="button-border opt opt-new">Hinzufügen</button>
     <button id="person-form-edit" class="button-border opt opt-edit">Speichern</button>
     <button id="person-form-delete" class="button-border opt opt-edit">Entfernen</button>
-    <button id="person-form-cancel" class="button-border"><?=($_SESSION[EDITING] ? 'Abbrechen' : 'Schließen')?></button>
+    <button id="person-form-cancel" class="button-border"><?=$_SESSION[EDITING] ? 'Abbrechen' : 'Schließen'?></button>
   </div>
 
   <div id="connection-form" class="box box-padding hidden">
     <h2>
       <span class="opt opt-new opt-new-child">Neue Verbindung</span>
-      <span class="opt opt-edit"><?=($_SESSION[EDITING] ? 'Verbindung bearbeiten' : 'Verbindungsdetails')?></span>
+      <span class="opt opt-edit"><?=($_SESSION[EDITING] && current_user_can(PERMISSION_EDIT_CONNECTIONS)) ? 'Verbindung bearbeiten' : 'Verbindungsdetails'?></span>
     </h2>
     <i id="connection-form-persons" class="opt opt-edit"></i>
     <div class="box-row">
       <label for="connection-form-relation">Art: </label>
-      <select id="connection-form-relation" <?=($_SESSION[EDITING] ? '' : 'disabled')?>>
+      <select id="connection-form-relation">
         <option value="Kind">Kind</option>
         <option value="adoptiert">adoptiert</option>
         <option disabled></option>
@@ -705,13 +785,13 @@ if ($_SESSION[TYPE] === ADMIN_) {
     </div>
     <div class="box-row">
       <label for="connection-form-desc">Info: </label>
-      <textarea id="connection-form-desc" rows="3" <?=($_SESSION[EDITING] ? '' : 'disabled')?>></textarea>
+      <textarea id="connection-form-desc" rows="3"></textarea>
     </div>
     <button id="connection-form-add" class="button-border opt opt-new">Verbinden</button>
     <button id="connection-form-add-child" class="button-border opt opt-new-child">Verbinden</button>
     <button id="connection-form-edit" class="button-border opt opt-edit">Speichern</button>
     <button id="connection-form-delete" class="button-border opt opt-edit">Entfernen</button>
-    <button id="connection-form-cancel" class="button-border"><?=($_SESSION[EDITING] ? 'Abbrechen' : 'Schließen')?></button>
+    <button id="connection-form-cancel" class="button-border"><?=$_SESSION[EDITING] ? 'Abbrechen' : 'Schließen'?></button>
   </div>
 
   <div id="help" class="box box-padding box-minimized">
@@ -724,7 +804,7 @@ if ($_SESSION[TYPE] === ADMIN_) {
     $bothModKeys = '<i>Shift &amp; Strg</i>'; ?>
     <div>
       <button id="restart-tutorial">(Die Anleitung noch einmal ansehen)</button>
-      <h2 class="collapse-trigger<?=($_SESSION[TYPE] !== VIEWER_) ? ' collapsed' : ''?>">Ansehen</h2>
+      <h2 class="collapse-trigger<?=current_user_can(PERMISSION_EDIT) ? ' collapsed' : ''?>">Ansehen</h2>
       <ul>
         <li>Elemente des Netzes:
           <ul>
@@ -809,7 +889,7 @@ if ($_SESSION[TYPE] === ADMIN_) {
         </li>
       </ul>
 
-      <?php if ($_SESSION[TYPE] !== VIEWER_) { ?>
+      <?php if (current_user_can(PERMISSION_EDIT)) { ?>
       <h2 class="collapse-trigger collapsed">Bearbeiten</h2>
       <ul>
         <li>Bearbeitungsmodus de-/aktivieren:
@@ -941,7 +1021,7 @@ if ($_SESSION[TYPE] === ADMIN_) {
   </div>
 
 <?php
-  if ($_SESSION[TYPE] !== ADMIN_) {
+  if (!current_user_can(PERMISSION_ADMIN)) {
 ?>
   <style type="text/css">
     .BETA { display: none !important; }
@@ -952,8 +1032,8 @@ if ($_SESSION[TYPE] === ADMIN_) {
   <script>
     let serverURL = '<?=$server_url?>';
     let currentUser = '<?=$_SESSION[USER]?>';
-    let currentUserIsAdmin = BETA = <?=($_SESSION[TYPE] === ADMIN_) ? 'true' : 'false'?>;
-    let currentUserIsViewer = <?=($_SESSION[TYPE] === VIEWER_) ? 'true' : 'false'?>;
+    let currentUserIsAdmin = BETA = <?=current_user_can(PERMISSION_ADMIN) ? 'true' : 'false'?>;
+    let currentUserIsViewer = <?=!current_user_can(PERMISSION_EDIT) ? 'true' : 'false'?>;
     let currentUserIsEditing = <?=$_SESSION[EDITING] ? 'true' : 'false'?>;
     let editingTimeout = <?=$_SESSION[EDITING] ?: '0'?>;
     let editingTimeoutDuration = <?=CURRENT_EDITOR_TIMEOUT?>;
@@ -962,6 +1042,19 @@ if ($_SESSION[TYPE] === ADMIN_) {
     let modKeys = '<?=$modKeys?>';
     let isMobile = <?=$is_mobile ? 'true' : 'false'?>;
     let currentLayoutId = '<?=$_GET['layout'] ?? ''?>';
+
+    let permissions = {
+      <?php
+      $perms = get_permissions();
+      array_walk($perms, function(&$val, $key)
+      {
+        $val = substr($key, strlen('PERMISSION_')) . ': ' .
+          (current_user_can($val) ? 'true' : 'false');
+      });
+      echo implode(",\n      ", $perms);
+      ?>
+
+    };
   </script>
   <script src="js/utils.js<?=V_?>"></script>
   <script src="js/person.js<?=V_?>"></script>
@@ -1190,7 +1283,7 @@ function save_settings()
 
 function get_log($commit_count = 0)
 {
-  exec(CD_STORAGE_DIR . 'git log --author-date-order --format=format:\'%h|||%ai|||%an|||%s\'' . (($_SESSION[TYPE] === ADMIN_ && array_key_exists(EXTENDED_LOG, $_SESSION)) ? ' --all' : '') . ($commit_count > 0 ? ' -' . $commit_count : ''), $out);
+  exec(CD_STORAGE_DIR . 'git log --author-date-order --format=format:\'%h|||%ai|||%an|||%s\'' . ((current_user_can(PERMISSION_ADMIN) && array_key_exists(EXTENDED_LOG, $_SESSION)) ? ' --all' : '') . ($commit_count > 0 ? ' -' . $commit_count : ''), $out);
   $out = array_map(function($line) {
     $line = explode('|||', $line);
     $line[1] = preg_replace('/ [+-]\d{4}/', '', $line[1]);
