@@ -2,75 +2,84 @@
 //phpinfo();
 
 // browser cache fix for scripts and styles
-define('V', 25.2);
-define('V_', '?v=' . V);
+const V = 25.2;
+const V_ = '?v=' . V;
 
-define('MAINTENANCE', false);
+const MAINTENANCE = false;
 
-define('RUNTIME_DIR', 'runtime');
+const RUNTIME_DIR = 'runtime';
 
-define('ACCOUNTS_FILE', RUNTIME_DIR . '/accounts.yml');
-define('LOGINS_FILE', RUNTIME_DIR . '/logins.txt');
+const ACCOUNTS_FILE = RUNTIME_DIR . '/accounts.yml';
+const LOGINS_FILE = RUNTIME_DIR . '/logins.txt';
 
-define('USER', 'user'); define('USER_', 'u');
-define('PASSWORD', 'password'); define('PASSWORD_', 'p');
+const USER = 'user'; const USER_ = 'u';
+const PASSWORD = 'password'; const PASSWORD_ = 'p';
 
-define('TYPE', 'type'); define('TYPE_', 't');
-define('ADMIN_', 'a'); define('ADMIN__', 'Admin');
-define('NORMAL_', 'n'); define('NORMAL__', 'Normal');
-define('VIEWER_', 'v'); define('VIEWER__', 'Betrachter');
+const TYPE = 'type'; const TYPE_ = 't';
+const ADMIN_ = 'a';
+const NORMAL_ = 'n';
+const VIEWER_ = 'v';
+const GUEST_ = 'g';
+const TYPES = [
+  ADMIN_ => ['label' => 'Admin', 'level' => 0],
+  NORMAL_ => ['label' => 'Normal', 'level' => 1],
+  VIEWER_ => ['label' => 'Betrachter', 'level' => 2],
+  GUEST_ => ['label' => 'Gast', 'level' => 3]
+];
 
-define('FIRST_LOGIN_', 'f');
-define('ACCOUNT_UPGRADED_', 'a');
+const FIRST_LOGIN_ = 'f';
+const ACCOUNT_UPGRADED_ = 'a';
 
-define('EXTENDED_LOG', 'e');
+const EXTENDED_LOG = 'e';
 
-define('ACTION', 'action');
-define('ADMIN_ACTION', 'admin-action');
-define('EDITING', 'editing');
+const ACTION = 'action';
+const ADMIN_ACTION = 'admin-action';
+const EDITING = 'editing';
 
-define('CURRENT_EDITOR_FILE', RUNTIME_DIR . '/current_editor.yml');
-define('CURRENT_EDITOR_TIMEOUT', 10 * 60);
+const CURRENT_EDITOR_FILE = RUNTIME_DIR . '/current_editor.yml';
+const CURRENT_EDITOR_TIMEOUT = 10 * 60;
 
-define('SETTINGS_FILE', RUNTIME_DIR . '/settings.yml');
-define('CAMERA', 'camera');
-define('CAMERA_DESKTOP', 'd');
-define('CAMERA_MOBILE', 'm');
+const SETTINGS_FILE = RUNTIME_DIR . '/settings.yml';
+const CAMERA = 'camera';
+const CAMERA_DESKTOP = 'd';
+const CAMERA_MOBILE = 'm';
+const PERSON_PREVIEW_DISPLAY_STRING = 'personPreviewDisplayString';
 
-define('STORAGE_DIR', 'storage');
-define('STORAGE_FILE', 'storage.yml');
-define('PERSONS', 'persons');
-define('CONNECTIONS', 'connections');
+const STORAGE_DIR = 'storage';
+const STORAGE_FILE = 'storage.yml';
+const PERSONS = 'persons';
+const CONNECTIONS = 'connections';
 
-define('COMMIT_MERGE_TIME_THRESH', 3600);
-define('CD_STORAGE_DIR', 'cd ' . STORAGE_DIR . '; ');
+const COMMIT_MERGE_TIME_THRESH = 3600;
+const CD_STORAGE_DIR = 'cd ' . STORAGE_DIR . '; ';
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-define('PERMISSION_VIEW_PERSON_DETAILS_FIRST_NAMES', [ ADMIN_, NORMAL_, VIEWER_ ]);
-define('PERMISSION_VIEW_PERSON_DETAILS_LAST_NAMES', [ ADMIN_, NORMAL_, VIEWER_ ]);
-define('PERMISSION_VIEW_PERSON_DETAILS_BIRTH_NAMES', [ ADMIN_, NORMAL_, VIEWER_ ]);
+const PERMISSION_VIEW_PERSON_FIRST_NAMES = [ADMIN_, NORMAL_, VIEWER_];
+const PERMISSION_VIEW_PERSON_LAST_NAMES = [ADMIN_, NORMAL_, VIEWER_, GUEST_];
+const PERMISSION_VIEW_PERSON_BIRTH_NAMES = [ADMIN_, NORMAL_, VIEWER_];
 
-define('PERMISSION_VIEW_PERSON_DETAILS_BIRTH_DAY', [ ADMIN_, NORMAL_, VIEWER_ ]);
-define('PERMISSION_VIEW_PERSON_DETAILS_BIRTH_MONTH', [ ADMIN_, NORMAL_, VIEWER_ ]);
-define('PERMISSION_VIEW_PERSON_DETAILS_BIRTH_YEAR', [ ADMIN_, NORMAL_, VIEWER_ ]);
+const PERMISSION_VIEW_PERSON_BIRTH_DAY = [ADMIN_, NORMAL_, VIEWER_];
+const PERMISSION_VIEW_PERSON_BIRTH_MONTH = [ADMIN_, NORMAL_, VIEWER_];
+const PERMISSION_VIEW_PERSON_BIRTH_YEAR = [ADMIN_, NORMAL_, VIEWER_, GUEST_];
 
-define('PERMISSION_VIEW_PERSON_DETAILS_NOTES', [ ADMIN_, NORMAL_, VIEWER_ ]);
+const PERMISSION_VIEW_PERSON_DEATH_DAY = [ADMIN_, NORMAL_, VIEWER_];
+const PERMISSION_VIEW_PERSON_DEATH_MONTH = [ADMIN_, NORMAL_, VIEWER_];
+const PERMISSION_VIEW_PERSON_DEATH_YEAR = [ADMIN_, NORMAL_, VIEWER_, GUEST_];
 
-define('PERMISSION_VIEW_PERSON_SHORT_NAMES', [ ADMIN_, NORMAL_, VIEWER_ ]);
-define('PERMISSION_VIEW_PERSON_LONG_NAMES', [ ADMIN_, NORMAL_, VIEWER_ ]);
+const PERMISSION_VIEW_PERSON_NOTES = [ADMIN_, NORMAL_, VIEWER_];
 
-define('PERMISSION_VIEW_CONNECTION_RELATION', [ ADMIN_, NORMAL_, VIEWER_ ]);
-define('PERMISSION_VIEW_CONNECTION_NOTE', [ ADMIN_, NORMAL_, VIEWER_ ]);
+const PERMISSION_VIEW_CONNECTION_RELATION = [ADMIN_, NORMAL_, VIEWER_, GUEST_];
+const PERMISSION_VIEW_CONNECTION_NOTE = [ADMIN_, NORMAL_, VIEWER_];
 
 
-define('PERMISSION_CREATE_PERSONS', [ ADMIN_, NORMAL_ ]);
-define('PERMISSION_EDIT_PERSONS', [ ADMIN_, NORMAL_ ]);
-define('PERMISSION_DELETE_PERSONS', [ ADMIN_, NORMAL_ ]);
+const PERMISSION_CREATE_PERSONS = [ADMIN_, NORMAL_];
+const PERMISSION_EDIT_PERSONS = [ADMIN_, NORMAL_];
+const PERMISSION_DELETE_PERSONS = [ADMIN_, NORMAL_];
 
-define('PERMISSION_CREATE_CONNECTIONS', [ ADMIN_, NORMAL_ ]);
-define('PERMISSION_EDIT_CONNECTIONS', [ ADMIN_, NORMAL_ ]);
-define('PERMISSION_DELETE_CONNECTIONS', [ ADMIN_, NORMAL_ ]);
+const PERMISSION_CREATE_CONNECTIONS = [ADMIN_, NORMAL_];
+const PERMISSION_EDIT_CONNECTIONS = [ADMIN_, NORMAL_];
+const PERMISSION_DELETE_CONNECTIONS = [ADMIN_, NORMAL_];
 
 define('PERMISSION_EDIT', array_unique(array_merge(
   PERMISSION_CREATE_PERSONS,
@@ -81,10 +90,12 @@ define('PERMISSION_EDIT', array_unique(array_merge(
   PERMISSION_EDIT_CONNECTIONS,
   PERMISSION_DELETE_CONNECTIONS )));
 
-define('PERMISSION_LOG_RESET_OWN', [ ADMIN_, NORMAL_ ]);
-define('PERMISSION_LOG_RESET_ALL', [ ADMIN_ ]);
+const PERMISSION_LOG_RESET_OWN = [ADMIN_, NORMAL_];
+const PERMISSION_LOG_RESET_ALL = [ADMIN_];
 
-define('PERMISSION_ADMIN', [ ADMIN_ ]);
+const PERMISSION_ADMIN = [ADMIN_];
+
+const NO_PERMISSION_VALUE = '*****';
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -185,7 +196,7 @@ if ((!$accounts || current_user_can(PERMISSION_ADMIN)) && isset($_POST[ADMIN_ACT
     break;
     case 'edit-type': {
       $i = $_POST[USER];
-      if ($accounts[$i][TYPE_] === VIEWER_ && $_POST[TYPE] === NORMAL_) {
+      if (TYPES[$accounts[$i][TYPE_]]['level'] < TYPES[$_POST[TYPE]]['level']) {
         $accounts[$i][ACCOUNT_UPGRADED_] = true;
       }
       $accounts[$i][TYPE_] = $_POST[TYPE];
@@ -300,10 +311,47 @@ else {
 
 $data_file_content = file_get_contents(STORAGE_DIR . '/' . STORAGE_FILE);
 if ($data_file_content) {
-  $data = json_decode($data_file_content, true);
+  $data = filter_graph_data_by_permission(json_decode($data_file_content, true));
 }
-else {
-  $data_file_content = json_encode($data);
+
+function split_date($str)
+{
+	$d = explode('-', $str);
+  while (count($d) < 3) {
+	  $d[] = '';
+  }
+  return $d;
+}
+function date_replace($str, $elem, $new_val)
+{
+  $d = split_date($str);
+  $d[$elem] = $new_val;
+  return implode('-', $d);
+}
+
+function filter_graph_data_by_permission($data)
+{
+	$fn_no_permission_value = fn($v) => NO_PERMISSION_VALUE;
+	$key_perm = [
+	  ['f', PERMISSION_VIEW_PERSON_FIRST_NAMES, $fn_no_permission_value],
+	  ['l', PERMISSION_VIEW_PERSON_LAST_NAMES, $fn_no_permission_value],
+	  ['m', PERMISSION_VIEW_PERSON_BIRTH_NAMES, $fn_no_permission_value],
+	  ['b', PERMISSION_VIEW_PERSON_BIRTH_YEAR, fn($v) => date_replace($v, 0, NO_PERMISSION_VALUE)],
+	  ['b', PERMISSION_VIEW_PERSON_BIRTH_MONTH, fn($v) => date_replace($v, 1, NO_PERMISSION_VALUE)],
+	  ['b', PERMISSION_VIEW_PERSON_BIRTH_DAY, fn($v) => date_replace($v, 2, NO_PERMISSION_VALUE)],
+	  ['d', PERMISSION_VIEW_PERSON_DEATH_YEAR, fn($v) => date_replace($v, 0, NO_PERMISSION_VALUE)],
+	  ['d', PERMISSION_VIEW_PERSON_DEATH_MONTH, fn($v) => date_replace($v, 1, NO_PERMISSION_VALUE)],
+	  ['d', PERMISSION_VIEW_PERSON_DEATH_DAY, fn($v) => date_replace($v, 2, NO_PERMISSION_VALUE)],
+	  ['o', PERMISSION_VIEW_PERSON_NOTES, $fn_no_permission_value]
+	];
+  foreach($data[PERSONS] as $p_i => &$p) {
+    foreach ($key_perm as $kp_i => &$kp) {
+      if (!current_user_can($kp[1])) {
+        $p[$kp[0]] = $kp[2]($p[$kp[0]]);
+      }
+    }
+  }
+  return $data;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -313,16 +361,20 @@ if (isset($_GET[ACTION])) {
   $t = time();
   $ret = $t;
   $d = json_decode(urldecode($_GET['d']), true);
-  $data_str = $data_file_content;
+  $data_str = null;
   switch ($_GET[ACTION]) {
     case 'preview':
     {
       exec(CD_STORAGE_DIR . 'git show ' . $_GET['hash'] . ':' . STORAGE_FILE, $out);
-      $data_str = implode(PHP_EOL, $out);
+      $preview_data = filter_graph_data_by_permission(json_decode(implode(PHP_EOL, $out), true));
+      $data_str = json_encode($preview_data);
     }
     // no break here, to continue preview like init but with different data
     case 'init':
     {
+      if (is_null($data_str)) {
+        $data_str = json_encode($data);
+      }
       echo '{' .
           '"settings":' . json_encode($user_settings) . PHP_EOL . ',' .
           '"graph":' . $data_str . PHP_EOL . ',' .
@@ -619,15 +671,15 @@ if (current_user_can(PERMISSION_ADMIN)) {
               <input type="hidden" name="<?=ADMIN_ACTION?>" value="edit-type" />
               <input type="hidden" name="<?=USER?>" value="<?=$i?>" />
               <select name="<?=TYPE?>" onchange="this.form.submit()">
-              <option value="<?=ADMIN_?>" <?=$a[TYPE_] === ADMIN_ ? 'selected' : ''?>><?=ADMIN__?></option>
-                <option value="<?=NORMAL_?>" <?=$a[TYPE_] === NORMAL_ ? 'selected' : ''?>><?=NORMAL__?></option>
-                <option value="<?=VIEWER_?>" <?=$a[TYPE_] === VIEWER_ ? 'selected' : ''?>><?=VIEWER__?></option>
+                <option value="<?=ADMIN_?>" <?=$a[TYPE_] === ADMIN_ ? 'selected' : ''?>><?=TYPES[ADMIN_]['label']?></option>
+                <option value="<?=NORMAL_?>" <?=$a[TYPE_] === NORMAL_ ? 'selected' : ''?>><?=TYPES[NORMAL_]['label']?></option>
+                <option value="<?=VIEWER_?>" <?=$a[TYPE_] === VIEWER_ ? 'selected' : ''?>><?=TYPES[VIEWER_]['label']?></option>
               </select>
             </form>
 <?php
     }
     else {
-      echo ' (' . ADMIN__ . ')';
+      echo ' (' . TYPES[ADMIN_]['label'] . ')';
     }
 ?>
           </td>
@@ -665,9 +717,9 @@ if (current_user_can(PERMISSION_ADMIN)) {
       <input type="text" name="<?=USER?>" placeholder="Name" autocomplete="off" autofocus />
       <input type="text" name="<?=PASSWORD?>" placeholder="Passwort" autocomplete="off" />
       <select name="<?=TYPE?>">
-        <option value="<?=ADMIN_?>"><?=ADMIN__?></option>
-        <option value="<?=NORMAL_?>" selected><?=NORMAL__?></option>
-        <option value="<?=VIEWER_?>"><?=VIEWER__?></option>
+        <option value="<?=ADMIN_?>"><?=TYPES[ADMIN_]['label']?></option>
+        <option value="<?=NORMAL_?>" selected><?=TYPES[NORMAL_]['label']?></option>
+        <option value="<?=VIEWER_?>"><?=TYPES[VIEWER_]['label']?></option>
       </select>
       <input type="submit" class="button button-border-full" value="Account hinzufügen" />
     </form>
@@ -1055,6 +1107,7 @@ if (current_user_can(PERMISSION_ADMIN)) {
       ?>
 
     };
+    let no_permission_value = '<?=NO_PERMISSION_VALUE?>';
   </script>
   <script src="js/utils.js<?=V_?>"></script>
   <script src="js/person.js<?=V_?>"></script>

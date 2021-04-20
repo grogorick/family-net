@@ -357,7 +357,25 @@ function splitDate(str)
   while (d.length < 3) {
     d.push('');
   }
-  return d.map(v => parseInt(v) || '');
+  return d.map((v, i) => parseInt(v) || (v === no_permission_value ? (i > 0 ? '**' : '****') : ''));
+}
+
+function dateString(d)
+{
+  let s = splitDate(d);
+  if (s[2] && s[1] && s[0]) {
+    return s.join('.');
+  }
+  if (s[2] && s[1]) {
+    return s[2] + '.' + s[1];
+  }
+  if (s[1] && s[0]) {
+    return s[1] + '.' + s[0];
+  }
+  if (s[2] && s[0]) {
+    return s[2] + '.__.' + s[1];
+  }
+  return s.join('');
 }
 
 function debounce(func, wait, immediate = true)
