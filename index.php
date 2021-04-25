@@ -684,9 +684,13 @@ if (current_user_can(PERMISSION_ADMIN)) {
               <input type="hidden" name="<?=ADMIN_ACTION?>" value="edit-type" />
               <input type="hidden" name="<?=USER?>" value="<?=$i?>" />
               <select name="<?=TYPE?>" onchange="this.form.submit()">
-                <option value="<?=ADMIN_?>" <?=$a[TYPE_] === ADMIN_ ? 'selected' : ''?>><?=TYPES[ADMIN_]['label']?></option>
-                <option value="<?=NORMAL_?>" <?=$a[TYPE_] === NORMAL_ ? 'selected' : ''?>><?=TYPES[NORMAL_]['label']?></option>
-                <option value="<?=VIEWER_?>" <?=$a[TYPE_] === VIEWER_ ? 'selected' : ''?>><?=TYPES[VIEWER_]['label']?></option>
+<?php
+              foreach (TYPES as $type_short => &$type) {
+?>
+                <option value="<?=$type_short?>" <?=$a[TYPE_] === $type_short ? 'selected' : ''?>><?=$type['label']?></option>
+<?php
+              }
+?>
               </select>
             </form>
 <?php
@@ -730,9 +734,13 @@ if (current_user_can(PERMISSION_ADMIN)) {
       <input type="text" name="<?=USER?>" placeholder="Name" autocomplete="off" autofocus />
       <input type="text" name="<?=PASSWORD?>" placeholder="Passwort" autocomplete="off" />
       <select name="<?=TYPE?>">
-        <option value="<?=ADMIN_?>"><?=TYPES[ADMIN_]['label']?></option>
-        <option value="<?=NORMAL_?>" selected><?=TYPES[NORMAL_]['label']?></option>
-        <option value="<?=VIEWER_?>"><?=TYPES[VIEWER_]['label']?></option>
+<?php
+      foreach (TYPES as $type_short => &$type) {
+?>
+        <option value="<?=$type_short?>" <?=$type_short === NORMAL_ ? 'selected' : ''?>><?=$type['label']?></option>
+<?php
+      }
+?>
       </select>
       <input type="submit" class="button button-border-full" value="Account hinzufügen" />
     </form>
