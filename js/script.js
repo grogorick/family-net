@@ -28,7 +28,7 @@ const settings = {
     verheiratet: { lineType: 'line', level: 'h' },
     geschieden: { lineType: 'dashed', level: 'h' },
     verwitwet: { lineType: 'dashed', level: 'h' },
-    unverheiratet: { lineType: 'dotted', level: 'h' },
+    unverheiratet: { lineType: 'dashed', level: 'h' },
     Doppelganger: { lineType: 'curve', level: 'h' },
     unknown: { lineType: 'dotted', level: 'h' } }
 };

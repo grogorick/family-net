@@ -629,7 +629,7 @@ $tmpLayout = isset($_GET['layout']) ? $_GET['layout'] . (isset($_GET['yearBased'
 ?>
   <div id="layouts" class="box box-minimized">
     <div class="box-minimize-buttons">
-      <button class="box-restore desktop-only" title="Layouts">D</button>
+      <button class="box-restore desktop-only" title="Ansicht">A</button>
       <button class="box-minimize"><?=$box_close_minimize_symbol?></button>
     </div>
     <button id="switch-layout-net" class="<?=$layout_class_netz?>" data-url="<?=$server_url?>">Netz</button>
@@ -642,7 +642,7 @@ if (current_user_can(PERMISSION_ADMIN)) {
 ?>
   <div id="admin" class="box box-padding<?=isset($_POST[ADMIN_ACTION]) ? '' : ' box-minimized'?>">
     <div class="box-minimize-buttons negative-padding">
-      <button class="box-restore desktop-only">A</button>
+      <button class="box-restore desktop-only">Admin</button>
       <button class="box-minimize"><?=$box_close_minimize_symbol?></button>
     </div>
 <?php
@@ -865,14 +865,15 @@ if (current_user_can(PERMISSION_ADMIN)) {
                 <dd><div class="tutorial-person"></div> Normal</dd>
                 <dd><div class="tutorial-person t-p-highlight"></div> Ausgewählt</dd>
                 <dd><div class="tutorial-person t-p-warning"></div> Warnung (enthält '???')</dd>
+                <dd><div class="tutorial-person t-p-doppelganger"></div> Doppelgänger ausgewählt</dd>
               </dl>
             </li>
             <li>Verbindungen
               <dl>
                 <dd><div class="tutorial-connection t-c-arrow"></div> Eltern&mdash;Kind</dd>
                 <dd><div class="tutorial-connection"></div> Verheiratet</dd>
-                <dd><div class="tutorial-connection t-c-dashed"></div> Geschieden/verwitwet</dd>
-                <dd><div class="tutorial-connection t-c-dotted"></div> Andere</dd>
+                <dd><div class="tutorial-connection t-c-dashed"></div> Unverheiratet/geschieden/verwitwet</dd>
+                <dd><div class="tutorial-connection t-c-dotted"></div> Unbekannt</dd>
                 <br />
                 <dd><div class="tutorial-connection"></div> Normal</dd>
                 <dd><div class="tutorial-connection t-c-highlight"></div> Ausgewählt</dd>
@@ -923,13 +924,13 @@ if (current_user_can(PERMISSION_ADMIN)) {
             </li>
           </ul>
         </li>
-        <li>Darstellung wechseln:
+        <li>Ansicht wechseln:
           <ul>
         <?php if (!$is_mobile) { ?>
-            <li>Oben auf <span class="help-button">D</span> klicken, um die Auswahl zu öffnen</li>
-            <li>Die gewünschte Darstellung auswählen</li>
+            <li>Oben auf <span class="help-button">A</span> klicken, um die Auswahl zu öffnen</li>
+            <li>Die gewünschte Ansicht auswählen</li>
           <?php } else { ?>
-            <li>Oben aus dem Menü die gewünschte Darstellung auswählen</li>
+            <li>Oben aus dem Menü die gewünschte Ansicht auswählen</li>
           <?php } ?>
           </ul>
         </li>
@@ -959,19 +960,18 @@ if (current_user_can(PERMISSION_ADMIN)) {
             <li>Oben <span class="help-button mobile-action-new-person"></span> auswählen</li>
             <li>Dort hintippen, wo die Person hinzugefügt werden soll</li>
           <?php } ?>
-            <li>Daten der Person im Eingabefenster eintragen:
+            <li>Daten der Person im Eingabefenster eintragen
               <dl>
-                <dt><i>Name</i></dt>
                 <dd>
-                  Vorname(n) und Nachname(n) mit einem Komma trennen.<br />
-                  Rufname mit einem * kennzeichnen, wenn es nicht der erste Vorname ist.<br />
-                  Spitzname in Klammern angegeben.
+                  Bei mehreren Vornamen wird der erste automatisch als Rufname verwendet.<br />
+                  Mit einem * kann ein anderer Vorname als Rufname gekennzeichnet werden.<br />
+                  Zusätzlich kann ein Spitzname in Klammern angegeben werden.
                   <p>
                     Bsp.:<br />
-                    &ndash; Maximilian Fritz Mustermann<br />
-                    &ndash; Maximilian *Fritz Mustermann<br />
-                    &ndash; (Maxi) Maximilian Fritz Mustermann<br />
-                    &ndash; (Maxi) Maximilian *Fritz Mustermann
+                    &ndash; Maximilian Fritz<br />
+                    &ndash; Maximilian *Fritz<br />
+                    &ndash; (Maxi) Maximilian Fritz<br />
+                    &ndash; (Fritzchen) Maximilian *Fritz
                   </p>
                 </dd>
               </dl>

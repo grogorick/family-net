@@ -608,6 +608,12 @@ button.selected, .button.selected {
 .tutorial-person.t-p-warning {
   background: #D0D480 !important;
 }
+.tutorial-person.t-p-doppelganger {
+  background: transparent !important;
+  border: 2pt solid #4499DD;
+  border-radius: 7pt;
+  margin-left: -2pt;
+}
 .tutorial-connection {
   display: inline-block;
   width: 20pt;
