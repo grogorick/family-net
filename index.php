@@ -1082,18 +1082,18 @@ if (current_user_can(PERMISSION_ADMIN)) {
 }
 ?>
   <script>
-    let serverURL = '<?=$server_url?>';
-    let currentUser = '<?=$_SESSION[USER]?>';
-    let currentUserIsAdmin = BETA = <?=current_user_can(PERMISSION_ADMIN) ? 'true' : 'false'?>;
-    let currentUserIsViewer = <?=!current_user_can(PERMISSION_EDIT) ? 'true' : 'false'?>;
-    let currentUserIsEditing = <?=$_SESSION[EDITING] ? 'true' : 'false'?>;
+    const serverURL = '<?=$server_url?>';
+    const currentUser = '<?=$_SESSION[USER]?>';
+    const currentUserIsAdmin = BETA = <?=current_user_can(PERMISSION_ADMIN) ? 'true' : 'false'?>;
+    const currentUserIsViewer = <?=!current_user_can(PERMISSION_EDIT) ? 'true' : 'false'?>;
+    const currentUserIsEditing = <?=$_SESSION[EDITING] ? 'true' : 'false'?>;
     let editingTimeout = <?=$_SESSION[EDITING] ?: '0'?>;
-    let editingTimeoutDuration = <?=CURRENT_EDITOR_TIMEOUT?>;
-    let firstLogin = <?=$first_login ? 'true' : 'false'?>;
-    let accountUpgraded = <?=$account_upgraded ? 'true' : 'false'?>;
-    let modKeys = '<?=$modKeys?>';
-    let isMobile = <?=$is_mobile ? 'true' : 'false'?>;
-    let currentLayoutId = '<?=$_GET['layout'] ?? ''?>';
+    const editingTimeoutDuration = <?=CURRENT_EDITOR_TIMEOUT?>;
+    const firstLogin = <?=$first_login ? 'true' : 'false'?>;
+    const accountUpgraded = <?=$account_upgraded ? 'true' : 'false'?>;
+    const modKeys = '<?=$modKeys?>';
+    const isMobile = <?=$is_mobile ? 'true' : 'false'?>;
+    const currentLayoutId = '<?=$_GET['layout'] ?? ''?>';
 
     let permissions = {
       <?php
@@ -1107,7 +1107,8 @@ if (current_user_can(PERMISSION_ADMIN)) {
       ?>
 
     };
-    let no_permission_value = '<?=NO_PERMISSION_VALUE?>';
+    const no_permission_value = '<?=NO_PERMISSION_VALUE?>';
+    const no_permission_char = '<?=mb_substr(NO_PERMISSION_VALUE, 0, 1, 'utf-8')?>';
   </script>
   <script src="js/utils.js<?=V_?>"></script>
   <script src="js/person.js<?=V_?>"></script>
