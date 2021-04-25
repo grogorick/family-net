@@ -216,9 +216,7 @@ s.bind('coordinatesUpdated', e =>
 {
   // console.log(['coordinatesUpdated', e]);
   s.camera.angle = 0;
-  if (logItemSelectedPreview === logItemSelectedMaster) {
-    cameraMoved(e);
-  }
+  cameraMoved(e);
 });
 
 }

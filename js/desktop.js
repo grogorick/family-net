@@ -176,9 +176,7 @@ s.bind('coordinatesUpdated', e =>
   clearTimeout(startedWith_coordinatesUpdated);
   startedWith_coordinatesUpdated = setTimeout(() => { startedWith_coordinatesUpdated = false; }, 1000);
 
-  if (logItemSelectedPreview === logItemSelectedMaster) {
-    cameraMoved(e);
-  }
+  cameraMoved(e);
 });
 
 dragListener.bind('startdrag', e =>

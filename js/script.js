@@ -1883,12 +1883,13 @@ function bindDefaultViewerEvents()
     }
   });
 
-  s.bind('coordinatesUpdated', () =>
+  s.bind('coordinatesUpdated', e =>
   {
     clearTimeout(startedWith_coordinatesUpdated);
     startedWith_coordinatesUpdated = setTimeout(() => { startedWith_coordinatesUpdated = false; }, 1000);
 
     s.camera.angle = 0;
+    cameraMoved(e);
   });
 
   let startedWith_coordinatesUpdated = false;
