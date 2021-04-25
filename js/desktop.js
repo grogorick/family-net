@@ -24,7 +24,7 @@ s.bind('hovers', e =>
   e.data.leave.nodes.forEach(n =>
   {
     if (isPersonNode(n) || isDoppelgangerNode(n))  {
-      n.label = n._my.p._.get_shortDisplayString();
+      n.label = getPersonPreviewDisplayString(n._my.p);
       showHideDoppelgangerEdges(n, true);
     }
   });

@@ -351,13 +351,20 @@ function Callbacks()
   }
 }
 
+function isAnonymized(str)
+{
+  return new RegExp('^[' + no_permission_char + ']{2,}$').test(str);
+}
+
 function splitDate(str)
 {
   let d = str.split('-');
   while (d.length < 3) {
     d.push('');
   }
-  return d.map((v, i) => parseInt(v) || (v === no_permission_value ? (i > 0 ? '**' : '****') : ''));
+  const a = no_permission_char;
+  const anon = [a+a+a+a, a+a, a+a];
+  return d.map((v, i) => v === no_permission_value ? anon[i] : parseInt(v) || '');
 }
 
 function dateString(d)

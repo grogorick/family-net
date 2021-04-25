@@ -2,7 +2,7 @@
 //phpinfo();
 
 // browser cache fix for scripts and styles
-const V = 25.2;
+const V = 25.3;
 const V_ = '?v=' . V;
 
 const MAINTENANCE = false;
@@ -57,7 +57,7 @@ const CD_STORAGE_DIR = 'cd ' . STORAGE_DIR . '; ';
 
 const PERMISSION_VIEW_PERSON_FIRST_NAMES = [ADMIN_, NORMAL_, VIEWER_];
 const PERMISSION_VIEW_PERSON_LAST_NAMES = [ADMIN_, NORMAL_, VIEWER_, GUEST_];
-const PERMISSION_VIEW_PERSON_BIRTH_NAMES = [ADMIN_, NORMAL_, VIEWER_];
+const PERMISSION_VIEW_PERSON_BIRTH_NAMES = [ADMIN_, NORMAL_, VIEWER_, GUEST_];
 
 const PERMISSION_VIEW_PERSON_BIRTH_DAY = [ADMIN_, NORMAL_, VIEWER_];
 const PERMISSION_VIEW_PERSON_BIRTH_MONTH = [ADMIN_, NORMAL_, VIEWER_];
@@ -95,12 +95,12 @@ const PERMISSION_LOG_RESET_ALL = [ADMIN_];
 
 const PERMISSION_ADMIN = [ADMIN_];
 
-const NO_PERMISSION_VALUE = '*****';
+const NO_PERMISSION_VALUE = '•••••';
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 $accounts = []; $first_login = false; $account_upgraded = false;
-$settings = [ CAMERA => ['default' => [ 'x' => 0, 'y' => 0, 'z' => 1] ] ];
+$settings = [ CAMERA => ['default' => [ 'x' => 0, 'y' => 0, 'z' => 1] ], PERSON_PREVIEW_DISPLAY_STRING => 'default' ];
 $data = [ PERSONS => [], CONNECTIONS => [] ];
 
 $server_url = substr($_SERVER["PHP_SELF"], 0, 1 + strrpos($_SERVER["PHP_SELF"], '/'));
@@ -296,7 +296,7 @@ else if ($_SESSION[EDITING]) {
 
 $settings_file_content = file_get_contents(SETTINGS_FILE);
 if ($settings_file_content) {
-  $settings = json_decode($settings_file_content, true);
+  $settings = array_merge($settings, json_decode($settings_file_content, true));
 }
 $user_settings = $settings;
 $cam_client = $is_mobile ? CAMERA_MOBILE : CAMERA_DESKTOP;
@@ -331,23 +331,36 @@ function date_replace($str, $elem, $new_val)
 
 function filter_graph_data_by_permission($data)
 {
-	$fn_no_permission_value = fn($v) => NO_PERMISSION_VALUE;
-	$key_perm = [
-	  ['f', PERMISSION_VIEW_PERSON_FIRST_NAMES, $fn_no_permission_value],
-	  ['l', PERMISSION_VIEW_PERSON_LAST_NAMES, $fn_no_permission_value],
-	  ['m', PERMISSION_VIEW_PERSON_BIRTH_NAMES, $fn_no_permission_value],
-	  ['b', PERMISSION_VIEW_PERSON_BIRTH_YEAR, fn($v) => date_replace($v, 0, NO_PERMISSION_VALUE)],
-	  ['b', PERMISSION_VIEW_PERSON_BIRTH_MONTH, fn($v) => date_replace($v, 1, NO_PERMISSION_VALUE)],
-	  ['b', PERMISSION_VIEW_PERSON_BIRTH_DAY, fn($v) => date_replace($v, 2, NO_PERMISSION_VALUE)],
-	  ['d', PERMISSION_VIEW_PERSON_DEATH_YEAR, fn($v) => date_replace($v, 0, NO_PERMISSION_VALUE)],
-	  ['d', PERMISSION_VIEW_PERSON_DEATH_MONTH, fn($v) => date_replace($v, 1, NO_PERMISSION_VALUE)],
-	  ['d', PERMISSION_VIEW_PERSON_DEATH_DAY, fn($v) => date_replace($v, 2, NO_PERMISSION_VALUE)],
-	  ['o', PERMISSION_VIEW_PERSON_NOTES, $fn_no_permission_value]
-	];
+  $fn_no_permission_value = fn($v) => NO_PERMISSION_VALUE;
+  $person_key_perm = [
+    ['f', PERMISSION_VIEW_PERSON_FIRST_NAMES, $fn_no_permission_value],
+    ['l', PERMISSION_VIEW_PERSON_LAST_NAMES, $fn_no_permission_value],
+    ['m', PERMISSION_VIEW_PERSON_BIRTH_NAMES, $fn_no_permission_value],
+    ['n', array_intersect(PERMISSION_VIEW_PERSON_FIRST_NAMES, PERMISSION_VIEW_PERSON_LAST_NAMES,PERMISSION_VIEW_PERSON_BIRTH_NAMES), $fn_no_permission_value], // old format (log compatibility)
+    ['b', PERMISSION_VIEW_PERSON_BIRTH_YEAR, fn($v) => date_replace($v, 0, NO_PERMISSION_VALUE)],
+    ['b', PERMISSION_VIEW_PERSON_BIRTH_MONTH, fn($v) => date_replace($v, 1, NO_PERMISSION_VALUE)],
+    ['b', PERMISSION_VIEW_PERSON_BIRTH_DAY, fn($v) => date_replace($v, 2, NO_PERMISSION_VALUE)],
+    ['d', PERMISSION_VIEW_PERSON_DEATH_YEAR, fn($v) => date_replace($v, 0, NO_PERMISSION_VALUE)],
+    ['d', PERMISSION_VIEW_PERSON_DEATH_MONTH, fn($v) => date_replace($v, 1, NO_PERMISSION_VALUE)],
+    ['d', PERMISSION_VIEW_PERSON_DEATH_DAY, fn($v) => date_replace($v, 2, NO_PERMISSION_VALUE)],
+    ['o', PERMISSION_VIEW_PERSON_NOTES, $fn_no_permission_value]
+  ];
   foreach($data[PERSONS] as $p_i => &$p) {
-    foreach ($key_perm as $kp_i => &$kp) {
+    foreach ($person_key_perm as $kp_i => &$kp) {
       if (!current_user_can($kp[1])) {
         $p[$kp[0]] = $kp[2]($p[$kp[0]]);
+      }
+    }
+  }
+
+  $connection_key_perm = [
+    ['r', PERMISSION_VIEW_CONNECTION_RELATION, $fn_no_permission_value],
+    ['d', PERMISSION_VIEW_CONNECTION_NOTE, $fn_no_permission_value]
+  ];
+  foreach($data[CONNECTIONS] as $c_i => &$c) {
+    foreach ($connection_key_perm as $kc_i => &$kc) {
+      if (!current_user_can($kc[1])) {
+        $c[$kc[0]] = $kc[2]($c[$kc[0]]);
       }
     }
   }
@@ -664,7 +677,7 @@ if (current_user_can(PERMISSION_ADMIN)) {
           <td>
 <?php
     $num_admins = count(array_filter($accounts, function($a) { return $a[TYPE_] === ADMIN_; }));
-    $editable = ($accounts[$i][TYPE_] !== ADMIN_ || $num_admins > 1) && $accounts[$i][USER_] !== $_SESSION[USER];
+    $editable = ($a[TYPE_] !== ADMIN_ || $num_admins > 1) && $a[USER_] !== $_SESSION[USER];
     if ($editable) {
 ?>
             <form method="POST">

@@ -155,7 +155,9 @@ let PERSON_PREVIEW = 'person-preview';
 let CONNECTION_PREVIEW = 'connection-preview';
 
 let data = {
-  settings: { camera: { x: 0, y: 0, z: 0 }},
+  settings: {
+    camera: { x: 0, y: 0, z: 0 },
+    personPreviewDisplayString: 'default' },
   graph: { persons: [], connections: [] },
   log: [],
   currentHash: '' };
@@ -294,6 +296,16 @@ function deleteDataConnection(t)
 function compareTs(c_p_t, p_t)
 {
   return isChildConnectionNodeId(c_p_t) ? c_p_t.includes(p_t) : (c_p_t == p_t);
+}
+
+function getPersonPreviewDisplayString(p)
+{
+  let s = data.settings.personPreviewDisplayString;
+  if (s === 'default') {
+    return p.get_shortDisplayString();
+  }
+  let ret = [];
+  return ret.joinNotEmpty(' ');
 }
 
 function getDataPersonConnections(t)
@@ -1243,7 +1255,7 @@ function addPerson(p_raw, toData, toServer, toGraph, refreshGraph, doneCallback 
             id: p.t,
             x: p.x,
             y: p.y,
-            label: p._.get_shortDisplayString(),
+            label: getPersonPreviewDisplayString(p),
             size: settings.nodeSize,
             color: p._.get_nodeColor(),
             labelAlignment: (p.y < nodeCenterY) ? 'top' : 'bottom' });
