@@ -113,7 +113,7 @@ class PersonFunctions
       'get_rufName',
       'get_lastNames',
       'get_birthNames'];
-    let ret = '???';
+    let ret = '';
     for (let i = 0; i < tmp.length; ++i) {
       let n = this[tmp[i]]();
       let n_a = isAnonymized(n);

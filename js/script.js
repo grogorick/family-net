@@ -873,8 +873,12 @@ logPlayForward.addEventListener('click', () =>
 // move camera
 // ------------------------------------
 let saveCameraTimeout = null;
+let doNotUpdateCamera = false;
 function cameraMoved(e)
 {
+  if (doNotUpdateCamera) {
+    return;
+  }
   // console.log('camera moved');
   if (saveCameraTimeout) {
     clearTimeout(saveCameraTimeout);
@@ -1906,6 +1910,7 @@ function bindDefaultViewerEvents()
 
   let startedWith_coordinatesUpdated = false;
 }
+
 
 let searchInput = document.querySelector('#search-input');
 searchInput.addEventListener('input', e =>

@@ -11,6 +11,7 @@ let tutorialSteps = [
       ? '<p>Hallo!</p><p>Du darfst jetzt Änderungen am Netz vornehmen.<br />Dazu gibt es noch einmal eine kurze Einführung, bevor du loslegen kannst.</p><p>Du kannst dir die Einleitung auch bei deinem nächsten Besuch ansehen.</p>'
       : '<p>Alles klar, gehen wir die Einführung noch einmal durch.</p>',
     before: () => {
+      doNotUpdateCamera = true;
       let rw = s.renderers[0].width / 2;
       let rh = s.renderers[0].height / 4;
       tutorialSet = {
@@ -34,9 +35,9 @@ let tutorialSteps = [
       tutorialWindow.button_Weiter.setAttribute('data-innerHTML', tutorialWindow.button_Weiter.innerHTML);
       tutorialWindow.button_Weiter.innerHTML = 'Los geht\'s'; },
     after: () => {
-      addPerson({ t: 'p0', x: tutorialSet.P0.x, y: tutorialSet.P0.y, n: 'Person C', o: '' }, false, false, true, false);
-      addPerson({ t: 'p1', x: tutorialSet.P1.x, y: tutorialSet.P1.y, n: 'Person A', o: '' }, false, false, true, false);
-      addPerson({ t: 'p2', x: tutorialSet.P2.x, y: tutorialSet.P2.y, n: 'Person B', o: '' }, false, false, true, false);
+      addPerson({ t: 'p0', x: tutorialSet.P0.x, y: tutorialSet.P0.y, l: 'Person C', o: '' }, false, false, true, false);
+      addPerson({ t: 'p1', x: tutorialSet.P1.x, y: tutorialSet.P1.y, l: 'Person A', o: '' }, false, false, true, false);
+      addPerson({ t: 'p2', x: tutorialSet.P2.x, y: tutorialSet.P2.y, l: 'Person B', o: '' }, false, false, true, false);
       addConnection({ t: 'c12', p1: 'p1', p2: 'p2', r: '', d: '' }, false, false, true, true);
       tutorialWindow.button_Abbrechen.innerHTML = tutorialWindow.button_Abbrechen.getAttribute('data-innerHTML');
       tutorialWindow.button_Weiter.innerHTML = tutorialWindow.button_Weiter.getAttribute('data-innerHTML');
@@ -73,15 +74,15 @@ if (!currentUserIsViewer) { tutorialSteps = tutorialSteps.concat([
     keepHighlights: true },
 
   { m: '</p><span class="old">Durch Doppelklicken auf den Hintergrund</span> erstellst du eine neue Person.</p>',
-    before: () => addPerson({ t: 'p3', x: tutorialSet.P3.x, y: tutorialSet.P3.y, n: 'Neue Person', o: '' }, false, false, true, true),
+    before: () => addPerson({ t: 'p3', x: tutorialSet.P3.x, y: tutorialSet.P3.y, l: 'Neue Person', o: '' }, false, false, true, true),
     delayNextStep: true },
 
   { m: '<p>Während du die ' + modKeys + '-Taste drückst, kannst du Personen mit der Maus verschieben.</p>',
     before: () => {
       let n = s.graph.nodes('p3'); n.x = tutorialSet.P4.x; n.y = tutorialSet.P4.y;
-      addPerson({ t: 'pm1', x: tutorialSet.P3.x, y: tutorialSet.P3.y, n: '', o: '', color: '#eee' }, false, false, true, false);
-      addPerson({ t: 'pm2', x: tutorialSet.P3_1.x, y: tutorialSet.P3_1.y, n: '', o: '', color: '#ddd' }, false, false, true, false);
-      addPerson({ t: 'pm3', x: tutorialSet.P3_2.x, y: tutorialSet.P3_2.y, n: '', o: '', color: '#ccc' }, false, false, true, true);
+      addPerson({ t: 'pm1', x: tutorialSet.P3.x, y: tutorialSet.P3.y, o: '', color: '#eee' }, false, false, true, false);
+      addPerson({ t: 'pm2', x: tutorialSet.P3_1.x, y: tutorialSet.P3_1.y, o: '', color: '#ddd' }, false, false, true, false);
+      addPerson({ t: 'pm3', x: tutorialSet.P3_2.x, y: tutorialSet.P3_2.y, o: '', color: '#ccc' }, false, false, true, true);
       tutorialHighlight(tutorialSet.H3_2, 100); },
     after: () => {
       deletePerson('pm1', false, false, true, false);
@@ -162,8 +163,12 @@ if (!currentUserIsViewer) { tutorialSteps = tutorialSteps.concat([
     delayNextStep: true } ]); }
 
 tutorialSteps = tutorialSteps.concat([
+  { m: '<p>Oben links findest du den kannst du zwischen verschiedenen Ansichten wechseln.</p>',
+    before: () => tutorialHighlight('#layouts', 70),
+    delayNextStep: true },
+
   { m: '<p>Oben rechts findest du den Verlauf aller Änderungen am Netz.</p>' + (currentUserIsViewer ? '' : '<p class="invisible">Deine eigenen Änderungen kannst du hier rückgängig machen,<br />solange nach dir kein anderer das Netz geändert hat.</p>'),
-    before: () => tutorialHighlight('#log', 80),
+    before: () => tutorialHighlight('#log', 70),
     keepHighlights: !currentUserIsViewer,
     delayNextStep: currentUserIsViewer } ]);
 
@@ -173,7 +178,7 @@ if (!currentUserIsViewer) { tutorialSteps = tutorialSteps.concat([
 
 tutorialSteps = tutorialSteps.concat([
   { m: '<p>Gleich daneben findest du jederzeit eine Hilfe mit Anleitungen<br />zu allen wichtigen Funktionen.</p><p class="invisible">Dort kannst du auch diese Einführung jederzeit noch einmal starten.</p>',
-    before: () => tutorialHighlight('#help', 80),
+    before: () => tutorialHighlight('#help', 70),
     keepHighlights: true },
 
   { m: '<p class="old">Gleich daneben findest du jederzeit eine Hilfe mit Anleitungen<br />zu allen wichtigen Funktionen.</p><p>Dort kannst du auch diese Einführung jederzeit noch einmal starten.</p>',
@@ -184,7 +189,10 @@ tutorialSteps = tutorialSteps.concat([
       tutorialWindow.button_Abbrechen.classList.add('hidden');
       tutorialWindow.button_Weiter.innerHTML = 'OK';
       xhRequest('?action=tutorial-completed'); },
-    after: () => loadData(),
+    after: () => {
+      loadData();
+      doNotUpdateCamera = false;
+    },
     buttonTimeout: 10 }
 ]);
 

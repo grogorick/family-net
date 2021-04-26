@@ -81,14 +81,14 @@ const PERMISSION_CREATE_CONNECTIONS = [ADMIN_, NORMAL_];
 const PERMISSION_EDIT_CONNECTIONS = [ADMIN_, NORMAL_];
 const PERMISSION_DELETE_CONNECTIONS = [ADMIN_, NORMAL_];
 
-define('PERMISSION_EDIT', array_unique(array_merge(
+define('PERMISSION_EDIT', array_intersect(
   PERMISSION_CREATE_PERSONS,
   PERMISSION_EDIT_PERSONS,
   PERMISSION_DELETE_PERSONS,
 
   PERMISSION_CREATE_CONNECTIONS,
   PERMISSION_EDIT_CONNECTIONS,
-  PERMISSION_DELETE_CONNECTIONS )));
+  PERMISSION_DELETE_CONNECTIONS ));
 
 const PERMISSION_LOG_RESET_OWN = [ADMIN_, NORMAL_];
 const PERMISSION_LOG_RESET_ALL = [ADMIN_];
@@ -99,7 +99,7 @@ const NO_PERMISSION_VALUE = '•••••';
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-$accounts = []; $first_login = false; $account_upgraded = false;
+$accounts = []; $first_login = false; $account_upgraded = false; $account_not_found = false;
 $settings = [ CAMERA => ['default' => [ 'x' => 0, 'y' => 0, 'z' => 1] ], PERSON_PREVIEW_DISPLAY_STRING => 'default' ];
 $data = [ PERSONS => [], CONNECTIONS => [] ];
 
@@ -130,18 +130,16 @@ if ($accounts_file_content) {
 
 if ($accounts) {
   if (isset($_POST[ACTION]) && $_POST[ACTION] === 'login') {
-    foreach ($accounts as &$a) {
-      if ($a[USER_] === $_POST[USER] && password_verify($_POST[PASSWORD], $a[PASSWORD_])) {
-        $_SESSION[USER] = $a[USER_];
-        $_SESSION[TYPE] = $a[TYPE_];
-        $_SESSION[EDITING] = false;
-        if (array_key_exists(FIRST_LOGIN_, $a)) {
-          $first_login = true;
-        }
-        else if (array_key_exists(ACCOUNT_UPGRADED_, $a)) {
-          $account_upgraded = true;
-        }
-        break;
+    $a = get_account($_POST[USER]);
+    if ($a && password_verify($_POST[PASSWORD], $a[PASSWORD_])) {
+      $_SESSION[USER] = $a[USER_];
+      $_SESSION[TYPE] = $a[TYPE_];
+      $_SESSION[EDITING] = false;
+      if (array_key_exists(FIRST_LOGIN_, $a)) {
+        $first_login = true;
+      }
+      else if (array_key_exists(ACCOUNT_UPGRADED_, $a)) {
+        $account_upgraded = true;
       }
     }
   }
@@ -158,6 +156,18 @@ if ($accounts) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+function & get_account($user)
+{
+  global $accounts;
+  global $account_not_found;
+	foreach ($accounts as &$a) {
+	  if ($a[USER_] === $user) {
+		  return $a;
+	  }
+  }
+	return $account_not_found;
+}
+
 function current_user_can($permission)
 {
   return in_array($_SESSION[TYPE], $permission);
@@ -172,6 +182,10 @@ function get_permissions()
     },
     ARRAY_FILTER_USE_KEY);
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+define('BETA', current_user_can(PERMISSION_ADMIN));
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -399,13 +413,12 @@ if (isset($_GET[ACTION])) {
 
     case 'tutorial-completed':
     {
-      foreach ($accounts as &$a) {
-        if ($a[USER_] === $_SESSION[USER]) {
-          if (array_key_exists(FIRST_LOGIN_, $a)) { unset($a[FIRST_LOGIN_]); }
-          if (array_key_exists(ACCOUNT_UPGRADED_, $a)) { unset($a[ACCOUNT_UPGRADED_]); }
-          save_accounts();
-          break;
-        }
+      $a = &get_account($_SESSION[USER]);
+      if ($a) {
+        if (array_key_exists(FIRST_LOGIN_, $a)) { unset($a[FIRST_LOGIN_]); }
+        if (array_key_exists(ACCOUNT_UPGRADED_, $a)) { unset($a[ACCOUNT_UPGRADED_]); }
+        save_accounts();
+        break;
       }
       exit;
     }
@@ -1094,7 +1107,7 @@ if (current_user_can(PERMISSION_ADMIN)) {
   </div>
 
 <?php
-  if (!current_user_can(PERMISSION_ADMIN)) {
+if (!BETA) {
 ?>
   <style type="text/css">
     .BETA { display: none !important; }
@@ -1105,7 +1118,8 @@ if (current_user_can(PERMISSION_ADMIN)) {
   <script>
     const serverURL = '<?=$server_url?>';
     const currentUser = '<?=$_SESSION[USER]?>';
-    const currentUserIsAdmin = BETA = <?=current_user_can(PERMISSION_ADMIN) ? 'true' : 'false'?>;
+    const BETA = <?=BETA ? 'true' : 'false'?>;
+    const currentUserIsAdmin = <?=current_user_can(PERMISSION_ADMIN) ? 'true' : 'false'?>;
     const currentUserIsViewer = <?=!current_user_can(PERMISSION_EDIT) ? 'true' : 'false'?>;
     const currentUserIsEditing = <?=$_SESSION[EDITING] ? 'true' : 'false'?>;
     let editingTimeout = <?=$_SESSION[EDITING] ?: '0'?>;
@@ -1137,18 +1151,16 @@ if (current_user_can(PERMISSION_ADMIN)) {
   <script src="js/script.js<?=V_?>"></script>
   <script src="js/tutorial.js<?=V_?>"></script>
 <?php
-  if ($is_mobile) {
+if ($is_mobile) {
 ?>
   <script src="js/mobile.js<?=V_?>"></script>
 <?php
-  }
-  else {
+}
+else {
 ?>
   <script src="js/desktop.js<?=V_?>"></script>
 <?php
 }
-?>
-<?php
 if ($useLayout) {
 ?>
   <script src="js/layout_<?=$_GET['layout']?>.js<?=V_?>"></script>
