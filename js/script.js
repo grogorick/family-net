@@ -1918,12 +1918,15 @@ searchInput.addEventListener('input', e =>
   let search = searchInput.value;
   activeState.dropNodes();
   activeState.dropEdges();
-  if (search.includes('*')) {
-    let re = new RegExp(search.replaceAll(/[.+?|()]/g, '\\$0').replaceAll('*', '.+'));
-    activeState.addNodes(data.graph.persons.filter(p => (p.f + p.l + p.m + p.o).match(re)).map(p => p.t));
-  }
-  else {
-    activeState.addNodes(data.graph.persons.filter(p => (p.f + p.l + p.m + p.o).includes(search)).map(p => p.t));
+  if (search.trim().length > 0) {
+    let s = search
+      .replaceAll(/[.+?|()]/g, '\\$0')
+      .replaceAll('*', '.+')
+      .split(' ')
+      .map(v => '(?=.*' + v + ')')
+      .join('');
+    let re = new RegExp('^' + s + '.*$', 'i');
+    activeState.addNodes(data.graph.persons.filter(p => (p._.f + p._.l + p._.m + p._.o).match(re)).map(p => p.t));
   }
 });
 
