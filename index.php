@@ -419,7 +419,20 @@ if (isset($_GET[ACTION])) {
         if (array_key_exists(FIRST_LOGIN_, $a)) { unset($a[FIRST_LOGIN_]); }
         if (array_key_exists(ACCOUNT_UPGRADED_, $a)) { unset($a[ACCOUNT_UPGRADED_]); }
         save_accounts();
-        break;
+      }
+      exit;
+    }
+
+    case 'change-password':
+    {
+      $a = &get_account($_SESSION[USER]);
+      if ($a) {
+        $a[PASSWORD_] = password_hash($_POST[PASSWORD], PASSWORD_BCRYPT);
+        save_accounts();
+        echo 'true';
+      }
+      else {
+        echo 'false';
       }
       exit;
     }
@@ -792,6 +805,23 @@ if (current_user_can(PERMISSION_ADMIN)) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 ?>
+
+  <a id="show-settings" class="box button desktop-only hidden-toggle" data-hidden-toggle-target="#settings">&#9881;</a>
+
+  <div id="settings" class="box box-padding hidden">
+    <div class="box-minimize-buttons negative-padding">
+      <button class="hidden-toggle" data-hidden-toggle-target="#settings"><?=$box_close_minimize_symbol?></button>
+    </div>
+    <h2>Einstellungen</h2>
+    <div class="box-row BETA">
+      Passwort ändern:<br />
+      <input type="password" id="settings-change-password1" autocomplete="off" placeholder="Neues Passwort" /><br />
+      <input type="password" id="settings-change-password2" autocomplete="off" placeholder="Neues Passwort wiederholen" /><br />
+      <div id="settings-change-password-info"></div>
+      <button id="settings-change-password" class="button-border-full">Speichern</button>
+    </div>
+  </div>
+
   <div id="log" class="box box-padding box-minimized">
     <div class="box-minimize-buttons negative-padding">
       <button class="box-restore desktop-only" title="Änderungsverlauf">&olarr;</button>

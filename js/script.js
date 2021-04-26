@@ -1944,12 +1944,39 @@ document.querySelectorAll('#layouts > button').forEach(btn =>
   });
 });
 
+
+let settings_changePassword = document.querySelector('#settings-change-password');
+settings_changePassword.addEventListener('click', e =>
+{
+  let pw1 = document.querySelector('#settings-change-password1');
+  let pw2 = document.querySelector('#settings-change-password2');
+  let pwInfo = document.querySelector('#settings-change-password-info');
+  if (pw1.value !== pw2.value) {
+    pwInfo.innerHTML = 'Die Passwörter stimmen nicht überein.';
+  }
+  else {
+    let fd = new FormData();
+    fd.append('password', pw1.value);
+    xhRequestPost('?action=change-password', fd, response =>
+    {
+      if (response === 'true') {
+        pwInfo.innerHTML = 'Passwort gespeichert.';
+      }
+      else {
+        pwInfo.innerHTML = 'Fehler: Passwort nicht gespeichert.';
+      }
+    });
+  }
+});
+
+
 window.addEventListener('resize', (e) =>
 {
   if (window.innerHeight !== windowSize.height && window.innerWidth !== windowSize.width) {
     window.location.reload();
   }
 });
+
 
 let selectionFromURL = urlParams.get('sel');
 let showFromURL = urlParams.get('show');

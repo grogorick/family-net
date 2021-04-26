@@ -322,6 +322,24 @@ function xhRequest(url, responseCallback = null, log = true)
   xhttp.send();
 }
 
+function xhRequestPost(url, data, responseCallback = null, log = true)
+{
+  let xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function()
+  {
+    if (this.readyState === 4 && this.status === 200) {
+      if (log) {
+        console.log(this.responseText);
+      }
+      if (responseCallback !== null) {
+        responseCallback(this.responseText);
+      }
+    }
+  };
+  xhttp.open('POST', url, true);
+  xhttp.send(data);
+}
+
 function Callbacks()
 {
   this.cbs = [];
