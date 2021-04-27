@@ -2,7 +2,7 @@
 //phpinfo();
 
 // browser cache fix for scripts and styles
-const V = 25.3;
+const V = 25.4;
 const V_ = '?v=' . V;
 
 const MAINTENANCE = false;
@@ -629,6 +629,7 @@ html_start();
     <div id="mobile-menu-close" class="button mobile-only hidden-toggle" data-hidden-toggle-target="#account">X</div><!--
     --><span id="account-name"><?=$_SESSION[USER]?></span><!--
     --><hr class="mobile-only" /><!--
+    --><div class="button mobile-menu-label mobile-only">Ansicht</div><!--
     --><div id="mobile-switch-layout-net" class="button mobile-only">Netz</div><!--
     --><div id="mobile-switch-layout-tree" class="button mobile-only">Baum</div><!--
     --><div id="mobile-switch-layout-treeYearBased" class="button mobile-only">Jahresbaum</div><!--
@@ -646,6 +647,7 @@ html_start();
     --><div id="mobile-help" class="button mobile-only">Hilfe</div><!--
     --><hr class="mobile-only" /><!--
     --><div id="mobile-admin" class="button mobile-only">Admin</div><!--
+    --><div id="mobile-settings" class="button mobile-only">Einstellungen</div><!--
     --><a id="logout" href="<?=$server_url?>?logout" class="button">Abmelden</a><!--
 
     --><div id="search-desktop" class="desktop-only">
@@ -806,14 +808,14 @@ if (current_user_can(PERMISSION_ADMIN)) {
 
 ?>
 
-  <a id="show-settings" class="box button desktop-only hidden-toggle" data-hidden-toggle-target="#settings">&#9881;</a>
+  <a id="show-settings" class="box button desktop-only hidden-toggle" data-hidden-toggle-target="#settings" title="Einstellungen">&#9881;</a>
 
   <div id="settings" class="box box-padding hidden">
     <div class="box-minimize-buttons negative-padding">
       <button class="hidden-toggle" data-hidden-toggle-target="#settings"><?=$box_close_minimize_symbol?></button>
     </div>
     <h2>Einstellungen</h2>
-    <div class="box-row BETA">
+    <div class="box-row">
       Passwort ändern:<br />
       <input type="password" id="settings-change-password1" autocomplete="off" placeholder="Neues Passwort" /><br />
       <input type="password" id="settings-change-password2" autocomplete="off" placeholder="Neues Passwort wiederholen" /><br />

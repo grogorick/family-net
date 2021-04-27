@@ -37,6 +37,12 @@ document.getElementById('mobile-admin').addEventListener('click', () =>
   document.querySelector('#admin .box-restore').click();
 });
 
+document.getElementById('mobile-settings').addEventListener('click', () =>
+{
+  mainMenu.classList.toggle('hidden');
+  document.querySelector('#show-settings').click();
+});
+
 if (currentUserCanEdit()) {
 
 let mobileActionMode = null;

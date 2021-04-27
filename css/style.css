@@ -291,10 +291,14 @@ button.selected, .button.selected {
 .mobile-action-move-person::after {
   content: '\2B58';
 }
+
 #mobile-menu-close {
   background: white !important;
   padding-top: 15pt;
   margin-bottom: 10pt;
+}
+.mobile-menu-label {
+  font-size: 70%;
 }
 
 #account.box {
@@ -347,9 +351,20 @@ button.selected, .button.selected {
   font-weight: bold;
 }
 
+.desktop-client #show-settings {
+  right: 10pt;
+  top: 10pt;
+  font-size: 80%;
+}
+.desktop-client #settings {
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
 .desktop-client #help.box {
   top: 10pt;
-  right: 60pt;
+  right: 64pt;
   white-space: nowrap;
 }
 .mobile-client #help.box {
