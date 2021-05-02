@@ -610,6 +610,10 @@ html_start();
 
   <div id="modal-blocker-graph" class="modal-blocker backdrop-blur hidden"></div>
 
+<?php
+///////////////////////////////////////////////////////////////////////////////////////////////////
+?>
+
   <div id="mobile-actions" class="box mobile-only">
     <div id="mobile-menu-toggle" class="button hidden-toggle" data-hidden-toggle-target="#account" style="">&#9776;</div><!--
 	  <?php if ($_SESSION[EDITING]) {
@@ -623,7 +627,11 @@ html_start();
     --><div id="mobile-action-move-person" class="button mobile-action-move-person" style=""></div><!--
       <?php }
     } ?>-->
-  </div>
+  </div><!-- mobile-actions -->
+
+<?php
+///////////////////////////////////////////////////////////////////////////////////////////////////
+?>
 
   <div id="account" class="box mobile-inverse-hidden">
     <div id="mobile-menu-close" class="button mobile-only hidden-toggle" data-hidden-toggle-target="#account">X</div><!--
@@ -653,11 +661,13 @@ html_start();
     --><div id="search-desktop" class="desktop-only">
         <span id="search-toggle-show" class="button search-button hidden-toggle focus-toggle" data-hidden-toggle-target="#search-toggle-show,#search-box" data-focus-toggle-target="#search-input" title="Suchen"></span>
         <div id="search-box" class="hidden" style="display: inline">
-          <input id="search-input" placeholder="Suchen nach..." type="search" autocomplete="off" />
-          <span id="search-toggle-hide" class="button hidden-toggle" data-hidden-toggle-target="#search-toggle-show,#search-box" title="Suche schließen">&lt;</span>
+          <form>
+            <input id="search-input" placeholder="Suchen nach..." type="search" autocomplete="off" />
+            <span id="search-toggle-hide" class="button hidden-toggle" data-hidden-toggle-target="#search-toggle-show,#search-box" title="Suche schließen">&lt;</span>
+          </form>
         </div>
     </div>
-  </div>
+  </div><!-- account -->
 <?php
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -677,8 +687,10 @@ $tmpLayout = isset($_GET['layout']) ? $_GET['layout'] . (isset($_GET['yearBased'
     <button id="switch-layout-net" class="<?=$layout_class_netz?>" data-url="<?=$server_url?>">Netz</button>
     <button id="switch-layout-tree" class="<?=$layout_class_tree?>" data-url="<?=$server_url?>?layout=tree">Baum</button>
     <button id="switch-layout-treeYearBased" class="<?=$layout_class_tree_yearBased?>" data-url="<?=$server_url?>?layout=tree&yearBased">Jahresbaum</button>
-  </div>
+  </div><!-- layouts -->
+
 <?php
+///////////////////////////////////////////////////////////////////////////////////////////////////
 
 if (current_user_can(PERMISSION_ADMIN)) {
 ?>
@@ -800,7 +812,7 @@ if (current_user_can(PERMISSION_ADMIN)) {
         </td></tr>
       </table>
     </div>
-  </div>
+  </div><!-- admin -->
 <?php
 }
 
@@ -817,12 +829,18 @@ if (current_user_can(PERMISSION_ADMIN)) {
     <h2>Einstellungen</h2>
     <div class="box-row">
       Passwort ändern:<br />
-      <input type="password" id="settings-change-password1" autocomplete="off" placeholder="Neues Passwort" /><br />
-      <input type="password" id="settings-change-password2" autocomplete="off" placeholder="Neues Passwort wiederholen" /><br />
+      <form>
+        <input type="password" id="settings-change-password1" autocomplete="off" placeholder="Neues Passwort" /><br />
+        <input type="password" id="settings-change-password2" autocomplete="off" placeholder="Neues Passwort wiederholen" /><br />
+      </form>
       <div id="settings-change-password-info"></div>
       <button id="settings-change-password" class="button-border-full">Speichern</button>
     </div>
-  </div>
+  </div><!-- settings -->
+
+<?php
+  ///////////////////////////////////////////////////////////////////////////////////////////////////
+?>
 
   <div id="log" class="box box-padding box-minimized">
     <div class="box-minimize-buttons negative-padding">
@@ -837,14 +855,20 @@ if (current_user_can(PERMISSION_ADMIN)) {
         --><span class="log-play-button log-play-forward"></span>
       </div>
       <div>
-        <input type="checkbox" id="log-extended" <?=array_key_exists(EXTENDED_LOG, $_SESSION) ? 'checked' : ''?> />
-        <label for="log-extended">Erweitert</label>
+        <form>
+          <input type="checkbox" id="log-extended" <?=array_key_exists(EXTENDED_LOG, $_SESSION) ? 'checked' : ''?> />
+          <label for="log-extended">Erweitert</label>
+        </form>
       </div>
       <ul id="log-list"></ul>
     </div>
-  </div>
+  </div><!-- log -->
 
   <a id="log-restore-selected-item" class="box button hidden">Das Netz auf diesen Zustand zurücksetzen</a>
+
+<?php
+  ///////////////////////////////////////////////////////////////////////////////////////////////////
+?>
 
   <div id="person-form" class="box box-padding hidden">
     <div id="person-form-doppelganger" class="box-row opt opt-new BETA">
@@ -856,32 +880,38 @@ if (current_user_can(PERMISSION_ADMIN)) {
       <span class="opt opt-edit"><?=($_SESSION[EDITING] && current_user_can(PERMISSION_EDIT_PERSONS)) ? 'Person bearbeiten' : 'Personendetails'?></span>
     </h2>
     <span id="person-form-person-url" class="box-row"></span>
-    <div class="box-row">
-      <label for="person-form-first-name">Vorname/n: </label>
-      <input id="person-form-first-name" type="text" autocomplete="off" placeholder="(Spitzname) Vorname/n" />
-    </div><div class="box-row">
-      <label for="person-form-last-name">Familienname/n: </label>
-      <input id="person-form-last-name" type="text" autocomplete="off" placeholder="Nachname/n" />
-      <input id="person-form-birth-name" type="text" autocomplete="off" placeholder="Geburtsname/n" />
-    </div><div class="box-row">
-      <label for="person-form-birth-day">Geburtstag: </label>
-      <input id="person-form-birth-day" type="text" autocomplete="off" placeholder="tt" />
-      <input id="person-form-birth-month" type="text" autocomplete="off" placeholder="mm" />
-      <input id="person-form-birth-year" type="text" autocomplete="off" placeholder="yyyy" />
-    </div><div class="box-row">
-      <label for="person-form-death-day">Todestag: </label>
-      <input id="person-form-death-day" type="text" autocomplete="off" placeholder="tt" />
-      <input id="person-form-death-month" type="text" autocomplete="off" placeholder="mm" />
-      <input id="person-form-death-year" type="text" autocomplete="off" placeholder="yyyy" />
-    </div><div class="box-row">
-      <label for="person-form-note">Notiz: </label>
-      <textarea id="person-form-note" rows="3"></textarea>
-    </div>
+    <form>
+      <div class="box-row">
+        <label for="person-form-first-name">Vorname/n: </label>
+        <input id="person-form-first-name" type="text" autocomplete="off" placeholder="(Spitzname) Vorname/n" />
+      </div><div class="box-row">
+        <label for="person-form-last-name">Familienname/n: </label>
+        <input id="person-form-last-name" type="text" autocomplete="off" placeholder="Nachname/n" />
+        <input id="person-form-birth-name" type="text" autocomplete="off" placeholder="Geburtsname/n" />
+      </div><div class="box-row">
+        <label for="person-form-birth-day">Geburtstag: </label>
+        <input id="person-form-birth-day" type="text" autocomplete="off" placeholder="tt" />
+        <input id="person-form-birth-month" type="text" autocomplete="off" placeholder="mm" />
+        <input id="person-form-birth-year" type="text" autocomplete="off" placeholder="yyyy" />
+      </div><div class="box-row">
+        <label for="person-form-death-day">Todestag: </label>
+        <input id="person-form-death-day" type="text" autocomplete="off" placeholder="tt" />
+        <input id="person-form-death-month" type="text" autocomplete="off" placeholder="mm" />
+        <input id="person-form-death-year" type="text" autocomplete="off" placeholder="yyyy" />
+      </div><div class="box-row">
+        <label for="person-form-note">Notiz: </label>
+        <textarea id="person-form-note" rows="3"></textarea>
+      </div>
+    </form>
     <button id="person-form-add" class="button-border opt opt-new">Hinzufügen</button>
     <button id="person-form-edit" class="button-border opt opt-edit">Speichern</button>
     <button id="person-form-delete" class="button-border opt opt-edit">Entfernen</button>
     <button id="person-form-cancel" class="button-border"><?=$_SESSION[EDITING] ? 'Abbrechen' : 'Schließen'?></button>
-  </div>
+  </div><!-- person-form -->
+
+<?php
+///////////////////////////////////////////////////////////////////////////////////////////////////
+?>
 
   <div id="connection-form" class="box box-padding hidden">
     <h2>
@@ -889,29 +919,35 @@ if (current_user_can(PERMISSION_ADMIN)) {
       <span class="opt opt-edit"><?=($_SESSION[EDITING] && current_user_can(PERMISSION_EDIT_CONNECTIONS)) ? 'Verbindung bearbeiten' : 'Verbindungsdetails'?></span>
     </h2>
     <i id="connection-form-persons" class="opt opt-edit"></i>
-    <div class="box-row">
-      <label for="connection-form-relation">Art: </label>
-      <select id="connection-form-relation">
-        <option value="Kind">Kind</option>
-        <option value="adoptiert">adoptiert</option>
-        <option disabled></option>
-        <option value="verheiratet">verheiratet</option>
-        <option value="geschieden">geschieden</option>
-        <option value="verwitwet">verwitwet</option>
-        <option value="unverheiratet">unverheiratet</option>
-        <option value="???" selected>??? (unbekannt)</option>
-      </select>
-    </div>
-    <div class="box-row">
-      <label for="connection-form-desc">Info: </label>
-      <textarea id="connection-form-desc" rows="3"></textarea>
-    </div>
+    <form>
+      <div class="box-row">
+        <label for="connection-form-relation">Art: </label>
+        <select id="connection-form-relation">
+          <option value="Kind">Kind</option>
+          <option value="adoptiert">adoptiert</option>
+          <option disabled></option>
+          <option value="verheiratet">verheiratet</option>
+          <option value="geschieden">geschieden</option>
+          <option value="verwitwet">verwitwet</option>
+          <option value="unverheiratet">unverheiratet</option>
+          <option value="???" selected>??? (unbekannt)</option>
+        </select>
+      </div>
+      <div class="box-row">
+        <label for="connection-form-desc">Info: </label>
+        <textarea id="connection-form-desc" rows="3"></textarea>
+      </div>
+    </form>
     <button id="connection-form-add" class="button-border opt opt-new">Verbinden</button>
     <button id="connection-form-add-child" class="button-border opt opt-new-child">Verbinden</button>
     <button id="connection-form-edit" class="button-border opt opt-edit">Speichern</button>
     <button id="connection-form-delete" class="button-border opt opt-edit">Entfernen</button>
     <button id="connection-form-cancel" class="button-border"><?=$_SESSION[EDITING] ? 'Abbrechen' : 'Schließen'?></button>
-  </div>
+  </div><!-- connection-form -->
+
+<?php
+///////////////////////////////////////////////////////////////////////////////////////////////////
+?>
 
   <div id="help" class="box box-padding box-minimized">
     <div class="box-minimize-buttons negative-padding">
@@ -1130,7 +1166,11 @@ if (current_user_can(PERMISSION_ADMIN)) {
       </ul>
       <?php } ?>
     </div>
-  </div>
+  </div><!-- help -->
+
+<?php
+///////////////////////////////////////////////////////////////////////////////////////////////////
+?>
 
   <div id="message-template" class="modal-blocker backdrop-blur message hidden">
     <div class="box box-padding">
@@ -1140,6 +1180,8 @@ if (current_user_can(PERMISSION_ADMIN)) {
   </div>
 
 <?php
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
 if (!BETA) {
 ?>
   <style type="text/css">

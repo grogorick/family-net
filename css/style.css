@@ -127,7 +127,7 @@ button {
   display: none;
 }
 
-.box > div.box-row {
+.box div.box-row {
   margin-bottom: 10pt;
 }
 
@@ -548,7 +548,7 @@ button.selected, .button.selected {
 }
 
 .desktop-client #admin.box {
-  top: 69pt;
+  top: 98pt;
   left: 10pt;
 }
 #admin.box > .box-minimize-buttons {
