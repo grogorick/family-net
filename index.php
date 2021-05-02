@@ -1241,6 +1241,11 @@ if ($useLayout) {
   <script src="js/layout_<?=$_GET['layout']?>.js<?=V_?>"></script>
 <?php
 }
+if (BETA) {
+?>
+  <script src="js/BETA.js<?=V_?>"></script>
+<?php
+}
 ?>
 </body>
 </html>
