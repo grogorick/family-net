@@ -772,7 +772,7 @@ function addLogItem(l, prepend, itemRestorable)
     logItemSelectedPreview.classList.add('log-item-preview');
     loadData(hash);
     logPreviewActive = hash !== data.currentHash;
-    if (logPreviewActive) {
+    if (logPreviewActive || !currentUserCanEdit()) {
       dragListener.disable();
     }
     else {
