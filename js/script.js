@@ -21,6 +21,7 @@ const settings = {
   stopEditWarningCountdown: 60,
   logPlaybackDelay: 200,
   selectDirectRelativesDelay: 200,
+  extendedLabelHoverDelay: 3000,
 
   relations: {
     Kind: { lineType: 'arrow', level: 'v' },

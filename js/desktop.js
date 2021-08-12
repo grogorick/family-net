@@ -1,4 +1,5 @@
 
+let hoverTimeouts = {};
 s.bind('hovers', e =>
 {
   // console.log(e);
@@ -17,15 +18,27 @@ s.bind('hovers', e =>
   e.data.enter.nodes.forEach(n =>
   {
     if (isPersonNode(n) || isDoppelgangerNode(n))  {
-      n.label = n._my.p._.get_longDisplayString();
       showHideDoppelgangerEdges(n, false);
+      n.label = n._my.p._.get_longDisplayString();
+      hoverTimeouts[n._my.p.t] = setTimeout(() => {
+        console.log('timer finished');
+        delete hoverTimeouts[n._my.p.t];
+        n.label = n._my.p._.get_fullName() + ' \n ' + n._my.p._.b + ' — ' + n._my.p._.d + (n._my.p._.o.length ? ' \n\n ' + n._my.p._.o : '');
+        s.refresh();
+      }, settings.extendedLabelHoverDelay);
+      console.log('timer started');
     }
   });
   e.data.leave.nodes.forEach(n =>
   {
     if (isPersonNode(n) || isDoppelgangerNode(n))  {
-      n.label = getPersonPreviewDisplayString(n._my.p);
       showHideDoppelgangerEdges(n, true);
+      if (n._my.p.t in hoverTimeouts) {
+        clearTimeout(hoverTimeouts[n._my.p.t]);
+        delete hoverTimeouts[n._my.p.t];
+        console.log('timer stopped');
+      }
+      n.label = getPersonPreviewDisplayString(n._my.p);
     }
   });
 
