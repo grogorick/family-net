@@ -160,12 +160,12 @@ function & get_account($user)
 {
   global $accounts;
   global $account_not_found;
-	foreach ($accounts as &$a) {
-	  if ($a[USER_] === $user) {
-		  return $a;
-	  }
+  foreach ($accounts as &$a) {
+    if ($a[USER_] === $user) {
+      return $a;
+    }
   }
-	return $account_not_found;
+  return $account_not_found;
 }
 
 function current_user_can($permission)
@@ -236,7 +236,7 @@ if ((!$accounts || current_user_can(PERMISSION_ADMIN)) && isset($_POST[ADMIN_ACT
 }
 
 if (!$accounts) {
-	html_min_start();
+  html_min_start();
 ?>
   <form method="POST">
     <input type="hidden" name="<?=ADMIN_ACTION?>" value="new" />
@@ -262,7 +262,7 @@ if (!isset($_SESSION[USER])) {
       <input type="submit" value="Anmelden" />
     </form>
 <?php
-	html_min_end();
+  html_min_end();
   exit;
 }
 
@@ -330,9 +330,9 @@ if ($data_file_content) {
 
 function split_date($str)
 {
-	$d = explode('-', $str);
+  $d = explode('-', $str);
   while (count($d) < 3) {
-	  $d[] = '';
+    $d[] = '';
   }
   return $d;
 }
@@ -465,7 +465,8 @@ if (isset($_GET[ACTION])) {
       save_settings();
       exit;
     }
-  }
+
+  } // switch ACTION
 
   if ($_SESSION[EDITING]) {
     startEditing();
@@ -616,14 +617,14 @@ html_start();
 
   <div id="mobile-actions" class="box mobile-only">
     <div id="mobile-menu-toggle" class="button hidden-toggle" data-hidden-toggle-target="#account" style="">&#9776;</div><!--
-	  <?php if ($_SESSION[EDITING]) {
-	          if (current_user_can(PERMISSION_CREATE_PERSONS)) { ?>
+    <?php if ($_SESSION[EDITING]) {
+      if (current_user_can(PERMISSION_CREATE_PERSONS)) { ?>
     --><div id="mobile-action-new-person" class="button mobile-action-new-person" style=""></div><!--
       <?php }
             if (current_user_can(PERMISSION_CREATE_CONNECTIONS)) { ?>
     --><div id="mobile-action-new-connection" class="button mobile-action-new-connection" style=""><span></span></div><!--
       <?php }
-	          if (current_user_can(PERMISSION_EDIT_PERSONS)) { ?>
+      if (current_user_can(PERMISSION_EDIT_PERSONS)) { ?>
     --><div id="mobile-action-move-person" class="button mobile-action-move-person" style=""></div><!--
       <?php }
     } ?>-->
@@ -799,7 +800,7 @@ if (current_user_can(PERMISSION_ADMIN)) {
       array_map(
         function($line) use ($today, $yesterday) {
           $parts = explode(' | ', $line);
-			    $date = substr($parts[0], 0, 16);
+          $date = substr($parts[0], 0, 16);
           $parts[0] = ($date === $today ? 'heute' : ($date === $yesterday ? 'gestern' : $date)) . '</td><td>' . substr($parts[0], 17);
           return implode('</td><td>', $parts);
         },

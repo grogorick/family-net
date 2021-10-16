@@ -224,7 +224,8 @@ button.selected, .button.selected {
 .button-border-full {
   border: 1px solid #eee;
 }
-.desktop-client .button-border:not(:disabled):hover, .desktop-client .button-border-full:not(:disabled):hover {
+.desktop-client .button-border:not(:disabled):hover,
+.desktop-client .button-border-full:not(:disabled):hover {
   border-top: 1px solid #ddd;
 }
 
@@ -258,7 +259,7 @@ button.selected, .button.selected {
 .mobile-client .message .box {
   top: initial;
 }
-.message .box .message-content {
+.message .message-content {
   text-align: initial;
 }
 
@@ -491,36 +492,36 @@ button.selected, .button.selected {
 }
 
 #log .log-play-button {
-	margin: 0;
-	padding: 10pt;
+  margin: 0;
+  padding: 10pt;
 }
 #log .log-play-button::before {
-	--play-btn-size: 10pt;
-	--play-btn-color: #ddd;
-	content: ' ';
-	display: inline-block;
-	box-sizing: border-box;
-	border-style: solid;
-	width: var(--play-btn-size);
-	height: var(--play-btn-size);
+  --play-btn-size: 10pt;
+  --play-btn-color: #ddd;
+  content: ' ';
+  display: inline-block;
+  box-sizing: border-box;
+  border-style: solid;
+  width: var(--play-btn-size);
+  height: var(--play-btn-size);
 }
 #log .log-play-button:hover::before {
-	--play-btn-color: #000;
+  --play-btn-color: #000;
 }
 #log .log-play-stop::before {
-	border-style: double;
-	border-width: 0 0 0 var(--play-btn-size);
-	border-color: var(--play-btn-color);
+  border-style: double;
+  border-width: 0 0 0 var(--play-btn-size);
+  border-color: var(--play-btn-color);
 }
 #log .log-play-backward::before {
-/*	border-width: calc(var(--play-btn-size) / 2) var(--play-btn-size) calc(var(--play-btn-size) / 2) 0;
-	border-color: transparent var(--play-btn-color) transparent transparent;*/
+/*  border-width: calc(var(--play-btn-size) / 2) var(--play-btn-size) calc(var(--play-btn-size) / 2) 0;
+  border-color: transparent var(--play-btn-color) transparent transparent;*/
   border-width: var(--play-btn-size) calc(var(--play-btn-size) / 2) 0 calc(var(--play-btn-size) / 2);
   border-color: var(--play-btn-color) transparent transparent transparent;
 }
 #log .log-play-forward::before {
-/*	border-width: calc(var(--play-btn-size) / 2) 0 calc(var(--play-btn-size) / 2) var(--play-btn-size);
-	border-color: transparent transparent transparent var(--play-btn-color);*/
+/*  border-width: calc(var(--play-btn-size) / 2) 0 calc(var(--play-btn-size) / 2) var(--play-btn-size);
+  border-color: transparent transparent transparent var(--play-btn-color);*/
   border-width: 0 calc(var(--play-btn-size) / 2) var(--play-btn-size) calc(var(--play-btn-size) / 2);
   border-color: transparent transparent var(--play-btn-color) transparent;
 }
@@ -642,13 +643,13 @@ button.selected, .button.selected {
   border-top-color: #E6AD92 !important;
 }
 .tutorial-connection.t-c-arrow::after {
-	content: '\1F892';
-	display: inline-block;
-	float: right;
-	font-size: 150%;
-	line-height: 0;
-	color: #DDD;
-	margin-right: -1px;
+  content: '\1F892';
+  display: inline-block;
+  float: right;
+  font-size: 150%;
+  line-height: 0;
+  color: #DDD;
+  margin-right: -1px;
 }
 .tutorial-connection.t-c-dashed {
   border-top-style: dashed;
