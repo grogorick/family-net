@@ -19,7 +19,7 @@ html, body {
   height: 100%;
 }
 body,
-input:not([type="submit"]):not([type="checkbox"]),
+input:not([type="checkbox"]):not([type="radio"]),
 select,
 textarea,
 button {
@@ -131,6 +131,16 @@ button {
   margin-bottom: 10pt;
 }
 
+.drag-drop-area > * {
+  pointer-events: none;
+}
+html body .drag-drop-visual-area {
+  border: 1px dashed #ddd !important;
+}
+html body .drag-drop-visual-area.drag-drop-visual-area-active {
+  border: 1px dashed #777 !important;
+}
+
 .box h2 {
   font-size: 100%;
   font-weight: bold;
@@ -174,7 +184,7 @@ button {
   border-top: 1px solid #ddd;
 }
 
-.box input:not([type="submit"]):not([type="checkbox"]),
+.box input:not([type="submit"]):not([type="checkbox"]):not([type="radio"]),
 .box select,
 .box textarea {
   width: 150pt;
@@ -182,7 +192,8 @@ button {
   border-radius: 3pt;
   padding: 3pt;
 }
-.box input:not([type="submit"]):not([type="checkbox"]):hover, .box input:not([type="submit"]):not([type="checkbox"]):focus,
+.box input:not([type="submit"]):not([type="checkbox"]):not([type="radio"]):hover,
+.box input:not([type="submit"]):not([type="checkbox"]):not([type="radio"]):focus,
 .box select:hover, .box select:focus,
 .box textarea:hover, .box textarea:focus {
   border-color: #555;
@@ -200,7 +211,11 @@ button {
   width: 4em !important;
 }
 
-button, .button {
+.box input[type="file"] {
+  display: none !important;
+}
+
+button, .button, input[type="submit"] {
   display: inline-block;
   margin: 0;
   padding: 5pt 20pt;
@@ -211,10 +226,12 @@ button, .button {
   background: transparent;
   user-select: none;
 }
-button.selected, .button.selected {
+button.selected, .button.selected, input[type="submit"].selected {
   background: radial-gradient(circle, #fff 70%, #eee 90%) !important; /* #f8f8f8 */
 }
-.desktop-client button:not(:disabled):hover, .desktop-client .button:not(:disabled):hover {
+.desktop-client button:not(:disabled):hover,
+.desktop-client .button:not(:disabled):hover,
+.desktop-client input[type="submit"]:not(:disabled):hover {
   background: radial-gradient(circle, #fcfcfc 50%, #f9f9f9 100%) !important;
 }
 .button-border {
@@ -351,6 +368,38 @@ button.selected, .button.selected {
 #layouts.box .selected-layout {
   font-weight: bold;
 }
+
+.desktop-client #sources.box {
+  top: 69pt;
+  left: 10pt;
+  font-size: 85%;
+  max-height: calc(100vh - 69pt - 2 * 20pt);
+  overflow-y: auto;
+}
+#sources.box > .box-minimize-buttons {
+  text-align: left;
+}
+
+
+#sources.box .new-source-preview-img {
+  max-width: 200px;
+  vertical-align: middle;
+}
+#sources.box .new-source-details {
+  display: inline-block;
+  margin-left: 10pt;
+}
+#sources.box > hr {
+  margin: 20pt 0;
+}
+
+
+#sources.box .source-preview-img {
+  max-width: 100px;
+  max-height: 100px;
+}
+
+
 
 .desktop-client #show-settings {
   right: 10pt;

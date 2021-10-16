@@ -50,6 +50,12 @@ const STORAGE_FILE = 'storage.yml';
 const PERSONS = 'persons';
 const CONNECTIONS = 'connections';
 
+const SOURCES_UPLOAD_DIR = STORAGE_DIR . '/sources';
+const SOURCES_META_FILE = SOURCES_UPLOAD_DIR . '/meta.yml';
+const SOURCES_MAX_FILE_SIZE = 10 /* MB */ * 1024 /* KB */ * 1024;
+const SOURCES_THUMB_SIZE = 100 /* px */;
+const SOURCES_THUMB_QUALITY = 40;
+
 const COMMIT_MERGE_TIME_THRESH = 3600;
 const CD_STORAGE_DIR = 'cd ' . STORAGE_DIR . '; ';
 
@@ -80,6 +86,9 @@ const PERMISSION_DELETE_PERSONS = [ADMIN_, NORMAL_];
 const PERMISSION_CREATE_CONNECTIONS = [ADMIN_, NORMAL_];
 const PERMISSION_EDIT_CONNECTIONS = [ADMIN_, NORMAL_];
 const PERMISSION_DELETE_CONNECTIONS = [ADMIN_, NORMAL_];
+
+const PERMISSION_UPLOAD_SOURCES = [ADMIN_, NORMAL_];
+const PERMISSION_DELETE_SOURCES = [ADMIN_, NORMAL_];
 
 define('PERMISSION_EDIT', array_intersect(
   PERMISSION_CREATE_PERSONS,
@@ -117,6 +126,9 @@ if (!file_exists(RUNTIME_DIR)) {
 }
 if (!file_exists(STORAGE_DIR)) {
   mkdir(STORAGE_DIR);
+}
+if (!file_exists(SOURCES_UPLOAD_DIR)) {
+  mkdir(SOURCES_UPLOAD_DIR);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -383,31 +395,54 @@ function filter_graph_data_by_permission($data)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+function load_sources_meta()
+{
+  $sources_meta_file_content = file_get_contents(SOURCES_META_FILE);
+  $sources = $sources_meta_file_content ? json_decode($sources_meta_file_content, true) : [];
+
+  $thumbs = glob(SOURCES_UPLOAD_DIR . '/*.thumb.jpg');
+  foreach ($thumbs as &$thumb) {
+    $start_pos = strlen(SOURCES_UPLOAD_DIR . '/');
+    $id = substr($thumb, $start_pos, strrpos($thumb, '.thumb') - $start_pos);
+    $sources[$id]['thumb'] = true;
+  }
+  return $sources;
+}
+
+function save_sources_meta($sources_meta)
+{
+  file_put_contents(SOURCES_META_FILE, json_encode($sources_meta));
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
 if (isset($_GET[ACTION])) {
   header('Content-Type: text/plain; charset=utf-8');
   $t = time();
-  $ret = $t;
+  $ret = false;
   $d = json_decode(urldecode($_GET['d']), true);
   $data_str = null;
+  $action_processed = false;
   switch ($_GET[ACTION]) {
-    case 'preview':
+    case 'get':
     {
-      exec(CD_STORAGE_DIR . 'git show ' . $_GET['hash'] . ':' . STORAGE_FILE, $out);
-      $preview_data = filter_graph_data_by_permission(json_decode(implode(PHP_EOL, $out), true));
-      $data_str = json_encode($preview_data);
-    }
-    // no break here, to continue preview like init but with different data
-    case 'init':
-    {
-      if (is_null($data_str)) {
-        $data_str = json_encode($data);
+      $ret = [];
+      foreach (explode(',', $_GET['q']) as $q) {
+        switch ($q) {
+          case 'preview':
+          {
+            exec(CD_STORAGE_DIR . 'git show ' . $_GET['hash'] . ':' . STORAGE_FILE, $out);
+            $ret['graph'] = filter_graph_data_by_permission(json_decode(implode(PHP_EOL, $out), true));
+            break;
+          }
+          case 'graph':    $ret['graph'] = $data; break;
+          case 'sources':  $ret['sources'] = load_sources_meta(); break;
+          case 'settings': $ret['settings'] = $user_settings; break;
+          case 'log':      $ret['log'] = get_log(); break;
+          case 'currentHash': $ret['currentHash'] = get_current_log_hash(); break;
+        }
       }
-      echo '{' .
-          '"settings":' . json_encode($user_settings) . PHP_EOL . ',' .
-          '"graph":' . $data_str . PHP_EOL . ',' .
-          '"log":' . prepare_json_for_storage(get_log()) . ',' .
-          '"currentHash":"' . get_current_log_hash() . '"' .
-        '}';
+      echo json_encode($ret);
       exit;
     }
 
@@ -570,14 +605,123 @@ if (isset($_GET[ACTION])) {
       }
       break;
 
-      default:
-        exit;
-    }
+      case 'upload-source-files':
+      {
+        if (current_user_can(PERMISSION_UPLOAD_SOURCES)) {
+          $errors = [];
+          $allowed_extensions = ['jpg', 'jpeg', 'png', 'svg'];
+          $sources_meta = load_sources_meta();
+          $new_sources_meta = [];
+
+          if (extension_loaded('imagick') && class_exists("Imagick")) {
+            $do_thumbs = true;
+          }
+          else {
+            $do_thumbs = false;
+            $errors[] = 'Vorschau kann nicht erzeugt werden (Imagick nicht installiert).';
+          }
+
+          foreach ($_FILES['files']['error'] as $i => $error_code) {
+            if ($error_code !== UPLOAD_ERR_OK) {
+              $errors[] = $file_name . ':<br />Speichern fehlgeschlagen (Fehlercode #' . $error_code . ').';
+              continue;
+            }
+            $file_name = $_FILES['files']['name'][$i];
+            $file_tmp = $_FILES['files']['tmp_name'][$i];
+            $file_type = $_FILES['files']['type'][$i];
+            $file_size = $_FILES['files']['size'][$i];
+            $file_ext = strtolower(end(explode('.', $_FILES['files']['name'][$i])));
+
+            if (!in_array($file_ext, $allowed_extensions)) {
+              $errors[] = $file_name + ':<br />Dateityp (' . $file_type . ') nicht erlaubt';
+              continue;
+            }
+            if ($file_size > SOURCES_MAX_FILE_SIZE) {
+              $errors[] = $file_name . ':<br />Maximale Dateigröße (' . SOURCES_MAX_FILE_SIZE . ') überschritten';
+              continue;
+            }
+
+            $j = $i;
+            do {
+              $file_id = time() . '.' . $j++;
+            } while(array_key_exists($file_id, $sources_meta));
+
+            $storage_path = SOURCES_UPLOAD_DIR . '/' . $file_id . '.';
+            $storage_file_path = $storage_path . $file_ext;
+            $storage_thumb_file_path = $storage_path . 'thumb.jpg';
+            $upload_successful = move_uploaded_file($file_tmp, $storage_file_path);
+            if (!$upload_successful) {
+              $errors[] = $file_name . ':<br />Speichern fehlgeschlagen.';
+            }
+            else {
+              $meta = [
+                'filename' => $file_name,
+                'title' => $_POST['titles'][$i],
+                'annotations' => []
+              ];
+              $sources_meta[$file_id] = $meta;
+              $new_sources_meta[$file_id] = $meta;
+
+              if ($do_thumbs) {
+                $thumb = new Imagick($storage_file_path);
+                $thumb->setImageFormat('jpeg');
+                $thumb->setImageCompression(Imagick::COMPRESSION_JPEG);
+                $thumb->setImageCompressionQuality(SOURCES_THUMB_QUALITY);
+                $thumb->thumbnailImage(SOURCES_THUMB_SIZE, SOURCES_THUMB_SIZE, true);
+                $thumb_saved_successful = $thumb->writeFile($storage_thumb_file_path);
+                if (!$thumb_saved_successful) {
+                  $errors[] = $file_name . ':<br />Vorschau erzeugen fehlgeschlagen.';
+                }
+              }
+            }
+          }
+
+          if ($new_sources_meta) {
+            save_sources_meta($sources_meta);
+          }
+
+          echo json_encode([
+            'new_sources' => $new_sources_meta,
+            'errors' => $errors
+          ]);
+          exit;
+        }
+      }
+      break;
+
+      case 'delete-source':
+      {
+        if (current_user_can(PERMISSION_DELETE_SOURCES)) {
+          $id = $_GET['id'];
+
+          $sources_meta = load_sources_meta();
+          if (array_key_exists($id, $sources_meta)) {
+            unset($sources_meta[$id]);
+            save_sources_meta($sources_meta);
+
+            $image_files = glob(SOURCES_UPLOAD_DIR . '/' . $id . '*');
+            foreach ($image_files as &$file) {
+              unlink($file);
+            }
+
+            echo json_encode(['deleted_source' => $id]);
+            exit;
+          }
+        }
+      }
+      break;
+
+    } // switch ACTION
+  } // if EDITING
+  
+  
+  if ($ret) {
+    $test = save_data($ret);
+    echo $ret . ' ;;; ' . add_newlines_to_json_for_git_friendly_file_content(get_log(1)) . ' ;;; ' . implode('\n', $test);
   }
-  $test = save_data($ret);
-  echo $ret . ' ;;; ' . prepare_json_for_storage(get_log(1)) . ' ;;; ' . implode('\n', $test);
   exit;
-}
+
+} // if ACTION
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -818,7 +962,67 @@ if (current_user_can(PERMISSION_ADMIN)) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+?>
 
+  <div id="sources" class="box box-padding box-minimized BETA">
+    <div class="box-minimize-buttons negative-padding">
+      <button class="box-restore desktop-only" title="Quellen">Q</button>
+      <button class="box-minimize"><?=$box_close_minimize_symbol?></button>
+    </div>
+<?php
+  if ($_SESSION[EDITING]) {
+?>
+    <form>
+      <div class="box-row">
+<?php
+    if (is_dir(SOURCES_UPLOAD_DIR) && is_writable(SOURCES_UPLOAD_DIR)) {
+?>
+        <input id="upload-new-source" type="file" multiple /><label for="upload-new-source" class="button drag-drop-visual-area">Hier klicken oder eine Datei hierhin schieben</label>
+<?php
+    } else {
+?>
+        <i>Upload deaktiviert: Fehlende Schreibrechte für das Upload-Verzeichnis.</i>
+<?php
+    }
+?>
+      </div>
+      <div id="new-source-preview-div-template" class="box-row hidden">
+        <img class="new-source-preview-img" />
+        <div class="new-source-details">
+          <span class="new-source-size"></span><br />
+          <input class="new-source-title" type="text" placeholder="Beschriftung" />
+        </div>
+      </div>
+      <div id="new-source-invalid-div-template" class="box-row hidden"></div>
+      <div id="new-source-buttons-div" class="box-row hidden">
+        <input type="submit" class="button-border" value="Speichern" />
+        <button type="button" class="button-border">Verwerfen</button>
+      </div>
+    </form>
+    <ul id="source-upload-response" class="box-row">
+    </ul>
+    <hr />
+<?php
+  }
+?>
+    <div id="sources-list">
+      <div id="source-div-template" class="box-row hidden">
+        <img class="source-preview-img" />
+        <span class="source-title"></span>
+        <ul class="source-linked-persons"></ul>
+<?php
+  if ($_SESSION[EDITING]) {
+?>
+        <button type="button" class="source-delete button-border">Löschen</button>
+<?php
+  }
+?>
+      </div>
+    </div>
+  </div>
+
+<?php
+///////////////////////////////////////////////////////////////////////////////////////////////////
 ?>
 
   <a id="show-settings" class="box button desktop-only hidden-toggle" data-hidden-toggle-target="#settings" title="Einstellungen">&#9881;</a>
@@ -1205,6 +1409,8 @@ if (!BETA) {
     const modKeys = '<?=$modKeys?>';
     const isMobile = <?=$is_mobile ? 'true' : 'false'?>;
     const currentLayoutId = '<?=$_GET['layout'] ?? ''?>';
+    const maxSourceFileSize = <?=SOURCES_MAX_FILE_SIZE?>;
+    const sourcesPath = '<?=$server_url . SOURCES_UPLOAD_DIR?>/';
 
     let permissions = {
       <?php
@@ -1339,11 +1545,11 @@ function init($admin_user)
 function save_accounts()
 {
   global $accounts;
-  $file_content = prepare_json_for_storage($accounts);
+  $file_content = add_newlines_to_json_for_git_friendly_file_content($accounts);
   file_put_contents(ACCOUNTS_FILE, $file_content, LOCK_EX);
 }
 
-function prepare_json_for_storage($arr)
+function add_newlines_to_json_for_git_friendly_file_content($arr)
 {
   return str_replace([
     '[{',
@@ -1443,7 +1649,7 @@ function stopEditing()
 function save_settings()
 {
   global $settings;
-  $file_content = prepare_json_for_storage($settings);
+  $file_content = add_newlines_to_json_for_git_friendly_file_content($settings);
   file_put_contents(SETTINGS_FILE, $file_content, LOCK_EX);
 }
 
@@ -1474,7 +1680,7 @@ function get_current_log_hash()
 function save_data($git_commit)
 {
   global $data;
-  $file_content = prepare_json_for_storage($data);
+  $file_content = add_newlines_to_json_for_git_friendly_file_content($data);
   file_put_contents(STORAGE_DIR . '/' . STORAGE_FILE, $file_content, LOCK_EX);
   exec('sh/update.sh ' .
     '"' . STORAGE_DIR . '" ' .

@@ -31,7 +31,16 @@ const settings = {
     verwitwet: { lineType: 'dashed', level: 'h' },
     unverheiratet: { lineType: 'dashed', level: 'h' },
     Doppelganger: { lineType: 'curve', level: 'h' },
-    unknown: { lineType: 'dotted', level: 'h' } }
+    unknown: { lineType: 'dotted', level: 'h' } },
+
+  loadLogItemsPerSecond: 100,
+  loadSourceItemsPerSecond: 10,
+
+  debug: {
+    addPerson: 1,
+    addConnection: 1,
+    addLogItem: 1,
+    addSourceItem: 1 }
 };
 
 let callbacks = {
@@ -179,9 +188,9 @@ if (startEdit) {
     let otherEditorDiv = document.getElementById('other-editor');
     let checkOtherEditor = () =>
     {
-      console.log('check other editor');
       xhRequest('?action=get-editor', responseText =>
       {
+        console.log('check other editor: ' + responseText);
         let otherEditor = JSON.parse(responseText);
         if (otherEditor !== false) {
           if (permissions.EDIT) {
@@ -197,7 +206,7 @@ if (startEdit) {
             startEdit.classList.remove('hidden');
           }
         }
-      });
+      }, false);
     };
     setInterval(checkOtherEditor, settings.checkOtherEditorInterval);
     checkOtherEditor();
@@ -525,8 +534,8 @@ function loadData(previewHash = null)
 
   console.log('load data from server ' + previewHash);
   xhRequest(previewHash
-    ? '?action=preview&hash=' + previewHash
-    : '?action=init', responseText =>
+    ? '?action=get&q=preview&hash=' + previewHash
+    : '?action=get&q=settings,graph,sources,log,currentHash', responseText =>
   {
     clearTimeout(delayedMsg);
     let d = JSON.parse(responseText);
@@ -545,8 +554,9 @@ if (!firstLogin && !accountUpgraded) {
 let nodeCenterY = 0;
 function applyLoadedData(loadedData, addLogItems, adjustCamera)
 {
-  data = loadedData;
-  // console.log(data);
+  for (const [key, value] of Object.entries(loadedData)) {
+    data[key] = value;
+  }
   if (adjustCamera) {
     moveCamera({
         x: parseFloat(data.settings.camera.x),
@@ -559,7 +569,7 @@ function applyLoadedData(loadedData, addLogItems, adjustCamera)
   data.graph.persons.forEach(p => { nodeCenterY += p.y; });
   nodeCenterY /= data.graph.persons.length;
 
-  logAddPerson = addLogItems ? 3 : false;
+  logAddPerson = addLogItems ? settings.debug.addPerson : false;
   let persons = data.graph.persons;
   data.graph.persons = [];
   persons.forEach(p =>
@@ -574,7 +584,7 @@ function applyLoadedData(loadedData, addLogItems, adjustCamera)
   });
   logAddPerson = true;
 
-  logAddConnection = addLogItems ? 3 : false;
+  logAddConnection = addLogItems ? settings.debug.addConnection : false;
   let connections = data.graph.connections;
   data.graph.connections = [];
   connections.forEach(c =>
@@ -598,10 +608,10 @@ function applyLoadedData(loadedData, addLogItems, adjustCamera)
         currentUserIsEditing &&
         (permissions.LOG_RESET_ALL ||
         (permissions.LOG_RESET_OWN && data.log[0][2] === currentUser));
-      logAddLogItem = 3;
+      logAddLogItem = settings.debug.addLogItem;
       let i = 0;
       let addLog = (continueAdding = true) => {
-        let j = Math.min(i + 10, data.log.length);
+        let j = Math.min(i + settings.loadLogItemsPerSecond, data.log.length);
         for (; i < j; ++i) {
           let l = data.log[i];
           addLogItem(l, false, logItemRestorable);
@@ -610,21 +620,15 @@ function applyLoadedData(loadedData, addLogItems, adjustCamera)
             (permissions.LOG_RESET_OWN && l[2] === currentUser));
           if (logAddLogItem) --logAddLogItem;
         }
-        if (continueAdding && i < data.log.length - 1) {
-          setTimeout(addLog, 500);
+        if (continueAdding && i < data.log.length) {
+          setTimeout(addLog, 1000);
         }
         else {
           logAddLogItem = true;
         }
       };
       addLog(false);
-      let logButton = document.querySelector('#log .box-restore');
-      let fn = () =>
-      {
-        logButton.removeEventListener('click', fn)
-        addLog();
-      };
-      logButton.addEventListener('click', fn);
+      addOneTimeEventListener(document.querySelector('#log .box-restore'), 'click', addLog);
     }
   }
 }
@@ -1792,6 +1796,229 @@ function addExtension(p, id, offset_xy, label)
       color: '#ddd'
   });
 }
+
+
+// sources
+// ------------------------------------
+let sourcesBox = document.getElementById('sources');
+let sourcesList = sourcesBox.querySelector('#sources-list');
+let sourceTemplateDiv = sourcesList.querySelector('#source-div-template');
+
+callbacks.initialLoadComplete.add(() =>
+{
+  for (const [id, source] of Object.entries(data.sources))  {
+    prepareSource(id, source);
+  }
+
+  logAddSourceItem = settings.debug.addSourceItem;
+  let i = 0;
+  let addSources = (continueAdding = true) => {
+    let sources = Object.entries(data.sources);
+    let j = Math.min(i + settings.loadSourceItemsPerSecond, sources.length);
+    for (; i < j; ++i) {
+      let [source_id, source] = sources[i];
+      addSourceItem(source);
+      if (logAddSourceItem) --logAddSourceItem;
+    }
+    if (continueAdding && i < sources.length) {
+      setTimeout(addSources, 1000);
+    }
+  }
+
+  addSources(false);
+  addOneTimeEventListener(document.querySelector('#sources .box-restore'), 'click', addSources);
+}, false);
+
+function prepareSource(id, source)
+{
+  source.id = id;
+  source.ext = source.filename.substr(source.filename.lastIndexOf('.'));
+}
+
+let logAddSourceItem = true;
+function addSourceItem(source)
+{
+  console.log(logAddSourceItem ? ['addSourceItem', source] : '...');
+  let sourceDiv = sourceTemplateDiv.cloneNode(true);
+  sourceDiv.removeAttribute('id');
+  sourceDiv.classList.remove('hidden');
+  sourceDiv.classList.add('generated-source');
+  sourceDiv.title = source.id;
+  sourcesList.appendChild(sourceDiv);
+
+  let img = sourceDiv.querySelector('.source-preview-img');
+  img.src = sourcesPath + source.id + (('thumb' in source) ? '.thumb.jpg' : (source.ext));
+
+  let title = sourceDiv.querySelector('.source-title');
+  title.innerHTML = source.title;
+
+  let deleteBtn = sourceDiv.querySelector('.source-delete');
+  if (deleteBtn) {
+    deleteBtn.addEventListener('click', e =>
+    {
+      if (confirm('Wirklich löschen?')) {
+        xhRequest('?action=delete-source&id=' + source.id, responseText =>
+        {
+          let response = JSON.parse(responseText);
+          if ('deleted_source' in response && response.deleted_source === source.id) {
+
+            delete data.sources[source.id];
+            sourceDiv.remove();
+          }
+        });
+      }
+    });
+  }
+}
+
+
+// new sources
+// ------------------------------------
+if (currentUserIsEditing) {
+  let newSourceForm = sourcesBox.querySelector('form');
+  let newSourceFileInput = sourcesBox.querySelector('#upload-new-source');
+  let newSourceFileInputLabel = sourcesBox.querySelector('label[for="upload-new-source"]');
+  let newSourcePreviewTemplateDiv = sourcesBox.querySelector('#new-source-preview-div-template');
+  let newSourceInvalidTemplateDiv = sourcesBox.querySelector('#new-source-invalid-div-template');
+  let newSourcePreviewButtonsDiv = sourcesBox.querySelector('#new-source-buttons-div');
+  let newSourceCancelButton = newSourcePreviewButtonsDiv.querySelector('button');
+  let newSourceUploadResponse = sourcesBox.querySelector('#source-upload-response');
+
+  newSourceFileInput.addEventListener('change', e =>
+  {
+    previewNewSourceFiles(newSourceFileInput.files);
+  });
+  sourcesBox.addEventListener('dragenter', e =>
+  {
+    e.stopPropagation();
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+    sourcesBox.classList.add('drag-drop-area');
+    newSourceFileInputLabel.classList.add('drag-drop-visual-area-active');
+  });
+  sourcesBox.addEventListener('dragover', e =>
+  {
+    e.stopPropagation();
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+  });
+  sourcesBox.addEventListener('dragleave', e =>
+  {
+    e.stopPropagation();
+    e.preventDefault();
+    sourcesBox.classList.remove('drag-drop-area');
+    newSourceFileInputLabel.classList.remove('drag-drop-visual-area-active');
+  });
+  sourcesBox.addEventListener('drop', e =>
+  {
+    e.stopPropagation();
+    e.preventDefault();
+    sourcesBox.classList.remove('drag-drop-area');
+    newSourceFileInputLabel.classList.remove('drag-drop-visual-area-active');
+
+    previewNewSourceFiles(e.dataTransfer.files);
+  });
+
+  let selectedFiles = [];
+  let approvedFiles = [];
+  function previewNewSourceFiles(files)
+  {
+    clearPreview();
+    selectedFiles = files;
+
+    for (let i = 0; i < files.length; ++i) {
+      let file = files[i];
+      let fileError = false;
+      if (!file.type.match('image.*')) {
+        fileError = file.name + ':<br />Dateityp (' + file.type + ') nicht erlaubt';
+      }
+      if (!file.size > maxSourceFileSize) {
+        fileError = file.name + ':<br />Maximale Dateigröße (' + maxSourceFileSize + ') überschritten';
+      }
+      if (fileError) {
+        let newSourceInvalidDiv = newSourceInvalidTemplateDiv.cloneNode(true);
+        newSourceInvalidDiv.removeAttribute('id');
+        newSourceInvalidDiv.classList.remove('hidden');
+        newSourceInvalidDiv.classList.add('generated-preview');
+        newSourceInvalidDiv.innerHTML = fileError;
+        newSourceForm.insertBefore(newSourceInvalidDiv, newSourcePreviewTemplateDiv);
+        continue;
+      }
+      console.log(file);
+      approvedFiles.push(i);
+
+      let newSourcePreviewDiv = newSourcePreviewTemplateDiv.cloneNode(true);
+      newSourcePreviewDiv.removeAttribute('id');
+      newSourcePreviewDiv.classList.remove('hidden');
+      newSourcePreviewDiv.classList.add('generated-preview');
+      newSourceForm.insertBefore(newSourcePreviewDiv, newSourcePreviewTemplateDiv);
+
+      let newSourcePreviewImg = newSourcePreviewDiv.querySelector('.new-source-preview-img');
+      newSourcePreviewImg.src = URL.createObjectURL(file);
+
+      let newSourceTitle = newSourcePreviewDiv.querySelector('.new-source-title');
+      newSourceTitle.value = file.name;
+
+      let newSourceSize = newSourcePreviewDiv.querySelector('.new-source-size');
+      newSourceSize.innerHTML = filesizeStr(file.size);
+    }
+    if (approvedFiles.length) {
+      newSourcePreviewButtonsDiv.classList.remove('hidden');
+    }
+    else {
+      alert('Nur Bilddateien können als Quellen hinzugefügt werden.');
+    }
+  }
+
+  newSourceForm.addEventListener('submit', e =>
+  {
+    e.preventDefault();
+    let titleInputs = newSourceForm.querySelectorAll('.new-source-title');
+    let formData = new FormData();
+    for (let i = 0; i < approvedFiles.length; ++i) {
+      let fi = approvedFiles[i];
+      formData.append('files[]', selectedFiles[fi]);
+      formData.append('titles[]', titleInputs[i].value);
+    }
+    xhRequestPost('?action=upload-source-files', formData, responseText =>
+    {
+      clearPreview();
+
+      if (responseText.length) {
+        let response = JSON.parse(responseText);
+        for (const [id, source] of Object.entries(response.new_sources)) {
+          prepareSource(id, source);
+          data.sources[id] = source;
+          addSourceItem(source);
+        }
+        for (error of response.errors) {
+          let li = document.createElement('li');
+          li.innerHTML = error;
+          newSourceUploadResponse.appendChild(li);
+        }
+      }
+    }, false);
+  });
+
+  newSourceCancelButton.addEventListener('click', e =>
+  {
+    newSourceForm.reset();
+    clearPreview();
+  });
+
+  function clearPreview()
+  {
+    selectedFiles = [];
+    approvedFiles = [];
+    newSourceForm.querySelectorAll('.generated-preview').forEach(gp => gp.remove());
+    newSourcePreviewButtonsDiv.classList.add('hidden');
+
+    while (newSourceUploadResponse.firstChild) {
+      newSourceUploadResponse.removeChild(newSourceUploadResponse.lastChild);
+    }
+  }
+}
+
 
 
 // other

@@ -351,8 +351,8 @@ function Callbacks()
   {
     let tmp = () =>
     {
-      cb();
       this.remove(tmp);
+      cb();
     }
     this.add(tmp);
   }
@@ -367,6 +367,16 @@ function Callbacks()
   {
     this.cbs.slice(0).forEach(cb => cb());
   }
+}
+
+function addOneTimeEventListener(obj, evt, callback)
+{
+  let tmp = e =>
+  {
+    obj.removeEventListener(evt, tmp);
+    callback(e);
+  }
+  obj.addEventListener(evt, tmp);
 }
 
 function isAnonymized(str)
@@ -389,7 +399,7 @@ function dateString(d)
 {
   let s = splitDate(d);
   if (s[2] && s[1] && s[0]) {
-    return s.join('.');
+    return s.reverse().join('.');
   }
   if (s[2] && s[1]) {
     return s[2] + '.' + s[1];
@@ -435,3 +445,15 @@ Object.defineProperty(Array.prototype, 'joinNotEmpty', { value: function(separat
 {
   return this.filter(elem => !!elem).join(separator);
 } });
+
+function filesizeStr(numBytes)
+{
+  for (prefix of ['', 'K', 'M']) {
+    if (numBytes < 1024) {
+      return numBytes + ' ' + prefix + 'B';
+    }
+    numBytes = numBytes >> 10;
+  }
+  return numBytes + ' GB';
+}
+
