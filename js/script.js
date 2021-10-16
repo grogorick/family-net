@@ -45,7 +45,8 @@ const settings = {
 
 let callbacks = {
   graphLoaded: new Callbacks(),
-  logPlayStopped: new Callbacks()
+  logPlayStopped: new Callbacks(),
+  initialLoadComplete: new Callbacks()
 };
 
 let layouts = {};
@@ -542,6 +543,11 @@ function loadData(previewHash = null)
     let hash = previewHash ? previewHash : d.currentHash;
     applyLoadedData(d, previewHash === null, previewHash === null);
     dataCache[hash] = d;
+
+    if (!previewHash) {
+      callbacks.initialLoadComplete.call();
+    }
+
     if (msg !== null) {
       setTimeout(msg.dismiss, 1000);
     }
