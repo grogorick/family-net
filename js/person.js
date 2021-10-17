@@ -21,9 +21,9 @@ class PersonFunctions
   // ... (xxx) ...
   get_nickName()
   {
-    let f = this._.f.replaceAll('?', '').trim();
+    let f = this._.f.replaceAll('?', '');
     let n = f.match(/\(([^()]+)\)/);
-    return n ? n[1] : '';
+    return n ? n[1].trim() : '';
   }
 
   // ... *xxx ...<br>
@@ -31,12 +31,12 @@ class PersonFunctions
   // xxx ... ...
   get_rufName()
   {
-    let f = this._.f.replaceAll('?', '').trim();
+    let f = this._.f.replaceAll('?', '');
     let n = f.match(/[*]\s*([^-,()\s]+)([-,()\s]|$)/);
     if (!n) {
       n = f.match(/^([^-,()\s]+)([-,()\s]|$)/);
     }
-    return n ? n[1] : '';
+    return n ? n[1].trim() : '';
   }
 
   get_firstNames()
@@ -106,6 +106,11 @@ class PersonFunctions
     return dateString(this._.d);
   }
 
+  get_notes()
+  {
+    return this._.o;
+  }
+
   get_shortDisplayString()
   {
     let tmp = [
@@ -135,6 +140,16 @@ class PersonFunctions
     return n + ((b || d) ? ' \n ' + b + ' — ' + d : '');
   }
 
+  get_allTextData()
+  {
+    return [this._.f, this._.l, this._.m, this._.o];
+  }
+
+  is_incomplete()
+  {
+    return this.get_allTextData().some(v => (typeof v === 'string') && v.includes('???'));
+  }
+
   get_nodeColor()
   {
     if ('color' in this) {
@@ -144,7 +159,7 @@ class PersonFunctions
     {
       return settings.nodeColorPreview;
     }
-    if ([this._.f, this._.l, this._.m, this._.o].some(v => (typeof v === 'string') && v.includes('???'))) {
+    if (this.is_incomplete()) {
       return settings.nodeColorWarning;
     }
     return settings.nodeColor;
@@ -153,13 +168,14 @@ class PersonFunctions
 
 class Person extends PersonFunctions
 {
-  t = null;
-  f = '';
-  l = '';
-  m = '';
-  b = '';
-  d = '';
-  o = '';
+  t = null; // ID (creation timestamp)
+  f = '';   // nick and first name(s)
+  l = '';   // last name(s)
+  m = '';   // birth name(s)
+  b = '';   // birth date (YYYY-MM-DD)
+  d = '';   // death date (YYYY-MM-DD)
+  o = '';   // notes
+  s = [];   // source IDs
 
   _parents = [];
   _children = [];

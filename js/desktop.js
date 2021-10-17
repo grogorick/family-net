@@ -19,11 +19,11 @@ s.bind('hovers', e =>
   {
     if (isPersonNode(n) || isDoppelgangerNode(n))  {
       showHideDoppelgangerEdges(n, false);
-      n.label = n._my.p._.get_longDisplayString();
+      n.label = n._my.p.get_longDisplayString();
       hoverTimeouts[n._my.p.t] = setTimeout(() => {
         console.log('long hovered to show details');
         delete hoverTimeouts[n._my.p.t];
-        n.label = n._my.p._.get_fullName() + ' \n ' + n._my.p.get_birthDate() + ' — ' + n._my.p.get_deathDate() + (n._my.p._.o.length ? ' \n\n ' + n._my.p._.o : '');
+        n.label = n._my.p.get_fullName() + ' \n ' + n._my.p.get_birthDate() + ' — ' + n._my.p.get_deathDate() + (n._my.p.get_notes().length ? ' \n\n ' + n._my.p.get_notes() : '');
         s.refresh();
       }, settings.extendedLabelHoverDelay);
     }

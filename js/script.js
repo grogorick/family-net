@@ -1272,7 +1272,7 @@ function addPerson(p_raw, toData, toServer, toGraph, refreshGraph, doneCallback 
             y: p.y,
             label: getPersonPreviewDisplayString(p),
             size: settings.nodeSize,
-            color: p._.get_nodeColor(),
+            color: p.get_nodeColor(),
             labelAlignment: (p.y < nodeCenterY) ? 'top' : 'bottom' });
         p._graphNode = s.graph.nodes(p.t);
 
@@ -1838,7 +1838,10 @@ callbacks.initialLoadComplete.add(() =>
 function prepareSource(id, source)
 {
   source.id = id;
-  source.ext = source.filename.substr(source.filename.lastIndexOf('.'));
+  source.ext = source.e;
+  source.filename = source.f;
+  source.title = source.t;
+  source.annotations = source.a;
 }
 
 let logAddSourceItem = true;
@@ -1929,7 +1932,7 @@ if (currentUserIsEditing) {
   let approvedFiles = [];
   function previewNewSourceFiles(files)
   {
-    clearPreview();
+    clearPreview(false);
     selectedFiles = files;
 
     for (let i = 0; i < files.length; ++i) {
@@ -1988,7 +1991,7 @@ if (currentUserIsEditing) {
     }
     xhRequestPost('?action=upload-source-files', formData, responseText =>
     {
-      clearPreview();
+      clearPreview(true);
 
       if (responseText.length) {
         let response = JSON.parse(responseText);
@@ -2003,17 +2006,19 @@ if (currentUserIsEditing) {
           newSourceUploadResponse.appendChild(li);
         }
       }
-    }, false);
+    }, true);
   });
 
   newSourceCancelButton.addEventListener('click', e =>
   {
-    newSourceForm.reset();
-    clearPreview();
+    clearPreview(true);
   });
 
-  function clearPreview()
+  function clearPreview(resetForm)
   {
+    if (resetForm) {
+      newSourceForm.reset();
+    }
     selectedFiles = [];
     approvedFiles = [];
     newSourceForm.querySelectorAll('.generated-preview').forEach(gp => gp.remove());
@@ -2159,8 +2164,8 @@ searchInput.addEventListener('input', e =>
       .split(' ')
       .map(v => '(?=.*' + v + ')')
       .join('');
-    let re = new RegExp('^' + s + '.*$', 'i');
-    activeState.addNodes(data.graph.persons.filter(p => (p._.f + p._.l + p._.m + p._.o).match(re)).map(p => p.t));
+    let searchRE = new RegExp('^' + s + '.*$', 'i');
+    activeState.addNodes(data.graph.persons.filter(p => p.get_allTextData().join('').match(searchRE)).map(p => p.t));
   }
 });
 

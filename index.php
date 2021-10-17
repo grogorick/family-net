@@ -609,7 +609,7 @@ if (isset($_GET[ACTION])) {
       {
         if (current_user_can(PERMISSION_UPLOAD_SOURCES)) {
           $errors = [];
-          $allowed_extensions = ['jpg', 'jpeg', 'png', 'svg'];
+          $allowed_extensions = ['.jpg', '.jpeg', '.png', '.svg'];
           $sources_meta = load_sources_meta();
           $new_sources_meta = [];
 
@@ -622,18 +622,18 @@ if (isset($_GET[ACTION])) {
           }
 
           foreach ($_FILES['files']['error'] as $i => $error_code) {
+            $file_name = $_FILES['files']['name'][$i];
             if ($error_code !== UPLOAD_ERR_OK) {
               $errors[] = $file_name . ':<br />Speichern fehlgeschlagen (Fehlercode #' . $error_code . ').';
               continue;
             }
-            $file_name = $_FILES['files']['name'][$i];
             $file_tmp = $_FILES['files']['tmp_name'][$i];
             $file_type = $_FILES['files']['type'][$i];
             $file_size = $_FILES['files']['size'][$i];
-            $file_ext = strtolower(end(explode('.', $_FILES['files']['name'][$i])));
+            $file_ext = strtolower(substr($file_name, strrpos($file_name, '.')));
 
             if (!in_array($file_ext, $allowed_extensions)) {
-              $errors[] = $file_name + ':<br />Dateityp (' . $file_type . ') nicht erlaubt';
+              $errors[] = $file_name . ':<br />Dateityp (' . $file_type . ') nicht erlaubt';
               continue;
             }
             if ($file_size > SOURCES_MAX_FILE_SIZE) {
@@ -646,31 +646,39 @@ if (isset($_GET[ACTION])) {
               $file_id = time() . '.' . $j++;
             } while(array_key_exists($file_id, $sources_meta));
 
-            $storage_path = SOURCES_UPLOAD_DIR . '/' . $file_id . '.';
+            $storage_path = SOURCES_UPLOAD_DIR . '/' . $file_id;
             $storage_file_path = $storage_path . $file_ext;
-            $storage_thumb_file_path = $storage_path . 'thumb.jpg';
+            $storage_thumb_file_path = $storage_path . '.thumb.jpg';
             $upload_successful = move_uploaded_file($file_tmp, $storage_file_path);
             if (!$upload_successful) {
               $errors[] = $file_name . ':<br />Speichern fehlgeschlagen.';
             }
             else {
               $meta = [
-                'filename' => $file_name,
-                'title' => $_POST['titles'][$i],
-                'annotations' => []
+                'e' /* extension */ => $file_ext,
+                'f' /* original filename */ => $file_name,
+                't' /* title */ => $_POST['titles'][$i],
+                'a' /* annotations */ => []
               ];
               $sources_meta[$file_id] = $meta;
               $new_sources_meta[$file_id] = $meta;
 
               if ($do_thumbs) {
-                $thumb = new Imagick($storage_file_path);
-                $thumb->setImageFormat('jpeg');
-                $thumb->setImageCompression(Imagick::COMPRESSION_JPEG);
-                $thumb->setImageCompressionQuality(SOURCES_THUMB_QUALITY);
-                $thumb->thumbnailImage(SOURCES_THUMB_SIZE, SOURCES_THUMB_SIZE, true);
-                $thumb_saved_successful = $thumb->writeFile($storage_thumb_file_path);
-                if (!$thumb_saved_successful) {
-                  $errors[] = $file_name . ':<br />Vorschau erzeugen fehlgeschlagen.';
+                try {
+                  $thumb = new Imagick($storage_file_path);
+                  $thumb->setImageFormat('jpeg');
+                  $thumb->setImageCompression(Imagick::COMPRESSION_JPEG);
+                  $thumb->setImageCompressionQuality(SOURCES_THUMB_QUALITY);
+                  $thumb->thumbnailImage(SOURCES_THUMB_SIZE, SOURCES_THUMB_SIZE, true);
+                  $thumb_saved_successful = $thumb->writeImage($storage_thumb_file_path);
+                  if ($thumb_saved_successful) {
+                    $new_sources_meta[$file_id]['thumb'] = true;
+                  }
+                  else {
+                    $errors[] = $file_name . ':<br />Vorschau speichern fehlgeschlagen.';
+                  }
+                } catch (ImagickException $e) {
+                  $errors[] = $file_name . ':<br />Vorschau erzeugen fehlgeschlagen: ' . $e->getMessage() . ' (' . $e->getCode() . ')';
                 }
               }
             }
@@ -704,7 +712,7 @@ if (isset($_GET[ACTION])) {
               unlink($file);
             }
 
-            echo json_encode(['deleted_source' => $id]);
+            echo json_encode(['deleted_source' => $id, 'files' => $image_files]);
             exit;
           }
         }
