@@ -1435,6 +1435,7 @@ if (!BETA) {
     const no_permission_value = '<?=NO_PERMISSION_VALUE?>';
     const no_permission_char = '<?=mb_substr(NO_PERMISSION_VALUE, 0, 1, 'utf-8')?>';
   </script>
+  <script src="js/callbacks.js<?=V_?>"></script>
   <script src="js/utils.js<?=V_?>"></script>
   <script src="js/person.js<?=V_?>"></script>
   <script src="js/connection.js<?=V_?>"></script>

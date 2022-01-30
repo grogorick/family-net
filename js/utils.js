@@ -358,35 +358,6 @@ function xhRequestPost(url, data, responseCallback = null, log = true)
   xhttp.send(data);
 }
 
-function Callbacks()
-{
-  this.cbs = [];
-  this.add = (cb) =>
-  {
-    this.cbs.push(cb);
-  }
-  this.addOnce = (cb) =>
-  {
-    let tmp = () =>
-    {
-      this.remove(tmp);
-      cb();
-    }
-    this.add(tmp);
-  }
-  this.remove = (cb) =>
-  {
-    let idx = this.cbs.indexOf(cb);
-    if (idx !== -1) {
-      this.cbs.splice(idx, 1);
-    }
-  }
-  this.call = () =>
-  {
-    this.cbs.slice(0).forEach(cb => cb());
-  }
-}
-
 function addOneTimeEventListener(obj, evt, callback)
 {
   let tmp = e =>

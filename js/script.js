@@ -43,12 +43,6 @@ const settings = {
     addSourceItem: 1 }
 };
 
-let callbacks = {
-  graphLoaded: new Callbacks(),
-  logPlayStopped: new Callbacks(),
-  initialLoadComplete: new Callbacks()
-};
-
 let layouts = {};
 
 let windowSize = { height: window.innerHeight, width: window.innerWidth };
