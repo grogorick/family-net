@@ -39,3 +39,42 @@ class Source
     }
   }
 }
+
+
+
+let annotatorBox = document.getElementById('source-annotator');
+let annotatorZoomContainer = annotatorBox.querySelector('.annotator-zoom-container');
+let annotatorContent = annotatorBox.querySelector('.annotator-content');
+let annotatorImg = annotatorBox.querySelector('.annotator-img');
+let annotatorZoomInBtn = annotatorBox.querySelector('.annotator-zoom-in');
+let annotatorZoomOutBtn = annotatorBox.querySelector('.annotator-zoom-out');
+let annotationDetails = annotatorBox.querySelector('#source-annotation-details');
+
+function showSourceDetails(source)
+{
+  annotatorImg.src = sourcesPath + source._id + source._ext;
+  annotatorContent.style.transform = 'scale(' + (annotatorZoom = 1) + ')';
+  annotatorContent.querySelectorAll('span').forEach(s => s.remove());
+  annotatorBox.classList.remove('hidden');
+  moveToFront(annotatorBox);
+  annotationEditable = false;
+}
+
+
+
+let annotatorZoom = 1;
+let annotatorZoomStep = .25;
+
+let annotatorZoomFn = e =>
+{
+  annotatorZoom = Math.max(1, annotatorZoom + annotatorZoomStep * parseFloat(e.target.getAttribute('data-value')));
+  annotatorContent.style.transform = 'scale(' + annotatorZoom + ')';
+};
+annotatorZoomInBtn.addEventListener('click', annotatorZoomFn);
+annotatorZoomOutBtn.addEventListener('click', annotatorZoomFn);
+
+annotatorZoomContainer.addEventListener('mousemove', e =>
+{
+  let pos = getRelativeEventPosition(e, annotatorZoomContainer);
+  annotatorContent.style.transformOrigin = (pos.x * annotatorZoom) + 'px ' + (pos.y * annotatorZoom) + 'px';
+});

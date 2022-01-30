@@ -1840,7 +1840,7 @@ function addSourceItem(source)
   console.log(logAddSourceItem ? ['addSourceItem', source] : '...');
   let sourceDiv = creatSourceDiv(source, e =>
   {
-    // show source details
+    showSourceDetails(source);
   }, {
     'Löschen': { class: 'source-delete', click: e =>
     {

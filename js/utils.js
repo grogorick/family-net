@@ -78,6 +78,14 @@ function multipleKeyPressed(e)
   return e.data ? (e.data.captor.ctrlKey || e.data.captor.shiftKey) : (e.ctrlKey || e.shiftKey);
 }
 
+function getRelativeEventPosition(evt, relativeTo = null)
+{
+  let rect = (relativeTo ?? evt.target).getBoundingClientRect();
+  return {
+    x: (evt.clientX - rect.left) / annotatorZoom,
+    y: (evt.clientY - rect.top) / annotatorZoom };
+}
+
 function twoDigits(v)
 {
   if (v === '0')

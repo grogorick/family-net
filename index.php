@@ -1155,6 +1155,33 @@ if (current_user_can(PERMISSION_ADMIN)) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 ?>
 
+  <div id="source-annotator" class="modal-blocker backdrop-blur message hidden">
+    <div  class="box box-padding message-content">
+      <div class="box-minimize-buttons negative-padding">
+        <button class="hidden-toggle" data-hidden-toggle-target="#source-annotator"><?=$box_close_minimize_symbol?></button>
+      </div>
+      <div class="annotator">
+        <div class="annotator-zoom-container">
+          <div class="annotator-content">
+            <img class="annotator-img" />
+          </div>
+        </div>
+        <div class="annotator-controls">
+          <b class="annotator-zoom-in" data-value="1">+</b>
+          <b class="annotator-zoom-out" data-value="-1">-</b>
+        </div>
+      </div>
+    </div>
+
+    <div id="source-annotation-details" class="hidden">
+      <input type="text" id="annotation-text" placeholder="Anmerkung" />
+    </div>
+  </div>
+
+<?php
+///////////////////////////////////////////////////////////////////////////////////////////////////
+?>
+
   <div id="help" class="box box-padding box-minimized">
     <div class="box-minimize-buttons negative-padding">
       <button class="box-restore desktop-only" title="Hilfe">?</button>
