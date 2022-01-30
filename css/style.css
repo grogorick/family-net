@@ -441,9 +441,34 @@ button.selected, .button.selected, input[type="submit"].selected {
   left: 0;
   top: 0;
 }
+.annotator-content > span {
+  position: absolute;
+  display: block;
+  background: #f003;
+  border: 1px solid #f006;
+}
+.annotator-content > span:hover {
+  background: transparent;
+  border: 1px solid #f00a;
+}
 .annotator-controls {
   height: 20pt;
 }
+/*
+.annotator-img {
+  -ms-transform: scale(0.25);
+  -moz-transform: scale(0.25);
+  -o-transform: scale(0.25);
+  -webkit-transform: scale(0.25);
+  transform: scale(0.25);
+
+  -ms-transform-origin: 0 0;
+  -moz-transform-origin: 0 0;
+  -o-transform-origin: 0 0;
+  -webkit-transform-origin: 0 0;
+  transform-origin: 0 0;
+}
+*/
 
 
 .desktop-client #show-settings {
