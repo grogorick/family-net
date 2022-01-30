@@ -395,27 +395,29 @@ if (BETA) {
 callbacks.showPersonInfo.add(person =>
 {
   console.log(['person source info', person]);
+  personMenuSourcesListDiv.innerHTML = '';
   if (Object.keys(person._sources).length > 0) {
-    personMenuSourcesListDiv.innerHTML = '';
     for (const [sourceID, annotations] of Object.entries(person._sources)) {
       console.log([personMenuSourcesListDiv, annotations, person]);
       addLinkedSourceItem(personMenuSourcesListDiv, data.sources[sourceID], person);
     }
   }
-  else {
-    personMenuSourcesListDiv.innerHTML = '<i style="color: #999">(bisher keine)</i>';
+  else if (!currentUserIsEditing) {
+    personMenuSourcesListDiv.innerHTML = '-';
   }
 });
 }
 
 function addLinkedSourceItem(listDiv, source, personOrConnection)
 {
-  let li = document.createElement('div');
-  li.innerHTML = source._description;
-  li.classList.add('button');
-  li.addEventListener('click', e =>
+  let showSourceDetailsBtn = document.createElement('button');
+  showSourceDetailsBtn.innerHTML = source._description;
+  showSourceDetailsBtn.addEventListener('click', e =>
   {
     showSourceWithAnnotations(source, personOrConnection);
   });
+
+  let li = document.createElement('div');
+  li.appendChild(showSourceDetailsBtn);
   listDiv.appendChild(li);
 }

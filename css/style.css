@@ -185,9 +185,13 @@ html body .drag-drop-visual-area.drag-drop-visual-area-active {
 #person-form.box #person-form-sources-list {
   margin: 0;
 }
-#person-form.box #person-form-sources-list div {
-  margin-bottom: 10pt;
-  display: block;
+#person-form.box #person-form-sources-list > div {
+  display: flex;
+}
+#person-form.box #person-form-sources-list > div button:first-child {
+  flex-grow: 1;
+  text-align: left;
+  padding-left: 5pt;
 }
 
 .box hr {
