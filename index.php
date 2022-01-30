@@ -322,25 +322,59 @@ else if ($_SESSION[EDITING]) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-$settings_file_content = file_get_contents(SETTINGS_FILE);
-if ($settings_file_content) {
-  $settings = array_merge($settings, json_decode($settings_file_content, true));
+function load_settings($default)
+{
+  $settings_file_content = file_get_contents(SETTINGS_FILE);
+  if ($settings_file_content) {
+    return array_merge($default, json_decode($settings_file_content, true));
+  }
+  return $default;
 }
-$user_settings = $settings;
-$cam_client = $is_mobile ? CAMERA_MOBILE : CAMERA_DESKTOP;
-if (array_key_exists($_SESSION[USER], $settings[CAMERA]) && array_key_exists($cam_client, $user_settings[CAMERA][$_SESSION[USER]])) {
-  $user_settings[CAMERA] = $user_settings[CAMERA][$_SESSION[USER]][$cam_client];
+
+function prepare_user_settings($settings)
+{
+  global $is_mobile;
+  $user_settings = $settings;
+  $cam_client = $is_mobile ? CAMERA_MOBILE : CAMERA_DESKTOP;
+  if (array_key_exists($_SESSION[USER], $user_settings[CAMERA]) && array_key_exists($cam_client, $user_settings[CAMERA][$_SESSION[USER]])) {
+    $user_settings[CAMERA] = $user_settings[CAMERA][$_SESSION[USER]][$cam_client];
+  }
+  else {
+    $user_settings[CAMERA] = $user_settings[CAMERA]['default'];
+  }
+  return $user_settings;
 }
-else {
-  $user_settings[CAMERA] = $user_settings[CAMERA]['default'];
+
+function load_graph_data($default)
+{
+  $data_file_content = file_get_contents(STORAGE_DIR . '/' . STORAGE_FILE);
+  if ($data_file_content) {
+    return filter_graph_data_by_permission(json_decode($data_file_content, true));
+  }
+  return $default;
+}
+
+function load_sources_meta()
+{
+  $sources_meta_file_content = file_get_contents(SOURCES_META_FILE);
+  $sources = $sources_meta_file_content ? json_decode($sources_meta_file_content, true) : [];
+
+  $thumbs = glob(SOURCES_UPLOAD_DIR . '/*.thumb.jpg');
+  foreach ($thumbs as &$thumb) {
+    $start_pos = strlen(SOURCES_UPLOAD_DIR . '/');
+    $id = substr($thumb, $start_pos, strrpos($thumb, '.thumb') - $start_pos);
+    $sources[$id]['thumb'] = true;
+  }
+  return $sources;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-$data_file_content = file_get_contents(STORAGE_DIR . '/' . STORAGE_FILE);
-if ($data_file_content) {
-  $data = filter_graph_data_by_permission(json_decode($data_file_content, true));
-}
+$settings = load_settings($settings);
+$user_settings = prepare_user_settings($settings);
+$data = load_graph_data($data);
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 
 function split_date($str)
 {
@@ -397,23 +431,9 @@ function filter_graph_data_by_permission($data)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-function load_sources_meta()
-{
-  $sources_meta_file_content = file_get_contents(SOURCES_META_FILE);
-  $sources = $sources_meta_file_content ? json_decode($sources_meta_file_content, true) : [];
-
-  $thumbs = glob(SOURCES_UPLOAD_DIR . '/*.thumb.jpg');
-  foreach ($thumbs as &$thumb) {
-    $start_pos = strlen(SOURCES_UPLOAD_DIR . '/');
-    $id = substr($thumb, $start_pos, strrpos($thumb, '.thumb') - $start_pos);
-    $sources[$id]['thumb'] = true;
-  }
-  return $sources;
-}
-
 function save_sources_meta($sources_meta)
 {
-  file_put_contents(SOURCES_META_FILE, json_encode($sources_meta));
+  file_put_contents(SOURCES_META_FILE, add_newlines_to_json_for_git_friendly_file_content($sources_meta));
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -423,8 +443,6 @@ if (isset($_GET[ACTION])) {
   $t = time();
   $ret = false;
   $d = json_decode(urldecode($_GET['d']), true);
-  $data_str = null;
-  $action_processed = false;
   switch ($_GET[ACTION]) {
     case 'get':
     {
