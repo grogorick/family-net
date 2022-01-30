@@ -381,15 +381,22 @@ if (personMenuLinkSource) {
   });
 }
 
+if (BETA) {
 callbacks.showPersonInfo.add(person =>
 {
-  personMenuSourcesListDiv.innerHTML = '';
   console.log(['person source info', person]);
-  for (const [sourceID, annotations] of Object.entries(person._sources)) {
-    console.log([personMenuSourcesListDiv, annotations, person]);
-    addLinkedSourceItem(personMenuSourcesListDiv, data.sources[sourceID], person);
+  if (Object.keys(person._sources).length > 0) {
+    personMenuSourcesListDiv.innerHTML = '';
+    for (const [sourceID, annotations] of Object.entries(person._sources)) {
+      console.log([personMenuSourcesListDiv, annotations, person]);
+      addLinkedSourceItem(personMenuSourcesListDiv, data.sources[sourceID], person);
+    }
+  }
+  else {
+    personMenuSourcesListDiv.innerHTML = '<i style="color: #999">(bisher keine)</i>';
   }
 });
+}
 
 function addLinkedSourceItem(listDiv, source, personOrConnection)
 {

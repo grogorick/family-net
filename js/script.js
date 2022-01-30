@@ -1841,24 +1841,26 @@ let logAddSourceItem = true;
 function addSourceItem(source)
 {
   console.log(logAddSourceItem ? ['addSourceItem', source] : '...');
-  let sourceDiv = creatSourceDiv(source, e =>
-  {
-    showSourceDetails(source);
-  }, {
-    'Löschen': { class: 'source-delete', click: e =>
-    {
-      if (confirm('Wirklich löschen?')) {
-        xhRequest('?action=delete-source&id=' + source._id, responseText =>
-        {
-          let response = JSON.parse(responseText);
-          if ('deleted_source' in response && response.deleted_source === source._id) {
-            delete data.sources[source._id];
-            sourceDiv.remove();
-          }
-        });
+  let btn = {};
+  if (currentUserIsEditing) {
+    btn['Löschen'] = {
+      class: 'source-delete',
+      click: e =>
+      {
+        if (confirm('Wirklich löschen?')) {
+          xhRequest('?action=delete-source&id=' + source._id, responseText =>
+          {
+            let response = JSON.parse(responseText);
+            if ('deleted_source' in response && response.deleted_source === source._id) {
+              delete data.sources[source._id];
+              sourceDiv.remove();
+            }
+          });
+        }
       }
-    }}
-  });
+    };
+  }
+  let sourceDiv = creatSourceDiv(source, e => showSourceDetails(source), btn);
   sourcesList.appendChild(sourceDiv);
 }
 

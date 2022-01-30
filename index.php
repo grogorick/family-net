@@ -658,7 +658,7 @@ if (isset($_GET[ACTION])) {
                 'e' /* extension */ => $file_ext,
                 'f' /* original filename */ => $file_name,
                 't' /* title */ => $_POST['titles'][$i],
-                'a' /* annotations */ => []
+                'a' /* annotations */ => json_decode('{}')
               ];
               $sources_meta[$file_id] = $meta;
               $new_sources_meta[$file_id] = $meta;
