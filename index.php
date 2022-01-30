@@ -721,8 +721,8 @@ if (isset($_GET[ACTION])) {
 
     } // switch ACTION
   } // if EDITING
-  
-  
+
+
   if ($ret) {
     $test = save_data($ret);
     echo $ret . ' ;;; ' . add_newlines_to_json_for_git_friendly_file_content(get_log(1)) . ' ;;; ' . implode('\n', $test);
@@ -1052,7 +1052,7 @@ if (current_user_can(PERMISSION_ADMIN)) {
   </div><!-- settings -->
 
 <?php
-  ///////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////
 ?>
 
   <div id="log" class="box box-padding box-minimized">
@@ -1080,7 +1080,7 @@ if (current_user_can(PERMISSION_ADMIN)) {
   <a id="log-restore-selected-item" class="box button hidden">Das Netz auf diesen Zustand zurücksetzen</a>
 
 <?php
-  ///////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////
 ?>
 
   <div id="person-form" class="box box-padding hidden">
@@ -1304,7 +1304,7 @@ if (current_user_can(PERMISSION_ADMIN)) {
           oder
           <ul>
             <li><?=$bothModKeys?> gedrückt halten</li>
-            <li>Personen mit der gedrückter Maustaste einkreisen</li>
+            <li>Personen mit gedrückter Maustaste einkreisen</li>
           </ul>
         </li>
       <?php } ?>
