@@ -372,8 +372,18 @@ if (personMenuLinkSource) {
         m.dismiss();
 
         let person = activeState.nodes()[0]._my.p._;
-        source.linkTo(person);
-        addLinkedSourceItem(personMenuSourcesListDiv, source, person);
+
+        xhRequest('?action=link-source&source-id=' + source._id + '&person-or-connection-id=' + person.t, responseText =>
+        {
+          let response = JSON.parse(responseText);
+          if ('linked_source' in response && response.linked_source === source._id && parseInt(response.linked_to) === person.t) {
+            if (Object.keys(person._sources).length === 0) {
+              personMenuSourcesListDiv.innerHTML = '';
+            }
+            source.linkTo(person);
+            addLinkedSourceItem(personMenuSourcesListDiv, source, person);
+          }
+        });
       });
       list.appendChild(item);
     }

@@ -90,6 +90,8 @@ const PERMISSION_DELETE_CONNECTIONS = [ADMIN_, NORMAL_];
 const PERMISSION_UPLOAD_SOURCES = [ADMIN_, NORMAL_];
 const PERMISSION_DELETE_SOURCES = [ADMIN_, NORMAL_];
 
+const PERMISSION_LINK_SOURCE = [ADMIN_, NORMAL_];
+
 define('PERMISSION_EDIT', array_intersect(
   PERMISSION_CREATE_PERSONS,
   PERMISSION_EDIT_PERSONS,
@@ -719,6 +721,24 @@ if (isset($_GET[ACTION])) {
       }
       break;
 
+      case 'link-source':
+      {
+        if (current_user_can(PERMISSION_LINK_SOURCE)) {
+          $sourceID = $_GET['source-id'];
+          $personOrConnectionID = $_GET['person-or-connection-id'];
+
+          $sources_meta = load_sources_meta();
+          if (array_key_exists($sourceID, $sources_meta)) {
+            $sources_meta[$sourceID]['a'][$personOrConnectionID] = [];
+            save_sources_meta($sources_meta);
+
+            echo json_encode(['linked_source' => $sourceID, 'linked_to' => $personOrConnectionID]);
+            exit;
+          }
+        }
+      }
+      break;
+
     } // switch ACTION
   } // if EDITING
 
@@ -1057,7 +1077,7 @@ if (current_user_can(PERMISSION_ADMIN)) {
         <label style="vertical-align: top">Quellen: </label>
         <div id="person-form-sources-div">
 <?php
-if ($_SESSION[EDITING]) {
+if ($_SESSION[EDITING] && current_user_can(PERMISSION_LINK_SOURCE)) {
 ?>
           <button id="person-form-link-source" class="border-button-full">Hinzufügen</button>
 <?php
