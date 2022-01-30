@@ -175,7 +175,6 @@ class Person extends PersonFunctions
   b = '';   // birth date (YYYY-MM-DD)
   d = '';   // death date (YYYY-MM-DD)
   o = '';   // notes
-  s = [];   // source IDs
 
   _parents = [];
   _children = [];

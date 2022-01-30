@@ -398,6 +398,10 @@ button.selected, .button.selected, input[type="submit"].selected {
   max-width: 100px;
   max-height: 100px;
 }
+.generated-source:hover {
+  background: #fafafa;
+}
+
 
 
 

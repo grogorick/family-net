@@ -972,67 +972,6 @@ if (current_user_can(PERMISSION_ADMIN)) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 ?>
 
-  <div id="sources" class="box box-padding box-minimized BETA">
-    <div class="box-minimize-buttons negative-padding">
-      <button class="box-restore desktop-only" title="Quellen">Q</button>
-      <button class="box-minimize"><?=$box_close_minimize_symbol?></button>
-    </div>
-<?php
-  if ($_SESSION[EDITING]) {
-?>
-    <form>
-      <div class="box-row">
-<?php
-    if (is_dir(SOURCES_UPLOAD_DIR) && is_writable(SOURCES_UPLOAD_DIR)) {
-?>
-        <input id="upload-new-source" type="file" multiple /><label for="upload-new-source" class="button drag-drop-visual-area">Hier klicken oder eine Datei hierhin schieben</label>
-<?php
-    } else {
-?>
-        <i>Upload deaktiviert: Fehlende Schreibrechte für das Upload-Verzeichnis.</i>
-<?php
-    }
-?>
-      </div>
-      <div id="new-source-preview-div-template" class="box-row hidden">
-        <img class="new-source-preview-img" />
-        <div class="new-source-details">
-          <span class="new-source-size"></span><br />
-          <input class="new-source-title" type="text" placeholder="Beschriftung" />
-        </div>
-      </div>
-      <div id="new-source-invalid-div-template" class="box-row hidden"></div>
-      <div id="new-source-buttons-div" class="box-row hidden">
-        <input type="submit" class="button-border" value="Speichern" />
-        <button type="button" class="button-border">Verwerfen</button>
-      </div>
-    </form>
-    <ul id="source-upload-response" class="box-row">
-    </ul>
-    <hr />
-<?php
-  }
-?>
-    <div id="sources-list">
-      <div id="source-div-template" class="box-row hidden">
-        <img class="source-preview-img" />
-        <span class="source-title"></span>
-        <ul class="source-linked-persons"></ul>
-<?php
-  if ($_SESSION[EDITING]) {
-?>
-        <button type="button" class="source-delete button-border">Löschen</button>
-<?php
-  }
-?>
-      </div>
-    </div>
-  </div>
-
-<?php
-///////////////////////////////////////////////////////////////////////////////////////////////////
-?>
-
   <a id="show-settings" class="box button desktop-only hidden-toggle" data-hidden-toggle-target="#settings" title="Einstellungen">&#9881;</a>
 
   <div id="settings" class="box box-padding hidden">
@@ -1157,6 +1096,60 @@ if (current_user_can(PERMISSION_ADMIN)) {
     <button id="connection-form-delete" class="button-border opt opt-edit">Entfernen</button>
     <button id="connection-form-cancel" class="button-border"><?=$_SESSION[EDITING] ? 'Abbrechen' : 'Schließen'?></button>
   </div><!-- connection-form -->
+
+<?php
+///////////////////////////////////////////////////////////////////////////////////////////////////
+?>
+
+<div id="sources" class="box box-padding box-minimized BETA">
+    <div class="box-minimize-buttons negative-padding">
+      <button class="box-restore desktop-only" title="Quellen">Q</button>
+      <button class="box-minimize"><?=$box_close_minimize_symbol?></button>
+    </div>
+<?php
+  if ($_SESSION[EDITING]) {
+?>
+    <form>
+      <div class="box-row">
+<?php
+    if (is_dir(SOURCES_UPLOAD_DIR) && is_writable(SOURCES_UPLOAD_DIR)) {
+?>
+        <input id="upload-new-source" type="file" multiple /><label for="upload-new-source" class="button drag-drop-visual-area">Hier klicken oder eine Datei hierhin schieben</label>
+<?php
+    } else {
+?>
+        <i>Upload deaktiviert: Fehlende Schreibrechte für das Upload-Verzeichnis.</i>
+<?php
+    }
+?>
+      </div>
+      <div id="new-source-preview-div-template" class="box-row hidden">
+        <img class="new-source-preview-img" />
+        <div class="new-source-details">
+          <span class="new-source-size"></span><br />
+          <input class="new-source-title" type="text" placeholder="Beschriftung" />
+        </div>
+      </div>
+      <div id="new-source-invalid-div-template" class="box-row hidden"></div>
+      <div id="new-source-buttons-div" class="box-row hidden">
+        <input type="submit" class="button-border" value="Speichern" />
+        <button type="button" class="button-border">Verwerfen</button>
+      </div>
+    </form>
+    <ul id="source-upload-response" class="box-row">
+    </ul>
+    <hr />
+<?php
+  }
+?>
+    <div id="sources-list">
+      <div id="source-div-template" class="box-row hidden">
+        <img class="source-preview-img" />
+        <span class="source-title"></span>
+        <ul class="source-linked-persons"></ul>
+      </div>
+    </div>
+  </div>
 
 <?php
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1439,6 +1432,7 @@ if (!BETA) {
   <script src="js/utils.js<?=V_?>"></script>
   <script src="js/person.js<?=V_?>"></script>
   <script src="js/connection.js<?=V_?>"></script>
+  <script src="js/source.js<?=V_?>"></script>
   <script src="js/script.js<?=V_?>"></script>
   <script src="js/tutorial.js<?=V_?>"></script>
 <?php

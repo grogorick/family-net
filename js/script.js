@@ -164,6 +164,7 @@ let data = {
     camera: { x: 0, y: 0, z: 0 },
     personPreviewDisplayString: 'default' },
   graph: { persons: [], connections: [] },
+  sources: {},
   log: [],
   currentHash: '' };
 
@@ -1806,8 +1807,12 @@ let sourceTemplateDiv = sourcesList.querySelector('#source-div-template');
 
 callbacks.initialLoadComplete.add(() =>
 {
-  for (const [id, source] of Object.entries(data.sources))  {
-    prepareSource(id, source);
+  let tmpSources = data.sources;
+  data.sources = {};
+  for (const [id, source_raw] of Object.entries(tmpSources)) {
+    let source = convertSource(source_raw);
+    source.prepare(id);
+    data.sources[id] = source;
   }
 
   logAddSourceItem = settings.debug.addSourceItem;
@@ -1827,51 +1832,67 @@ callbacks.initialLoadComplete.add(() =>
 
   addSources(false);
   addOneTimeEventListener(document.querySelector('#sources .box-restore'), 'click', addSources);
-}, false);
-
-function prepareSource(id, source)
-{
-  source.id = id;
-  source.ext = source.e;
-  source.filename = source.f;
-  source.title = source.t;
-  source.annotations = source.a;
-}
+});
 
 let logAddSourceItem = true;
 function addSourceItem(source)
 {
   console.log(logAddSourceItem ? ['addSourceItem', source] : '...');
-  let sourceDiv = sourceTemplateDiv.cloneNode(true);
-  sourceDiv.removeAttribute('id');
-  sourceDiv.classList.remove('hidden');
-  sourceDiv.classList.add('generated-source');
-  sourceDiv.title = source.id;
-  sourcesList.appendChild(sourceDiv);
-
-  let img = sourceDiv.querySelector('.source-preview-img');
-  img.src = sourcesPath + source.id + (('thumb' in source) ? '.thumb.jpg' : (source.ext));
-
-  let title = sourceDiv.querySelector('.source-title');
-  title.innerHTML = source.title;
-
-  let deleteBtn = sourceDiv.querySelector('.source-delete');
-  if (deleteBtn) {
-    deleteBtn.addEventListener('click', e =>
+  let sourceDiv = creatSourceDiv(source, e =>
+  {
+    // show source details
+  }, {
+    'Löschen': { class: 'source-delete', click: e =>
     {
       if (confirm('Wirklich löschen?')) {
-        xhRequest('?action=delete-source&id=' + source.id, responseText =>
+        xhRequest('?action=delete-source&id=' + source._id, responseText =>
         {
           let response = JSON.parse(responseText);
-          if ('deleted_source' in response && response.deleted_source === source.id) {
-
-            delete data.sources[source.id];
+          if ('deleted_source' in response && response.deleted_source === source._id) {
+            delete data.sources[source._id];
             sourceDiv.remove();
           }
         });
       }
-    });
+    }}
+  });
+  sourcesList.appendChild(sourceDiv);
+}
+
+function creatSourceDiv(source, img_click_callback = null, buttons = {})
+{
+  let sourceDiv = sourceTemplateDiv.cloneNode(true);
+  sourceDiv.removeAttribute('id');
+  sourceDiv.classList.remove('hidden');
+  sourceDiv.classList.add('generated-source');
+  sourceDiv.title = source._id;
+
+  let img = sourceDiv.querySelector('.source-preview-img');
+  img.src = sourcesPath + source._id + (('thumb' in source) ? '.thumb.jpg' : (source._ext));
+  if (img_click_callback && BETA) {
+    img.addEventListener('click', img_click_callback);
   }
+
+  let title = sourceDiv.querySelector('.source-title');
+  title.innerHTML = source._description;
+
+  for (const [label, buttonData] of Object.entries(buttons)) {
+    let btn = document.createElement('button');
+    btn.type = 'button';
+    btn.innerHTML = label;
+    btn.classList.add('button-border');
+    if ('class' in buttonData) {
+      for (const c in buttonData.class) {
+        btn.classList.add(c);
+      }
+    }
+    if ('click' in buttonData) {
+      btn.addEventListener('click', buttonData.click);
+    }
+    sourceDiv.appendChild(btn);
+  }
+
+  return sourceDiv;
 }
 
 
@@ -1989,8 +2010,9 @@ if (currentUserIsEditing) {
 
       if (responseText.length) {
         let response = JSON.parse(responseText);
-        for (const [id, source] of Object.entries(response.new_sources)) {
-          prepareSource(id, source);
+        for (const [id, source_raw] of Object.entries(response.new_sources)) {
+          let source = convertSource(source_raw);
+          source.prepare(id);
           data.sources[id] = source;
           addSourceItem(source);
         }
