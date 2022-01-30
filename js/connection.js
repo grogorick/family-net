@@ -19,6 +19,8 @@ class Connection
 
   _persons = [];
   _children = [];
+  _sources = {};
+
   _prepared = false;
 
   get_edgeColor()

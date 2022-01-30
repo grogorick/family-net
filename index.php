@@ -1053,6 +1053,18 @@ if (current_user_can(PERMISSION_ADMIN)) {
       </div><div class="box-row">
         <label for="person-form-note">Notiz: </label>
         <textarea id="person-form-note" rows="3"></textarea>
+      </div><div class="box-row BETA">
+        <label style="vertical-align: top">Quellen: </label>
+        <div id="person-form-sources-div">
+<?php
+if ($_SESSION[EDITING]) {
+?>
+          <button id="person-form-link-source" class="border-button-full">Hinzufügen</button>
+<?php
+}
+?>
+          <div id="person-form-sources-list"></div>
+        </div>
       </div>
     </form>
     <button id="person-form-add" class="button-border opt opt-new">Hinzufügen</button>

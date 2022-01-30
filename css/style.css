@@ -167,7 +167,6 @@ html body .drag-drop-visual-area.drag-drop-visual-area-active {
 }
 
 #person-form.box input,
-#person-form.box select,
 #person-form.box textarea,
 #connection-form.box input,
 #connection-form.box select,
@@ -177,6 +176,18 @@ html body .drag-drop-visual-area.drag-drop-visual-area-active {
 #person-form.box input#person-form-last-name,
 #person-form.box input#person-form-birth-name {
   width: 27%;
+}
+
+#person-form.box #person-form-sources-div {
+  display: inline-block;
+  width: calc(60% + 6pt + 2px);
+}
+#person-form.box #person-form-sources-list {
+  margin: 0;
+}
+#person-form.box #person-form-sources-list div {
+  margin-bottom: 10pt;
+  display: block;
 }
 
 .box hr {

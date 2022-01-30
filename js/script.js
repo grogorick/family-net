@@ -1145,6 +1145,9 @@ function showPersonInfo(n)
       personMenuNote.disabled = true;
     }
     personMenuDoppelganger.classList.add('hidden');
+
+    callbacks.showPersonInfo.call(p);
+
     showForm(personMenuForm, 'opt-edit', currentUserCanEdit());
   };
   if (isMobile) {

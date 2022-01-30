@@ -182,6 +182,7 @@ class Person extends PersonFunctions
   _other = [];
   _doppelgangers = [];
   _all_connections = [];
+  _sources = {};
 
   constructor(p)
   {
