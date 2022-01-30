@@ -130,24 +130,36 @@ function toServerDataGraph(action, d, cb = { toServer: null, toData: null, toGra
   }
 }
 
+function setBoxOpt(box, opt)
+{
+  box.classList.forEach(c => { if (c.startsWith('opt-')) box.classList.remove(c); });
+  if (opt) {
+    box.classList.add(opt);
+  }
+}
+
+function moveToFront(f)
+{
+  f.data_zIndex = f.style.zIndex;
+  f.style.zIndex = 2;
+  setTimeout(() => f.style.zIndex = f.data_zIndex, 1000);
+}
+
 let modalBlocker = document.getElementById('modal-blocker-graph');
 let boxWithModalBlocker = null;
-function showForm(f, opt, autofocus)
+function showForm(f, opt = false, autofocus = false)
 {
   modalBlocker.classList.remove('hidden');
   boxWithModalBlocker = f;
 
-  f.classList.forEach(c => { if (c.startsWith('opt-')) f.classList.remove(c); });
-  if (opt) {
-    f.classList.add(opt);
-  }
+  setBoxOpt(f, opt);
+  moveToFront(f);
 
   f.classList.remove('hidden');
 
   if (autofocus) {
     let firstInput = f.querySelector('input:not([disabled]), select:not([disabled]), textarea:not([disabled])');
     if (firstInput) {
-      console.log(firstInput);
       firstInput.focus();
     }
     else {
