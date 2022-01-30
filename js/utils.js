@@ -138,10 +138,10 @@ function setBoxOpt(box, opt)
   }
 }
 
-function moveToFront(f)
+function moveToFront(f, zIndex = 2)
 {
   f.data_zIndex = f.style.zIndex;
-  f.style.zIndex = 2;
+  f.style.zIndex = zIndex;
   setTimeout(() => f.style.zIndex = f.data_zIndex, 1000);
 }
 
@@ -194,7 +194,12 @@ function showMessage(msg, buttons = { 'OK': DISMISS_MESSAGE })
   document.body.appendChild(m.modalBlocker);
   m.box = m.modalBlocker.querySelector('.box');
   m.content = m.box.querySelector('.message-content');
-  m.content.innerHTML = msg;
+  if (typeof msg == 'string') {
+    m.content.innerHTML = msg;
+  }
+  else {
+    m.content.replaceChildren(...msg);
+  }
   m.dismiss = e => { m.modalBlocker.remove(); };
   let buttonTemplate = m.box.querySelector('button');
   m.box.removeChild(buttonTemplate);
@@ -210,6 +215,7 @@ function showMessage(msg, buttons = { 'OK': DISMISS_MESSAGE })
     m.box.appendChild(button);
     m['button_' + b] = button;
   }
+  moveToFront(m.modalBlocker);
   m.modalBlocker.classList.remove('hidden');
   return m;
 }
