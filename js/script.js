@@ -184,7 +184,7 @@ if (startEdit) {
     let otherEditorDiv = document.getElementById('other-editor');
     let checkOtherEditor = () =>
     {
-      xhRequest('?action=get-editor', responseText =>
+      xhRequest({ action: 'get-editor' }, responseText =>
       {
         console.log('check other editor: ' + responseText);
         let otherEditor = JSON.parse(responseText);
@@ -233,7 +233,7 @@ if (stopEditTimer && editingTimeout) {
           {
             stopEditCountdownMessage.content.innerHTML = 'Bearbeitungsmodus wird verlängert...';
             stopEditCountdownMessage['button_Weiter bearbeiten'].remove();
-            xhRequest('?action=restart-edit-timer', responseText =>
+            xhRequest({ action: 'restart-edit-timer' }, responseText =>
             {
               if (responseText.startsWith('restarted ')) {
                 restartEditingStopTimer(parseInt(responseText.substr('restarted '.length)));
@@ -530,8 +530,8 @@ function loadData(previewHash = null)
 
   console.log('load data from server ' + previewHash);
   xhRequest(previewHash
-    ? '?action=get&q=preview&hash=' + previewHash
-    : '?action=get&q=settings,graph,sources,log,currentHash', responseText =>
+    ? { action: 'get', q: 'preview', hash: previewHash }
+    : { action: 'get', q: 'settings,graph,sources,log,currentHash' }, responseText =>
   {
     clearTimeout(delayedMsg);
     let d = JSON.parse(responseText);
@@ -673,7 +673,7 @@ logListUL.addEventListener('mouseleave', e =>
 if (permissions.ADMIN) {
   document.getElementById('log-extended').addEventListener('change', () =>
   {
-    xhRequest('?action=toggle-extended-log', () => window.location.reload());
+    xhRequest({ action: 'toggle-extended-log' }, () => window.location.reload());
   });
 }
 
@@ -1848,7 +1848,7 @@ function addSourceItem(source)
       click: e =>
       {
         if (confirm('Wirklich löschen?')) {
-          xhRequest('?action=delete-source&id=' + source._id, responseText =>
+          xhRequest({ action: 'delete-source', id: source._id }, responseText =>
           {
             let response = JSON.parse(responseText);
             if ('deleted_source' in response && response.deleted_source === source._id) {
@@ -2009,7 +2009,7 @@ if (currentUserIsEditing) {
       formData.append('files[]', selectedFiles[fi]);
       formData.append('titles[]', titleInputs[i].value);
     }
-    xhRequestPost('?action=upload-source-files', formData, responseText =>
+    xhRequestPost({ action: 'upload-source-files' }, formData, responseText =>
     {
       clearPreview(true);
 
@@ -2217,7 +2217,7 @@ settings_changePassword.addEventListener('click', e =>
   else {
     let fd = new FormData();
     fd.append('password', pw1.value);
-    xhRequestPost('?action=change-password', fd, response =>
+    xhRequestPost({ action: 'change-password' }, fd, response =>
     {
       if (response === 'true') {
         pwInfo.innerHTML = 'Passwort gespeichert.';

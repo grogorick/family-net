@@ -373,10 +373,10 @@ if (personMenuLinkSource) {
 
         let person = activeState.nodes()[0]._my.p._;
 
-        xhRequest('?action=link-source&source-id=' + source._id + '&person-or-connection-id=' + person.t, responseText =>
+        xhRequest({ action: 'link-source', source_id: source._id, person_or_connection_id: person.t }, responseText =>
         {
           let response = JSON.parse(responseText);
-          if ('linked_source' in response && response.linked_source === source._id && parseInt(response.linked_to) === person.t) {
+          if (response.linked_source === source._id && parseInt(response.linked_to) === person.t) {
             if (Object.keys(person._sources).length === 0) {
               personMenuSourcesListDiv.innerHTML = '';
             }

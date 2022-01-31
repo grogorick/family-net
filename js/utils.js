@@ -125,7 +125,7 @@ function toServerDataGraph(action, d, cb = { toServer: null, toData: null, toGra
     }
   };
   if (cb.toServer) {
-    xhRequest('?action=' + action + '&d=' + encodeURIComponent(JSON.stringify(d)), responseText =>
+    xhRequest({ action: action, d: encodeURIComponent(JSON.stringify(d)) }, responseText =>
     {
       if (cb.toServer !== true) {
         d = cb.toServer(responseText, d) || d;
@@ -332,6 +332,9 @@ document.querySelectorAll('.box input[placeholder="yyyy"]').forEach(yyyy =>
 
 function xhRequest(url, responseCallback = null, log = true)
 {
+  if (typeof url === 'object') {
+    url = paramStr(url);
+  }
   let xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function()
   {
@@ -350,6 +353,9 @@ function xhRequest(url, responseCallback = null, log = true)
 
 function xhRequestPost(url, data, responseCallback = null, log = true)
 {
+  if (typeof url === 'object') {
+    url = paramStr(url);
+  }
   let xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function()
   {
@@ -364,6 +370,13 @@ function xhRequestPost(url, data, responseCallback = null, log = true)
   };
   xhttp.open('POST', url, true);
   xhttp.send(data);
+}
+
+function paramStr(params)
+{
+  let ret = [];
+  Object.entries(params).forEach(p => ret.push(p[0] + '=' + p[1]));
+  return '?' + ret.join('&');
 }
 
 function addOneTimeEventListener(obj, evt, callback)

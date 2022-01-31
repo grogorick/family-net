@@ -742,8 +742,8 @@ if (isset($_GET[ACTION])) {
       case 'link-source':
       {
         if (current_user_can(PERMISSION_LINK_SOURCE)) {
-          $sourceID = $_GET['source-id'];
-          $personOrConnectionID = $_GET['person-or-connection-id'];
+          $sourceID = $_GET['source_id'];
+          $personOrConnectionID = $_GET['person_or_connection_id'];
 
           $sources_meta = load_sources_meta();
           if (array_key_exists($sourceID, $sources_meta)) {
