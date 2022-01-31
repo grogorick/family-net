@@ -356,8 +356,8 @@ function finishNewAnnotation()
 
 
 
-let personMenuLinkSource = document.getElementById('person-form-link-source');
 let personMenuSourcesListDiv = document.getElementById('person-form-sources-list');
+let personMenuLinkSource = document.getElementById('person-form-link-source');
 
 if (personMenuLinkSource) {
   personMenuLinkSource.addEventListener('click', function(e)
@@ -414,6 +414,7 @@ function addLinkedSourceItem(listDiv, source, personOrConnection)
   showSourceDetailsBtn.innerHTML = source._description;
   showSourceDetailsBtn.addEventListener('click', e =>
   {
+    e.preventDefault();
     showSourceWithAnnotations(source, personOrConnection);
   });
 
