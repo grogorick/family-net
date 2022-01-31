@@ -403,7 +403,7 @@ callbacks.showPersonInfo.add(person =>
     }
   }
   else if (!currentUserIsEditing) {
-    personMenuSourcesListDiv.innerHTML = '-';
+    personMenuSourcesListDiv.innerHTML = '&mdash;';
   }
 });
 }

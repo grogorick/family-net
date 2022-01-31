@@ -1094,14 +1094,14 @@ if (current_user_can(PERMISSION_ADMIN)) {
       </div><div class="box-row BETA">
         <label style="vertical-align: top">Quellen: </label>
         <div id="person-form-sources-div">
+          <div id="person-form-sources-list"></div>
 <?php
 if ($_SESSION[EDITING] && current_user_can(PERMISSION_LINK_SOURCE)) {
 ?>
-          <button id="person-form-link-source" class="border-button-full">Hinzufügen</button>
+          <button id="person-form-link-source" class="button-border-full">Verknüpfen</button>
 <?php
 }
 ?>
-          <div id="person-form-sources-list"></div>
         </div>
       </div>
     </form>

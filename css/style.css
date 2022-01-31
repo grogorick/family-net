@@ -193,6 +193,9 @@ html body .drag-drop-visual-area.drag-drop-visual-area-active {
   text-align: left;
   padding-left: 5pt;
 }
+#person-form.box #person-form-sources-list > div:last-child {
+  margin-bottom: 10pt;
+}
 
 .box hr {
   border: 0;
