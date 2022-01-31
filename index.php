@@ -91,6 +91,7 @@ const PERMISSION_UPLOAD_SOURCES = [ADMIN_, NORMAL_];
 const PERMISSION_DELETE_SOURCES = [ADMIN_, NORMAL_];
 
 const PERMISSION_LINK_SOURCE = [ADMIN_, NORMAL_];
+const PERMISSION_UNLINK_SOURCE = [ADMIN_, NORMAL_];
 
 define('PERMISSION_EDIT', array_intersect(
   PERMISSION_CREATE_PERSONS,
@@ -751,6 +752,24 @@ if (isset($_GET[ACTION])) {
             save_sources_meta($sources_meta);
 
             echo json_encode(['linked_source' => $sourceID, 'linked_to' => $personOrConnectionID]);
+            exit;
+          }
+        }
+      }
+      break;
+
+      case 'unlink-source':
+      {
+        if (current_user_can(PERMISSION_UNLINK_SOURCE)) {
+          $sourceID = $_GET['source_id'];
+          $personOrConnectionID = $_GET['person_or_connection_id'];
+
+          $sources_meta = load_sources_meta();
+          if (array_key_exists($sourceID, $sources_meta)) {
+            unset($sources_meta[$sourceID]['a'][$personOrConnectionID]);
+            save_sources_meta($sources_meta);
+
+            echo json_encode(['unlinked_source' => $sourceID, 'unlinked_from' => $personOrConnectionID]);
             exit;
           }
         }

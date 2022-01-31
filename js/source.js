@@ -53,6 +53,19 @@ class Source
     }
   }
 
+  unlinkFrom(personOrConnection)
+  {
+    if (typeof personOrConnection !== 'object') {
+      personOrConnection = getDataPerson(personOrConnection) || getDataConnection(personOrConnection);
+    }
+    if (personOrConnection.t in this._annotations) {
+      delete this._annotations[personOrConnection.t];
+    }
+    if (this._id in personOrConnection._sources) {
+      delete personOrConnection._sources[this._id];
+    }
+  }
+
   addAnnotation(personOrConnectionID, a)
   {
     let annotation = convertAnnotation(a);
@@ -64,7 +77,10 @@ class Source
   reset()
   {
     if (this._prepared) {
-      Object.values(this._annotations).forEach(annotations => annotations.forEach(a => a.reset()));
+      for (const [personOrConnectionID, annotations] of Object.entries(this._annotations)) {
+        annotations.forEach(a => a.reset())
+        this.unlinkFrom(personOrConnectionID);
+      }
       this._prepared = false;
     }
   }
@@ -410,6 +426,8 @@ callbacks.showPersonInfo.add(person =>
 
 function addLinkedSourceItem(listDiv, source, personOrConnection)
 {
+  let li = document.createElement('div');
+
   let showSourceDetailsBtn = document.createElement('button');
   showSourceDetailsBtn.innerHTML = source._description;
   showSourceDetailsBtn.addEventListener('click', e =>
@@ -417,8 +435,31 @@ function addLinkedSourceItem(listDiv, source, personOrConnection)
     e.preventDefault();
     showSourceWithAnnotations(source, personOrConnection);
   });
-
-  let li = document.createElement('div');
   li.appendChild(showSourceDetailsBtn);
+
+  if (currentUserIsEditing && permissions.UNLINK_SOURCE) {
+    let unlinkSourceBtn = document.createElement('button');
+    unlinkSourceBtn.innerHTML = 'X';
+    unlinkSourceBtn.addEventListener('click', e =>
+    {
+      e.preventDefault();
+
+      xhRequest({ action: 'unlink-source', source_id: source._id, person_or_connection_id: personOrConnection.t }, responseText =>
+      {
+        let response = JSON.parse(responseText);
+        if (response.unlinked_source === source._id && parseInt(response.unlinked_from) === personOrConnection.t) {
+          source.unlinkFrom(personOrConnection)
+          if (Object.keys(personOrConnection._sources).length === 0) {
+            listDiv.innerHTML = '';
+          }
+          else {
+            li.remove();
+          }
+        }
+      });
+    });
+    li.appendChild(unlinkSourceBtn);
+  }
+
   listDiv.appendChild(li);
 }
