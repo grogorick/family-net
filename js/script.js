@@ -2241,11 +2241,11 @@ window.addEventListener('resize', (e) =>
 let selectionFromURL = urlParams.get('sel');
 let showFromURL = urlParams.get('show');
 if (currentLayoutId) {
-  callbacks.graphLoaded.add(() => layouts[currentLayoutId].apply(selectionFromURL));
+  callbacks.initialLoadComplete.add(() => layouts[currentLayoutId].apply(selectionFromURL));
 }
 let fromURL = showFromURL || selectionFromURL;
 if (fromURL) {
-  callbacks.graphLoaded.addOnce(() =>
+  callbacks.initialLoadComplete.add(() =>
   {
     let p = getDataPerson(fromURL);
     if (p) {
