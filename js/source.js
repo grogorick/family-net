@@ -230,7 +230,7 @@ class AnnotationSpanBuilder
 
     this.span.addEventListener('mousemove', e =>
     {
-      this.setSecondPos(getRelativeEventPosition(e, annotatorImg).scale(annotatorZoom));
+      this.setSecondPos(getRelativeEventPosition(e, annotatorImg).scale(annotatorZoomFactor));
     });
     addOneTimeEventListener(this.span, 'click', e =>
     {
@@ -265,7 +265,7 @@ let annotationEditable = false;
 function showSourceDetails(source)
 {
   annotatorImg.src = sourcesPath + source._id + source._ext;
-  annotatorContent.style.transform = 'scale(' + (annotatorZoom = 1) + ')';
+  resetAnnotatorZoom();
   annotatorContent.querySelectorAll('span').forEach(s => s.remove());
   annotatorBox.classList.remove('hidden');
   moveToFront(annotatorBox);
@@ -301,27 +301,49 @@ function addAnnotationSpan(annotation)
 
 
 
-let annotatorZoom = 1;
 let annotatorZoomStep = .25;
 let annotatorZoomWheelStep = .01;
+let annotatorZoomFactor = 1;
+let annotatorZoomTransform = ['', '', ''];
+
+function resetAnnotatorZoom()
+{
+  annotatorZoomFactor = 1;
+  annotatorZoomTransform = ['', '', ''];
+  annotatorContent.style.transform = '';
+}
 
 annotatorZoomInBtn.addEventListener('click', annotatorZoomFn);
 annotatorZoomOutBtn.addEventListener('click', annotatorZoomFn);
 function annotatorZoomFn(e)
 {
-  annotatorZoom = Math.max(1, annotatorZoom + annotatorZoomStep * parseFloat(e.target.getAttribute('data-value')));
-  annotatorContent.style.transform = 'scale(' + annotatorZoom + ')';
+  annotatorZoomFactor = Math.max(1, annotatorZoomFactor + annotatorZoomStep * parseFloat(e.target.getAttribute('data-value')));
+  annotatorZoomTransform[0] = 'scale(' + annotatorZoomFactor + ')';
+  annotatorContent.style.transform = annotatorZoomTransform.join(' ');
 };
 annotatorZoomContainer.addEventListener('wheel', e =>
 {
-  annotatorZoom = Math.max(1, annotatorZoom - annotatorZoomWheelStep * e.deltaY);
-  annotatorContent.style.transform = 'scale(' + annotatorZoom + ')';
+  annotatorZoomFactor = Math.max(1, annotatorZoomFactor - annotatorZoomWheelStep * e.deltaY);
+  annotatorZoomTransform[0] = 'scale(' + annotatorZoomFactor + ')';
+  annotatorContent.style.transform = annotatorZoomTransform.join(' ');
 });
 
 annotatorZoomContainer.addEventListener('mousemove', e =>
 {
   let pos = getRelativeEventPosition(e, annotatorZoomContainer);
   annotatorContent.style.transformOrigin = pos.x + 'px ' + pos.y + 'px';
+
+  let rectImg = annotatorImg.getBoundingClientRect();
+  let rectContainer = annotatorZoomContainer.getBoundingClientRect();
+  annotatorZoomTransform[1] = 'translate(' +
+    ((rectImg.width > rectContainer.width)
+      ? ((pos.x / rectContainer.width) * (rectContainer.width - rectImg.width / annotatorZoomFactor))
+      : '0') + 'px, ' +
+    ((rectImg.height > rectContainer.height)
+      ? ((pos.y / rectContainer.height) * (rectContainer.height - rectImg.height / annotatorZoomFactor))
+      : '0') + 'px' +
+    ')';
+  annotatorContent.style.transform = annotatorZoomTransform.join(' ');
 });
 
 
@@ -333,7 +355,7 @@ if (currentUserIsEditing) {
   {
     if (annotationEditable) {
       if (annotationSpanBuilder === null) {
-        annotationSpanBuilder = new AnnotationSpanBuilder(new AnnotationBuilder(getRelativeEventPosition(e).scale(annotatorZoom)));
+        annotationSpanBuilder = new AnnotationSpanBuilder(new AnnotationBuilder(getRelativeEventPosition(e).scale(annotatorZoomFactor)));
         annotatorContent.appendChild(annotationSpanBuilder.span);
       }
       else {
@@ -345,7 +367,7 @@ if (currentUserIsEditing) {
   annotatorImg.addEventListener('mousemove', e =>
   {
     if (annotationSpanBuilder !== null) {
-      annotationSpanBuilder.setSecondPos(getRelativeEventPosition(e).scale(annotatorZoom));
+      annotationSpanBuilder.setSecondPos(getRelativeEventPosition(e).scale(annotatorZoomFactor));
     }
   });
 }
