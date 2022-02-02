@@ -230,7 +230,7 @@ class AnnotationSpanBuilder
 
     this.span.addEventListener('mousemove', e =>
     {
-      this.setSecondPos(getRelativeEventPosition(e, annotatorImg));
+      this.setSecondPos(getRelativeEventPosition(e, annotatorImg).scale(annotatorZoom));
     });
     addOneTimeEventListener(this.span, 'click', e =>
     {
@@ -303,19 +303,25 @@ function addAnnotationSpan(annotation)
 
 let annotatorZoom = 1;
 let annotatorZoomStep = .25;
+let annotatorZoomWheelStep = .01;
 
-let annotatorZoomFn = e =>
+annotatorZoomInBtn.addEventListener('click', annotatorZoomFn);
+annotatorZoomOutBtn.addEventListener('click', annotatorZoomFn);
+function annotatorZoomFn(e)
 {
   annotatorZoom = Math.max(1, annotatorZoom + annotatorZoomStep * parseFloat(e.target.getAttribute('data-value')));
   annotatorContent.style.transform = 'scale(' + annotatorZoom + ')';
 };
-annotatorZoomInBtn.addEventListener('click', annotatorZoomFn);
-annotatorZoomOutBtn.addEventListener('click', annotatorZoomFn);
+annotatorZoomContainer.addEventListener('wheel', e =>
+{
+  annotatorZoom = Math.max(1, annotatorZoom - annotatorZoomWheelStep * e.deltaY);
+  annotatorContent.style.transform = 'scale(' + annotatorZoom + ')';
+});
 
 annotatorZoomContainer.addEventListener('mousemove', e =>
 {
   let pos = getRelativeEventPosition(e, annotatorZoomContainer);
-  annotatorContent.style.transformOrigin = (pos.x * annotatorZoom) + 'px ' + (pos.y * annotatorZoom) + 'px';
+  annotatorContent.style.transformOrigin = pos.x + 'px ' + pos.y + 'px';
 });
 
 
@@ -327,7 +333,7 @@ if (currentUserIsEditing) {
   {
     if (annotationEditable) {
       if (annotationSpanBuilder === null) {
-        annotationSpanBuilder = new AnnotationSpanBuilder(new AnnotationBuilder(getRelativeEventPosition(e)));
+        annotationSpanBuilder = new AnnotationSpanBuilder(new AnnotationBuilder(getRelativeEventPosition(e).scale(annotatorZoom)));
         annotatorContent.appendChild(annotationSpanBuilder.span);
       }
       else {
@@ -339,7 +345,7 @@ if (currentUserIsEditing) {
   annotatorImg.addEventListener('mousemove', e =>
   {
     if (annotationSpanBuilder !== null) {
-      annotationSpanBuilder.setSecondPos(getRelativeEventPosition(e));
+      annotationSpanBuilder.setSecondPos(getRelativeEventPosition(e).scale(annotatorZoom));
     }
   });
 }

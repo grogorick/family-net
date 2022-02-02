@@ -82,8 +82,9 @@ function getRelativeEventPosition(evt, relativeTo = null)
 {
   let rect = (relativeTo ?? evt.target).getBoundingClientRect();
   return {
-    x: (evt.clientX - rect.left) / annotatorZoom,
-    y: (evt.clientY - rect.top) / annotatorZoom };
+    x: (evt.clientX - rect.left),
+    y: (evt.clientY - rect.top),
+    scale: function(zoomFactor) { this.x /= zoomFactor; this.y /= zoomFactor; return this; } };
 }
 
 function twoDigits(v)
