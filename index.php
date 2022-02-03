@@ -357,16 +357,18 @@ function load_graph_data($default)
   return $default;
 }
 
-function load_sources_meta()
+function load_sources_meta($check_thumbs)
 {
   $sources_meta_file_content = file_get_contents(SOURCES_META_FILE);
   $sources = $sources_meta_file_content ? json_decode($sources_meta_file_content, true) : [];
 
-  $thumbs = glob(SOURCES_UPLOAD_DIR . '/*.thumb.jpg');
-  foreach ($thumbs as &$thumb) {
-    $start_pos = strlen(SOURCES_UPLOAD_DIR . '/');
-    $id = substr($thumb, $start_pos, strrpos($thumb, '.thumb') - $start_pos);
-    $sources[$id]['thumb'] = true;
+  if ($check_thumbs) {
+    $thumbs = glob(SOURCES_UPLOAD_DIR . '/*.thumb.jpg');
+    foreach ($thumbs as &$thumb) {
+      $start_pos = strlen(SOURCES_UPLOAD_DIR . '/');
+      $id = substr($thumb, $start_pos, strrpos($thumb, '.thumb') - $start_pos);
+      $sources[$id]['thumb'] = true;
+    }
   }
   return $sources;
 }
@@ -436,7 +438,7 @@ function filter_graph_data_by_permission($data)
 
 function save_sources_meta($sources_meta)
 {
-  file_put_contents(SOURCES_META_FILE, add_newlines_to_json_for_git_friendly_file_content($sources_meta));
+  file_put_contents(SOURCES_META_FILE, add_newlines_to_source_json_for_git_friendly_file_content($sources_meta));
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -460,7 +462,7 @@ if (isset($_GET[ACTION])) {
             break;
           }
           case 'graph':    $retData['graph'] = $data; break;
-          case 'sources':  $retData['sources'] = load_sources_meta(); break;
+          case 'sources':  $retData['sources'] = load_sources_meta(true); break;
           case 'settings': $retData['settings'] = $user_settings; break;
           case 'log':      $retData['log'] = get_log(); break;
           case 'currentHash': $retData['currentHash'] = get_current_log_hash(); break;
@@ -634,7 +636,7 @@ if (isset($_GET[ACTION])) {
         if (current_user_can(PERMISSION_UPLOAD_SOURCES)) {
           $errors = [];
           $allowed_extensions = ['.jpg', '.jpeg', '.png', '.svg'];
-          $sources_meta = load_sources_meta();
+          $sources_meta = load_sources_meta(false);
           $new_sources_meta = [];
 
           if (extension_loaded('imagick') && class_exists("Imagick")) {
@@ -727,7 +729,7 @@ if (isset($_GET[ACTION])) {
         if (current_user_can(PERMISSION_DELETE_SOURCES)) {
           $id = $_GET['id'];
 
-          $sources_meta = load_sources_meta();
+          $sources_meta = load_sources_meta(false);
           if (array_key_exists($id, $sources_meta)) {
             unset($sources_meta[$id]);
             save_sources_meta($sources_meta);
@@ -750,7 +752,7 @@ if (isset($_GET[ACTION])) {
           $sourceID = $_GET['source_id'];
           $personOrConnectionID = $_GET['person_or_connection_id'];
 
-          $sources_meta = load_sources_meta();
+          $sources_meta = load_sources_meta(false);
           if (array_key_exists($sourceID, $sources_meta)) {
             $sources_meta[$sourceID]['a'][$personOrConnectionID] = [];
             save_sources_meta($sources_meta);
@@ -768,7 +770,7 @@ if (isset($_GET[ACTION])) {
           $sourceID = $_GET['source_id'];
           $personOrConnectionID = $_GET['person_or_connection_id'];
 
-          $sources_meta = load_sources_meta();
+          $sources_meta = load_sources_meta(false);
           if (array_key_exists($sourceID, $sources_meta)) {
             unset($sources_meta[$sourceID]['a'][$personOrConnectionID]);
             save_sources_meta($sources_meta);
@@ -785,7 +787,7 @@ if (isset($_GET[ACTION])) {
         if (current_user_can(PERMISSION_CREATE_ANNOTATION)) {
           $d['a']['t'] = $t;
 
-          $sources_meta = load_sources_meta();
+          $sources_meta = load_sources_meta(false);
           if (array_key_exists($d['source_id'], $sources_meta)) {
             if (array_key_exists($d['linked_id'], $sources_meta[$d['source_id']]['a'])) {
               $sources_meta[$d['source_id']]['a'][$d['linked_id']][] = $d['a'];
@@ -802,10 +804,10 @@ if (isset($_GET[ACTION])) {
 
   if ($retData) {
     $test = save_data($retData);
-    echo $retData . ' ;;; ' . add_newlines_to_json_for_git_friendly_file_content(get_log(1)) . ' ;;; ' . implode('\n', $test);
+    echo $retData . ' ;;; ' . add_newlines_to_data_json_for_git_friendly_file_content(get_log(1)) . ' ;;; ' . implode('\n', $test);
   }
   if ($retSources) {
-    // save_sources_meta($sources_meta);
+    save_sources_meta($sources_meta);
     echo $retSources;
   }
 
@@ -1669,11 +1671,11 @@ function init($admin_user)
 function save_accounts()
 {
   global $accounts;
-  $file_content = add_newlines_to_json_for_git_friendly_file_content($accounts);
+  $file_content = add_newlines_to_data_json_for_git_friendly_file_content($accounts);
   file_put_contents(ACCOUNTS_FILE, $file_content, LOCK_EX);
 }
 
-function add_newlines_to_json_for_git_friendly_file_content($arr)
+function add_newlines_to_data_json_for_git_friendly_file_content($arr)
 {
   return str_replace([
     '[{',
@@ -1691,6 +1693,14 @@ function add_newlines_to_json_for_git_friendly_file_content($arr)
     '[' . PHP_EOL . '[',
     ']' . PHP_EOL . ',',
     ']' . PHP_EOL . ']'
+  ], json_encode($arr));
+}
+function add_newlines_to_source_json_for_git_friendly_file_content($arr)
+{
+  return str_replace([
+    '}},'
+  ], [
+    '}}' . PHP_EOL . ','
   ], json_encode($arr));
 }
 
@@ -1773,7 +1783,7 @@ function stopEditing()
 function save_settings()
 {
   global $settings;
-  $file_content = add_newlines_to_json_for_git_friendly_file_content($settings);
+  $file_content = add_newlines_to_data_json_for_git_friendly_file_content($settings);
   file_put_contents(SETTINGS_FILE, $file_content, LOCK_EX);
 }
 
@@ -1804,7 +1814,7 @@ function get_current_log_hash()
 function save_data($git_commit)
 {
   global $data;
-  $file_content = add_newlines_to_json_for_git_friendly_file_content($data);
+  $file_content = add_newlines_to_data_json_for_git_friendly_file_content($data);
   file_put_contents(STORAGE_DIR . '/' . STORAGE_FILE, $file_content, LOCK_EX);
   exec('sh/update.sh ' .
     '"' . STORAGE_DIR . '" ' .
