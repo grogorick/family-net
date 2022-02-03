@@ -1794,26 +1794,34 @@ function save_data($git_commit)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-function & get_data($what, $t)
+function & get_from_array(&$arr, $t)
 {
-  global $data;
-  foreach ($data[$what] as &$d) {
+  foreach ($arr as &$d) {
     if ($d['t'] == $t) {
       return $d;
     }
   }
-  die('ERROR | get_data(' . $what . ', ' . $t . ') | requested record not found.');
+  die('ERROR | get_from_array(' . $t . ') | requested record not found.');
 }
-
-function delete_data($what, $t)
+function & get_data($what, $t)
 {
   global $data;
-  foreach ($data[$what] as $index => $d) {
+  return get_from_array($data[$what], $t);
+}
+
+function delete_from_array(&$arr, $t)
+{
+  foreach ($arr as $index => $d) {
     if ($d['t'] == $t) {
-      array_splice($data[$what], $index, 1);
+      array_splice($arr, $index, 1);
       return;
     }
   }
+}
+function delete_data($what, $t)
+{
+  global $data;
+  delete_from_array($data[$what], $t);
 }
 
 function fileDebug($file, $msg)
