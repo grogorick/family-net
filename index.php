@@ -641,6 +641,7 @@ if (isset($_GET[ACTION])) {
             $do_thumbs = false;
             $errors[] = 'Vorschau kann nicht erzeugt werden (Imagick nicht installiert).';
           }
+          $time = time();
 
           foreach ($_FILES['files']['error'] as $i => $error_code) {
             $file_name = $_FILES['files']['name'][$i];
@@ -664,7 +665,7 @@ if (isset($_GET[ACTION])) {
 
             $j = $i;
             do {
-              $file_id = time() . '.' . $j++;
+              $file_id = $time . '.' . $j++;
             } while(array_key_exists($file_id, $sources_meta));
 
             $storage_path = SOURCES_UPLOAD_DIR . '/' . $file_id;
