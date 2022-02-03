@@ -119,6 +119,7 @@ class Annotation
   prepare(source, personOrConnectionID)
   {
     if (!this._prepared) {
+      this.t = parseInt(this.t);
       this._description = this.d;
       this._source = source;
 

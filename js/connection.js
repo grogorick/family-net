@@ -40,6 +40,7 @@ class Connection
 
   prepare()
   {
+    this.t = parseInt(this.t);
     let p2 = getDataPerson(this.p2)._;
     let isChildConnection = isChildConnectionNodeId(this.p1);
     let level = getConnectionRelationSettings(this.r).level;

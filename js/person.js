@@ -206,6 +206,7 @@ class Person extends PersonFunctions
 
   prepare()
   {
+    this.t = parseInt(this.t);
   }
 
   reset()
@@ -230,6 +231,7 @@ class Doppelganger extends PersonFunctions
   prepare()
   {
     if (!this._prepared) {
+      this.t = parseInt(this.t);
       this._ = getDataPerson(this.p);
       this._._doppelgangers.push(this);
       this._prepared = true;
