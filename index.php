@@ -93,6 +93,8 @@ const PERMISSION_DELETE_SOURCES = [ADMIN_, NORMAL_];
 const PERMISSION_LINK_SOURCE = [ADMIN_, NORMAL_];
 const PERMISSION_UNLINK_SOURCE = [ADMIN_, NORMAL_];
 
+const PERMISSION_CREATE_ANNOTATION = [ADMIN_, NORMAL_];
+
 define('PERMISSION_EDIT', array_intersect(
   PERMISSION_CREATE_PERSONS,
   PERMISSION_EDIT_PERSONS,
@@ -443,6 +445,7 @@ if (isset($_GET[ACTION])) {
   header('Content-Type: text/plain; charset=utf-8');
   $t = time();
   $retData = false;
+  $retSources = false;
   $d = json_decode(urldecode($_GET['d']), true);
   switch ($_GET[ACTION]) {
     case 'get':
@@ -777,6 +780,22 @@ if (isset($_GET[ACTION])) {
       }
       break;
 
+      case 'addAnnotation':
+      {
+        if (current_user_can(PERMISSION_CREATE_ANNOTATION)) {
+          $d['a']['t'] = $t;
+
+          $sources_meta = load_sources_meta();
+          if (array_key_exists($d['source_id'], $sources_meta)) {
+            if (array_key_exists($d['linked_id'], $sources_meta[$d['source_id']]['a'])) {
+              $sources_meta[$d['source_id']]['a'][$d['linked_id']][] = $d['a'];
+              $retSources = 's ' . $t;
+            }
+          }
+        }
+      }
+      break;
+
     } // switch ACTION
   } // if EDITING
 
@@ -785,6 +804,11 @@ if (isset($_GET[ACTION])) {
     $test = save_data($retData);
     echo $retData . ' ;;; ' . add_newlines_to_json_for_git_friendly_file_content(get_log(1)) . ' ;;; ' . implode('\n', $test);
   }
+  if ($retSources) {
+    // save_sources_meta($sources_meta);
+    echo $retSources;
+  }
+
   exit;
 
 } // if ACTION

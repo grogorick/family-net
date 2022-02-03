@@ -392,9 +392,28 @@ function finishNewAnnotation()
       }
       let tmpAnnotation = tmpAnnotationSpanBuilder.annotationBuilder.annotation.convert_toRelative(annotatorImg);
       tmpAnnotation.d = input.value;
-      let newAnnotation = currentSource.addAnnotation(currentAnnotationPersonOrConnection.t, tmpAnnotation);
-      addAnnotationSpan(newAnnotation);
-      closeInput();
+      toServerDataGraph('addAnnotation', {
+          source_id: currentSource._id,
+          linked_id: currentAnnotationPersonOrConnection.t,
+          a: {
+            x: tmpAnnotation.x,
+            y: tmpAnnotation.y,
+            w: tmpAnnotation.w,
+            h: tmpAnnotation.h,
+            d: tmpAnnotation.d
+          }}, {
+          toServer: (response, d) =>
+          {
+            response = splitServerResponse(response);
+            d.a.t = response[0].substr(2);
+          },
+          toData: d =>
+          {
+            let newAnnotation = currentSource.addAnnotation(currentAnnotationPersonOrConnection.t, d.a);
+            addAnnotationSpan(newAnnotation);
+            closeInput();
+          }
+        });
     },
     'Verwerfen': closeInput
   });
