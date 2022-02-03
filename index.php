@@ -442,28 +442,28 @@ function save_sources_meta($sources_meta)
 if (isset($_GET[ACTION])) {
   header('Content-Type: text/plain; charset=utf-8');
   $t = time();
-  $ret = false;
+  $retData = false;
   $d = json_decode(urldecode($_GET['d']), true);
   switch ($_GET[ACTION]) {
     case 'get':
     {
-      $ret = [];
+      $retData = [];
       foreach (explode(',', $_GET['q']) as $q) {
         switch ($q) {
           case 'preview':
           {
             exec(CD_STORAGE_DIR . 'git show ' . $_GET['hash'] . ':' . STORAGE_FILE, $out);
-            $ret['graph'] = filter_graph_data_by_permission(json_decode(implode(PHP_EOL, $out), true));
+            $retData['graph'] = filter_graph_data_by_permission(json_decode(implode(PHP_EOL, $out), true));
             break;
           }
-          case 'graph':    $ret['graph'] = $data; break;
-          case 'sources':  $ret['sources'] = load_sources_meta(); break;
-          case 'settings': $ret['settings'] = $user_settings; break;
-          case 'log':      $ret['log'] = get_log(); break;
-          case 'currentHash': $ret['currentHash'] = get_current_log_hash(); break;
+          case 'graph':    $retData['graph'] = $data; break;
+          case 'sources':  $retData['sources'] = load_sources_meta(); break;
+          case 'settings': $retData['settings'] = $user_settings; break;
+          case 'log':      $retData['log'] = get_log(); break;
+          case 'currentHash': $retData['currentHash'] = get_current_log_hash(); break;
         }
       }
-      echo json_encode($ret);
+      echo json_encode($retData);
       exit;
     }
 
@@ -557,7 +557,7 @@ if (isset($_GET[ACTION])) {
         if (current_user_can(PERMISSION_CREATE_PERSONS)) {
           $d['t'] = $t;
           $data[PERSONS][] = $d;
-          $ret = 'p ' . $t;
+          $retData = 'p ' . $t;
         }
       }
       break;
@@ -569,7 +569,7 @@ if (isset($_GET[ACTION])) {
           $d['x'] = $p['x'];
           $d['y'] = $p['y'];
           $p = $d;
-          $ret = 'p ' . $t;
+          $retData = 'p ' . $t;
         }
       }
       break;
@@ -577,7 +577,7 @@ if (isset($_GET[ACTION])) {
       {
         if (current_user_can(PERMISSION_DELETE_PERSONS)) {
           delete_data(PERSONS, $d);
-          $ret = 'P ' . $d;
+          $retData = 'P ' . $d;
         }
       }
       break;
@@ -591,7 +591,7 @@ if (isset($_GET[ACTION])) {
             $p['y'] = $d_['y'];
             $ts[] = $d_['t'];
           }
-          $ret = 'm ' . implode(', ', $ts);
+          $retData = 'm ' . implode(', ', $ts);
         }
       }
       break;
@@ -601,7 +601,7 @@ if (isset($_GET[ACTION])) {
         if (current_user_can(PERMISSION_CREATE_CONNECTIONS)) {
           $d['t'] = $t;
           $data[CONNECTIONS][] = $d;
-          $ret = 'c ' . $t;
+          $retData = 'c ' . $t;
         }
       }
       break;
@@ -613,7 +613,7 @@ if (isset($_GET[ACTION])) {
           $d['p1'] = $c['p1'];
           $d['p2'] = $c['p2'];
           $c = $d;
-          $ret = 'c ' . $t;
+          $retData = 'c ' . $t;
         }
       }
       break;
@@ -621,7 +621,7 @@ if (isset($_GET[ACTION])) {
       {
         if (current_user_can(PERMISSION_DELETE_CONNECTIONS)) {
           delete_data(CONNECTIONS, $d);
-          $ret = 'C ' . $d;
+          $retData = 'C ' . $d;
         }
       }
       break;
@@ -780,9 +780,9 @@ if (isset($_GET[ACTION])) {
   } // if EDITING
 
 
-  if ($ret) {
-    $test = save_data($ret);
-    echo $ret . ' ;;; ' . add_newlines_to_json_for_git_friendly_file_content(get_log(1)) . ' ;;; ' . implode('\n', $test);
+  if ($retData) {
+    $test = save_data($retData);
+    echo $retData . ' ;;; ' . add_newlines_to_json_for_git_friendly_file_content(get_log(1)) . ' ;;; ' . implode('\n', $test);
   }
   exit;
 
