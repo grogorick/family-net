@@ -801,9 +801,14 @@ function removeLatestLogItem()
   logListUL.children[0].remove();
 }
 
+function splitServerResponse(responseStr)
+{
+  return responseStr.split(' ;;; ');
+}
+
 function addLogItemFromServerResponse(responseStr)
 {
-  let response = responseStr.split(' ;;; ');
+  let response = splitServerResponse(responseStr);
   if (response[2].includes('UPDATED') || response[2].includes('EXTENDED')) {
     removeLatestLogItem();
   }
