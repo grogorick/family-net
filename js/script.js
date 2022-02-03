@@ -232,7 +232,7 @@ if (stopEditTimer && editingTimeout) {
           'Weiter bearbeiten': e =>
           {
             stopEditCountdownMessage.content.innerHTML = 'Bearbeitungsmodus wird verlängert...';
-            stopEditCountdownMessage['button_Weiter bearbeiten'].remove();
+            stopEditCountdownMessage.buttons['Weiter bearbeiten'].remove();
             xhRequest({ action: 'restart-edit-timer' }, responseText =>
             {
               if (responseText.startsWith('restarted ')) {

@@ -212,6 +212,7 @@ function showMessage(msg, buttons = { 'OK': DISMISS_MESSAGE })
   m.dismiss = e => { m.modalBlocker.remove(); };
   let buttonTemplate = m.box.querySelector('button');
   m.box.removeChild(buttonTemplate);
+  m.buttons = {};
   for (b in buttons) {
     let button = buttonTemplate.cloneNode(true);
     button.innerHTML = b;
@@ -222,7 +223,7 @@ function showMessage(msg, buttons = { 'OK': DISMISS_MESSAGE })
       button.addEventListener('click', buttons[b]);
     }
     m.box.appendChild(button);
-    m['button_' + b] = button;
+    m.buttons[b] = button;
   }
   moveToFront(m.modalBlocker);
   m.modalBlocker.classList.remove('hidden');

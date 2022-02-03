@@ -387,6 +387,9 @@ function finishNewAnnotation()
   m = showMessage('<input type="text" id="annotationDescription" placeholder="Beschreibung" />', {
     'Speichern': e =>
     {
+      for (b in m.buttons) {
+        m.buttons[b].remove();
+      }
       let tmpAnnotation = tmpAnnotationSpanBuilder.annotationBuilder.annotation.convert_toRelative(annotatorImg);
       tmpAnnotation.d = input.value;
       let newAnnotation = currentSource.addAnnotation(currentAnnotationPersonOrConnection.t, tmpAnnotation);
