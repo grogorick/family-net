@@ -105,7 +105,7 @@ function escapeHtml(unsafe) {
     .replace(/'/g, "&#039;");
 }
 
-function toServerDataGraph(action, d, cb = { toServer: null, toData: null, toGraph: null, refreshGraph: false, doneCallback: null }, log = true)
+function toServerDataGraph(action, d, cb = { toServer: null, splitServerResponse: false, jsonServerResponse: false, toData: null, toGraph: null, refreshGraph: false, doneCallback: null }, log = true)
 {
   if (log) {
     console.log([action, d, 'toServer:', cb.toServer, 'toData:', cb.toData, 'toGraph:', cb.toGraph, 'refreshGraph:', cb.refreshGraph]);
@@ -126,13 +126,28 @@ function toServerDataGraph(action, d, cb = { toServer: null, toData: null, toGra
     }
   };
   if (cb.toServer) {
-    xhRequest({ action: action, d: encodeURIComponent(JSON.stringify(d)) }, responseText =>
+    xhRequest({ action: action, d: encodeURIComponent(JSON.stringify(d)) }, response =>
     {
       if (cb.toServer !== true) {
-        d = cb.toServer(responseText, d) || d;
+        if (cb.splitServerResponse) {
+          response = splitServerResponse(response);
+        }
+        if ('jsonServerResponse' in cb) {
+          if (cb.splitServerResponse) {
+            for (i in response) {
+              if (cb.jsonServerResponse === true || (typeof cb.jsonServerResponse === 'object' && 'includes' in cb.jsonServerResponse && cb.jsonServerResponse.includes(i))) {
+                resposne[i] = JSON.parse(response[i]);
+              }
+            }
+          }
+          else {
+            response = JSON.parse(response);
+          }
+        }
+        d = cb.toServer(response, d) || d;
       }
       continueWhenServerIsDone();
-    });
+    }, log);
   }
   else {
     continueWhenServerIsDone();

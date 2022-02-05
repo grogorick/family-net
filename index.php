@@ -746,36 +746,30 @@ if (isset($_GET[ACTION])) {
       }
       break;
 
-      case 'link-source':
+      case 'linkSource':
       {
         if (current_user_can(PERMISSION_LINK_SOURCE)) {
-          $sourceID = $_GET['source_id'];
-          $personOrConnectionID = $_GET['person_or_connection_id'];
-
           $sources_meta = load_sources_meta(false);
-          if (array_key_exists($sourceID, $sources_meta)) {
-            $sources_meta[$sourceID]['a'][$personOrConnectionID] = [];
+          if (array_key_exists($d['source_id'], $sources_meta)) {
+            $sources_meta[$d['source_id']]['a'][$d['person_or_connection_id']] = [];
             save_sources_meta($sources_meta);
 
-            echo json_encode(['linked_source' => $sourceID, 'linked_to' => $personOrConnectionID]);
+            echo json_encode(['linked_source' => $d['source_id'], 'linked_to' => $d['person_or_connection_id']]);
             exit;
           }
         }
       }
       break;
 
-      case 'unlink-source':
+      case 'unlinkSource':
       {
         if (current_user_can(PERMISSION_UNLINK_SOURCE)) {
-          $sourceID = $_GET['source_id'];
-          $personOrConnectionID = $_GET['person_or_connection_id'];
-
           $sources_meta = load_sources_meta(false);
-          if (array_key_exists($sourceID, $sources_meta)) {
-            unset($sources_meta[$sourceID]['a'][$personOrConnectionID]);
+          if (array_key_exists($d['source_id'], $sources_meta)) {
+            unset($sources_meta[$d['source_id']]['a'][$d['person_or_connection_id']]);
             save_sources_meta($sources_meta);
 
-            echo json_encode(['unlinked_source' => $sourceID, 'unlinked_from' => $personOrConnectionID]);
+            echo json_encode(['unlinked_source' => $d['source_id'], 'unlinked_from' => $d['person_or_connection_id']]);
             exit;
           }
         }
@@ -1144,7 +1138,7 @@ if (current_user_can(PERMISSION_ADMIN)) {
 <?php
 if ($_SESSION[EDITING] && current_user_can(PERMISSION_LINK_SOURCE)) {
 ?>
-          <button id="person-form-link-source" class="button-border-full">Verknüpfen</button>
+          <button id="person-form-link-source" class="button-border-full">Neue Quelle verknüpfen</button>
 <?php
 }
 ?>

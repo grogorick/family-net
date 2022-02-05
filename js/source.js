@@ -401,7 +401,7 @@ function finishNewAnnotation()
             w: tmpAnnotation.w,
             h: tmpAnnotation.h,
             d: tmpAnnotation.d
-          }}, {
+        }}, {
           toServer: (response, d) =>
           {
             response = splitServerResponse(response);
@@ -440,17 +440,22 @@ if (personMenuLinkSource) {
 
         let person = activeState.nodes()[0]._my.p._;
 
-        xhRequest({ action: 'link-source', source_id: source._id, person_or_connection_id: person.t }, responseText =>
-        {
-          let response = JSON.parse(responseText);
-          if (response.linked_source === source._id && parseInt(response.linked_to) === person.t) {
-            if (Object.keys(person._sources).length === 0) {
-              personMenuSourcesListDiv.innerHTML = '';
+        toServerDataGraph('linkSource', {
+            source_id: source._id,
+            person_or_connection_id: person.t
+          }, {
+            jsonServerResponse: true,
+            toServer: (response, d) =>
+            {
+              if (response.linked_source === source._id && parseInt(response.linked_to) === person.t) {
+                if (Object.keys(person._sources).length === 0) {
+                  personMenuSourcesListDiv.innerHTML = '';
+                }
+                source.linkTo(person);
+                addLinkedSourceItem(personMenuSourcesListDiv, source, person);
+              }
             }
-            source.linkTo(person);
-            addLinkedSourceItem(personMenuSourcesListDiv, source, person);
-          }
-        });
+          });
       });
       list.appendChild(item);
     }
@@ -495,19 +500,24 @@ function addLinkedSourceItem(listDiv, source, personOrConnection)
     {
       e.preventDefault();
 
-      xhRequest({ action: 'unlink-source', source_id: source._id, person_or_connection_id: personOrConnection.t }, responseText =>
-      {
-        let response = JSON.parse(responseText);
-        if (response.unlinked_source === source._id && parseInt(response.unlinked_from) === personOrConnection.t) {
-          source.unlinkFrom(personOrConnection)
-          if (Object.keys(personOrConnection._sources).length === 0) {
-            listDiv.innerHTML = '';
+      toServerDataGraph('unlinkSource', {
+          source_id: source._id,
+          person_or_connection_id: personOrConnection.t
+        }, {
+          jsonServerResponse: true,
+          toServer: (response, d) =>
+          {
+            if (response.unlinked_source === source._id && parseInt(response.unlinked_from) === personOrConnection.t) {
+              source.unlinkFrom(personOrConnection)
+              if (Object.keys(personOrConnection._sources).length === 0) {
+                listDiv.innerHTML = '';
+              }
+              else {
+                li.remove();
+              }
+            }
           }
-          else {
-            li.remove();
-          }
-        }
-      });
+        });
     });
     li.appendChild(unlinkSourceBtn);
   }
