@@ -19,7 +19,7 @@ class Connection
 
   _persons = [];
   _children = [];
-  _sources = {};
+  _sources = [];
 
   _prepared = false;
 

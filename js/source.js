@@ -48,8 +48,8 @@ class Source
     if (!(personOrConnection.t in this._annotations)) {
       this._annotations[personOrConnection.t] = [];
     }
-    if (!(this._id in personOrConnection._sources)) {
-      personOrConnection._sources[this._id] = [];
+    if (!personOrConnection._sources.includes(this)) {
+      personOrConnection._sources.push(this);
     }
   }
 
@@ -61,8 +61,8 @@ class Source
     if (personOrConnection.t in this._annotations) {
       delete this._annotations[personOrConnection.t];
     }
-    if (this._id in personOrConnection._sources) {
-      delete personOrConnection._sources[this._id];
+    if (personOrConnection._sources.includes(this)) {
+      personOrConnection._sources.splice(personOrConnection._sources.indexOf(this), 1);
     }
   }
 
@@ -133,8 +133,6 @@ class Annotation
         this._connection = getDataConnection(personOrConnectionID);
       }
 
-      this.get_personOrConnection()._sources[this._source._id].push(this);
-
       this._prepared = true;
     }
   }
@@ -142,8 +140,6 @@ class Annotation
   reset()
   {
     if (this._prepared) {
-      let annotations = this.get_personOrConnection()._sources[this._source._id];
-      annotations.splice(annotations.indexOf(this), 1);
       this._prepared = false;
     }
   }
@@ -466,7 +462,7 @@ if (personMenuLinkSource) {
             toServer: (response, d) =>
             {
               if (response.linked_source === source._id && parseInt(response.linked_to) === person.t) {
-                if (Object.keys(person._sources).length === 0) {
+                if (person._sources.length === 0) {
                   personMenuSourcesListDiv.innerHTML = '';
                 }
                 source.linkTo(person);
@@ -486,10 +482,9 @@ callbacks.showPersonInfo.add(person =>
 {
   console.log(['person source info', person]);
   personMenuSourcesListDiv.innerHTML = '';
-  if (Object.keys(person._sources).length > 0) {
-    for (const [sourceID, annotations] of Object.entries(person._sources)) {
-      console.log([personMenuSourcesListDiv, annotations, person]);
-      addLinkedSourceItem(personMenuSourcesListDiv, data.sources[sourceID], person);
+  if (person._sources.length > 0) {
+    for (source of person._sources) {
+      addLinkedSourceItem(personMenuSourcesListDiv, source, person);
     }
   }
   else if (!currentUserIsEditing) {
@@ -517,6 +512,7 @@ function addLinkedSourceItem(listDiv, source, personOrConnection)
     unlinkSourceBtn.addEventListener('click', e =>
     {
       e.preventDefault();
+      console.log(['unlinkSource click', source, personOrConnection]);
 
       toServerDataGraph('unlinkSource', {
           source_id: source._id,
@@ -527,7 +523,7 @@ function addLinkedSourceItem(listDiv, source, personOrConnection)
           {
             if (response.unlinked_source === source._id && parseInt(response.unlinked_from) === personOrConnection.t) {
               source.unlinkFrom(personOrConnection)
-              if (Object.keys(personOrConnection._sources).length === 0) {
+              if (personOrConnection._sources.length === 0) {
                 listDiv.innerHTML = '';
               }
               else {
