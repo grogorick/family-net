@@ -1853,14 +1853,15 @@ function addSourceItem(source)
       click: e =>
       {
         if (confirm('Wirklich löschen?')) {
-          xhRequest({ action: 'delete-source', id: source._id }, responseText =>
-          {
-            let response = JSON.parse(responseText);
-            if ('deleted_source' in response && response.deleted_source === source._id) {
-              delete data.sources[source._id];
-              sourceDiv.remove();
-            }
-          });
+          toServerDataGraph('deleteSource', source._id, {
+              toServer: true,
+              toData: d =>
+              {
+                source.reset();
+                delete data.sources[source._id];
+                sourceDiv.remove();
+              }
+            });
         }
       }
     };
@@ -1883,8 +1884,8 @@ function creatSourceDiv(source, img_click_callback = null, buttons = {})
     img.addEventListener('click', img_click_callback);
   }
 
-  let title = sourceDiv.querySelector('.source-title');
-  title.innerHTML = source._description;
+  let description = sourceDiv.querySelector('.source-description');
+  description.innerHTML = source._description;
 
   for (const [label, buttonData] of Object.entries(buttons)) {
     let btn = document.createElement('button');
@@ -1990,8 +1991,8 @@ if (currentUserIsEditing) {
       let newSourcePreviewImg = newSourcePreviewDiv.querySelector('.new-source-preview-img');
       newSourcePreviewImg.src = URL.createObjectURL(file);
 
-      let newSourceTitle = newSourcePreviewDiv.querySelector('.new-source-title');
-      newSourceTitle.value = file.name;
+      let newSourceDescription = newSourcePreviewDiv.querySelector('.new-source-description');
+      newSourceDescription.value = file.name.substr(0, file.name.lastIndexOf('.'));
 
       let newSourceSize = newSourcePreviewDiv.querySelector('.new-source-size');
       newSourceSize.innerHTML = filesizeStr(file.size);
@@ -2007,26 +2008,27 @@ if (currentUserIsEditing) {
   newSourceForm.addEventListener('submit', e =>
   {
     e.preventDefault();
-    let titleInputs = newSourceForm.querySelectorAll('.new-source-title');
+    let descriptionInputs = newSourceForm.querySelectorAll('.new-source-description');
     let formData = new FormData();
     for (let i = 0; i < approvedFiles.length; ++i) {
       let fi = approvedFiles[i];
       formData.append('files[]', selectedFiles[fi]);
-      formData.append('titles[]', titleInputs[i].value);
+      formData.append('descriptions[]', descriptionInputs[i].value);
     }
     xhRequestPost({ action: 'upload-source-files' }, formData, responseText =>
     {
       clearPreview(true);
 
       if (responseText.length) {
-        let response = JSON.parse(responseText);
-        for (const [id, source_raw] of Object.entries(response.new_sources)) {
+        let response = splitServerResponse(responseText);
+        response[1] = JSON.parse(response[1]);
+        for (const [id, source_raw] of Object.entries(response[1].new_sources)) {
           let source = convertSource(source_raw);
           source.prepare(id);
           data.sources[id] = source;
           addSourceItem(source);
         }
-        for (error of response.errors) {
+        for (error of response[1].errors) {
           let li = document.createElement('li');
           li.innerHTML = error;
           newSourceUploadResponse.appendChild(li);

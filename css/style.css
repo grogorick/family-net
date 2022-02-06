@@ -674,7 +674,7 @@ button.selected, .button.selected, input[type="submit"].selected {
   right: 10pt;
   bottom: 10pt;
   width: 30%;
-  min-width: 280pt;
+  min-width: 310pt;
 }
 #connection-form-persons {
   display: block;

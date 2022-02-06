@@ -295,25 +295,27 @@ function addAnnotationSpan(annotation)
   span.addEventListener('click', e =>
   {
     let m = showMessage(annotation._description, {
-      'Schließen': DISMISS_MESSAGE,
+      'OK': DISMISS_MESSAGE,
       'Entfernen': e =>
       {
-        for (b in m.buttons) {
-          m.buttons[b].remove();
+        if (confirm('Markierung wirklich entfernen?')) {
+          for (b in m.buttons) {
+            m.buttons[b].remove();
+          }
+          toServerDataGraph('deleteAnnotation', {
+              t: annotation.t,
+              source_id: annotation._source._id,
+              linked_id: annotation.get_personOrConnection().t,
+            }, {
+              toServer: true,
+              toData: d =>
+              {
+                span.remove();
+                annotation._source.removeAnnotation(annotation);
+                m.dismiss()
+              }
+            });
         }
-        toServerDataGraph('deleteAnnotation', {
-            t: annotation.t,
-            source_id: annotation._source._id,
-            linked_id: annotation.get_personOrConnection().t,
-          }, {
-            toServer: true,
-            toData: d =>
-            {
-              span.remove();
-              annotation._source.removeAnnotation(annotation);
-              m.dismiss()
-            }
-          });
       }
     });
   });
@@ -517,15 +519,15 @@ function addLinkedSourceItem(listDiv, source, personOrConnection)
     {
       e.preventDefault();
       console.log(['unlinkSource click', source, personOrConnection]);
-
-      toServerDataGraph('unlinkSource', {
-          source_id: source._id,
-          person_or_connection_id: personOrConnection.t
-        }, {
-          jsonServerResponse: true,
-          toServer: (response, d) =>
-          {
-            if (response.unlinked_source === source._id && parseInt(response.unlinked_from) === personOrConnection.t) {
+      if (confirm('Quelle wirklich entfernen?')) {
+        toServerDataGraph('unlinkSource', {
+            source_id: source._id,
+            person_or_connection_id: personOrConnection.t
+          }, {
+            jsonServerResponse: true,
+            toServer: true,
+            toData: d =>
+            {
               source.unlinkFrom(personOrConnection)
               if (personOrConnection._sources.length === 0) {
                 listDiv.innerHTML = '';
@@ -534,8 +536,8 @@ function addLinkedSourceItem(listDiv, source, personOrConnection)
                 li.remove();
               }
             }
-          }
-        });
+          });
+      }
     });
     li.appendChild(unlinkSourceBtn);
   }

@@ -51,7 +51,7 @@ const PERSONS = 'persons';
 const CONNECTIONS = 'connections';
 
 const SOURCES_UPLOAD_DIR = STORAGE_DIR . '/sources';
-const SOURCES_META_FILE = SOURCES_UPLOAD_DIR . '/meta.yml';
+const SOURCES_META_FILE = 'sources.yml';
 const SOURCES_MAX_FILE_SIZE = 10 /* MB */ * 1024 /* KB */ * 1024;
 const SOURCES_THUMB_SIZE = 100 /* px */;
 const SOURCES_THUMB_QUALITY = 40;
@@ -360,15 +360,12 @@ function load_graph_data($default)
 
 function load_sources_meta($check_thumbs)
 {
-  $sources_meta_file_content = file_get_contents(SOURCES_META_FILE);
+  $sources_meta_file_content = file_get_contents(STORAGE_DIR . '/' . SOURCES_META_FILE);
   $sources = $sources_meta_file_content ? json_decode($sources_meta_file_content, true) : [];
 
   if ($check_thumbs) {
-    $thumbs = glob(SOURCES_UPLOAD_DIR . '/*.thumb.jpg');
-    foreach ($thumbs as &$thumb) {
-      $start_pos = strlen(SOURCES_UPLOAD_DIR . '/');
-      $id = substr($thumb, $start_pos, strrpos($thumb, '.thumb') - $start_pos);
-      $sources[$id]['thumb'] = true;
+    foreach ($sources as $id => &$source) {
+      $sources[$id]['thumb'] = is_file(SOURCES_UPLOAD_DIR . '/' . $id . '.thumb.jpg');
     }
   }
   return $sources;
@@ -379,6 +376,46 @@ function load_sources_meta($check_thumbs)
 $settings = load_settings($settings);
 $user_settings = prepare_user_settings($settings);
 $data = load_graph_data($data);
+$sources_meta = null;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+function save_settings()
+{
+  global $settings;
+  $file_content = add_newlines_to_data_json_for_git_friendly_file_content($settings);
+  file_put_contents(SETTINGS_FILE, $file_content, LOCK_EX);
+}
+
+function save_graph_data($git_commit)
+{
+  global $data;
+  $file_content = add_newlines_to_data_json_for_git_friendly_file_content($data);
+  file_put_contents(STORAGE_DIR . '/' . STORAGE_FILE, $file_content, LOCK_EX);
+  exec('sh/update.sh ' .
+    '"' . STORAGE_DIR . '" ' .
+    '"' . STORAGE_FILE . '" ' .
+    '"' . $_SESSION[USER] . '" ' .
+    '"' . $git_commit . '" ' .
+    COMMIT_MERGE_TIME_THRESH . ' ' .
+    '2>&1', $out);
+  return $out;
+}
+
+function save_sources_meta($git_commit)
+{
+  global $sources_meta;
+  $file_content = add_newlines_to_source_json_for_git_friendly_file_content($sources_meta);
+  file_put_contents(STORAGE_DIR . '/' . SOURCES_META_FILE, $file_content, LOCK_EX);
+  exec('sh/update.sh ' .
+    '"' . STORAGE_DIR . '" ' .
+    '"' . SOURCES_META_FILE . '" ' .
+    '"' . $_SESSION[USER] . '" ' .
+    '"' . $git_commit . '" ' .
+    COMMIT_MERGE_TIME_THRESH . ' ' .
+    '2>&1', $out);
+  return $out;
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -437,18 +474,12 @@ function filter_graph_data_by_permission($data)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-function save_sources_meta($sources_meta)
-{
-  file_put_contents(SOURCES_META_FILE, add_newlines_to_source_json_for_git_friendly_file_content($sources_meta));
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
 if (isset($_GET[ACTION])) {
   header('Content-Type: text/plain; charset=utf-8');
   $t = time();
   $retData = false;
   $retSources = false;
+  $retSourcesExtra = '';
   $d = json_decode(urldecode($_GET['d']), true);
   switch ($_GET[ACTION]) {
     case 'get':
@@ -685,7 +716,7 @@ if (isset($_GET[ACTION])) {
               $meta = [
                 'e' /* extension */ => $file_ext,
                 'f' /* original filename */ => $file_name,
-                't' /* title */ => $_POST['titles'][$i],
+                'd' /* description */ => $_POST['descriptions'][$i],
                 'a' /* annotations */ => json_decode('{}')
               ];
               $sources_meta[$file_id] = $meta;
@@ -713,35 +744,28 @@ if (isset($_GET[ACTION])) {
           }
 
           if ($new_sources_meta) {
-            save_sources_meta($sources_meta);
+            $retSources = 's ' . $time;
           }
-
-          echo json_encode([
+          $retSourcesExtra = json_encode([
             'new_sources' => $new_sources_meta,
             'errors' => $errors
           ]);
-          exit;
         }
       }
       break;
 
-      case 'delete-source':
+      case 'deleteSource':
       {
         if (current_user_can(PERMISSION_DELETE_SOURCES)) {
-          $id = $_GET['id'];
-
           $sources_meta = load_sources_meta(false);
-          if (array_key_exists($id, $sources_meta)) {
-            unset($sources_meta[$id]);
-            save_sources_meta($sources_meta);
+          if (array_key_exists($d, $sources_meta)) {
+            unset($sources_meta[$d]);
 
-            $image_files = glob(SOURCES_UPLOAD_DIR . '/' . $id . '*');
+            $image_files = glob(SOURCES_UPLOAD_DIR . '/' . $d . '*');
             foreach ($image_files as &$file) {
               unlink($file);
             }
-
-            echo json_encode(['deleted_source' => $id, 'files' => $image_files]);
-            exit;
+            $retSources = 'S ' . $d;
           }
         }
       }
@@ -753,10 +777,7 @@ if (isset($_GET[ACTION])) {
           $sources_meta = load_sources_meta(false);
           if (array_key_exists($d['source_id'], $sources_meta)) {
             $sources_meta[$d['source_id']]['a'][$d['person_or_connection_id']] = [];
-            save_sources_meta($sources_meta);
-
-            echo json_encode(['linked_source' => $d['source_id'], 'linked_to' => $d['person_or_connection_id']]);
-            exit;
+            $retSources = 'l ' . $d['source_id'] . ' ' . $d['person_or_connection_id'];
           }
         }
       }
@@ -768,10 +789,7 @@ if (isset($_GET[ACTION])) {
           $sources_meta = load_sources_meta(false);
           if (array_key_exists($d['source_id'], $sources_meta)) {
             unset($sources_meta[$d['source_id']]['a'][$d['person_or_connection_id']]);
-            save_sources_meta($sources_meta);
-
-            echo json_encode(['unlinked_source' => $d['source_id'], 'unlinked_from' => $d['person_or_connection_id']]);
-            exit;
+            $retSources = 'L ' . $d['source_id'] . ' ' . $d['person_or_connection_id'];
           }
         }
       }
@@ -812,12 +830,22 @@ if (isset($_GET[ACTION])) {
 
 
   if ($retData) {
-    $test = save_data($retData);
-    echo $retData . ' ;;; ' . add_newlines_to_data_json_for_git_friendly_file_content(get_log(1)) . ' ;;; ' . implode('\n', $test);
+    $output = save_graph_data($retData);
+    echo implode(' ;;; ', [
+      $retData,
+      json_encode(get_log(1)),
+      implode('\n', $output)
+    ]);
   }
+
   if ($retSources) {
-    save_sources_meta($sources_meta);
-    echo $retSources;
+    $output = save_sources_meta($retSources);
+    echo implode(' ;;; ', [
+      $retSources,
+      $retSourcesExtra,
+      json_encode(get_log(1)),
+      implode('\n', $output)
+    ]);
   }
 
   exit;
@@ -1235,7 +1263,7 @@ if ($_SESSION[EDITING] && current_user_can(PERMISSION_LINK_SOURCE)) {
         <img class="new-source-preview-img" />
         <div class="new-source-details">
           <span class="new-source-size"></span><br />
-          <input class="new-source-title" type="text" placeholder="Beschriftung" />
+          <input class="new-source-description" type="text" placeholder="Beschriftung" />
         </div>
       </div>
       <div id="new-source-invalid-div-template" class="box-row hidden"></div>
@@ -1253,7 +1281,7 @@ if ($_SESSION[EDITING] && current_user_can(PERMISSION_LINK_SOURCE)) {
     <div id="sources-list">
       <div id="source-div-template" class="box-row hidden">
         <img class="source-preview-img" />
-        <span class="source-title"></span>
+        <span class="source-description"></span>
         <ul class="source-linked-persons"></ul>
       </div>
     </div>
@@ -1792,15 +1820,6 @@ function stopEditing()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-function save_settings()
-{
-  global $settings;
-  $file_content = add_newlines_to_data_json_for_git_friendly_file_content($settings);
-  file_put_contents(SETTINGS_FILE, $file_content, LOCK_EX);
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
 function get_log($commit_count = 0)
 {
   exec(CD_STORAGE_DIR . 'git log --author-date-order --format=format:\'%h|||%ai|||%an|||%s\'' . ((current_user_can(PERMISSION_ADMIN) && array_key_exists(EXTENDED_LOG, $_SESSION)) ? ' --all' : '') . ($commit_count > 0 ? ' -' . $commit_count : ''), $out);
@@ -1819,23 +1838,6 @@ function get_current_log_hash()
 {
   exec(CD_STORAGE_DIR . 'git log -1 --format=format:\'%h\'', $out);
   return $out[0];
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
-function save_data($git_commit)
-{
-  global $data;
-  $file_content = add_newlines_to_data_json_for_git_friendly_file_content($data);
-  file_put_contents(STORAGE_DIR . '/' . STORAGE_FILE, $file_content, LOCK_EX);
-  exec('sh/update.sh ' .
-    '"' . STORAGE_DIR . '" ' .
-    '"' . STORAGE_FILE . '" ' .
-    '"' . $_SESSION[USER] . '" ' .
-    '"' . $git_commit . '" ' .
-    COMMIT_MERGE_TIME_THRESH . ' ' .
-    '2>&1', $out);
-  return $out;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
