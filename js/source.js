@@ -110,9 +110,7 @@ class Annotation
   _description = null;
   _source = null;
   _person = null;
-  _forPerson = false;
   _connection = null;
-  _forConnection = false;
 
   _prepared = false;
 
@@ -124,17 +122,11 @@ class Annotation
       this._source = source;
 
       this._person = getDataPerson(personOrConnectionID);
-      if (this._person) {
-        this._forPerson = true;
-      }
-      else {
+      if (!this._person) {
         this._connection = getDataConnection(personOrConnectionID);
-        if (this._connection) {
-          this._forConnection = true;
-        }
       }
 
-      (this._person || this._connection)._sources[this._source._id].push(this);
+      this.get_personOrConnection()._sources[this._source._id].push(this);
 
       this._prepared = true;
     }
@@ -143,8 +135,8 @@ class Annotation
   reset()
   {
     if (this._prepared) {
-      let sources = (this._person || this._connection)._sources;
-      sources[this._source._id].splice(sources[this._source._id].indexOf(this), 1);
+      let annotations = this.get_personOrConnection()._sources[this._source._id];
+      annotations.splice(annotations.indexOf(this), 1);
       this._prepared = false;
     }
   }
@@ -185,18 +177,16 @@ class Annotation
     span.style.height = this.h + 'px';
   }
 
-  get_forPerson() {
-    return this._forPerson;
-  }
-  get_forConnection() {
-    return this._forConnection;
-  }
-
   get_person() {
     return this._person;
   }
   get_connection() {
     return this._connection;
+  }
+
+  get_personOrConnection()
+  {
+    return this._person || this._connection;
   }
 }
 
@@ -378,7 +368,7 @@ function finishNewAnnotation()
   let tmpAnnotationSpanBuilder = annotationSpanBuilder;
   annotationSpanBuilder = null;
   let m = null;
-  let closeInput = e =>
+  let cancelNewAnnotation = e =>
   {
     annotatorContent.removeChild(tmpAnnotationSpanBuilder.span);
     m.dismiss();
@@ -411,11 +401,11 @@ function finishNewAnnotation()
           {
             let newAnnotation = currentSource.addAnnotation(currentAnnotationPersonOrConnection.t, d.a);
             addAnnotationSpan(newAnnotation);
-            closeInput();
+            cancelNewAnnotation();
           }
         });
     },
-    'Verwerfen': closeInput
+    'Verwerfen': cancelNewAnnotation
   });
   input = m.content.querySelector('#annotationDescription');
   input.focus();

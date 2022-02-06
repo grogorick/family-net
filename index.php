@@ -785,7 +785,7 @@ if (isset($_GET[ACTION])) {
           if (array_key_exists($d['source_id'], $sources_meta)) {
             if (array_key_exists($d['linked_id'], $sources_meta[$d['source_id']]['a'])) {
               $sources_meta[$d['source_id']]['a'][$d['linked_id']][] = $d['a'];
-              $retSources = 's ' . $t;
+              $retSources = 'a ' . $t;
             }
           }
         }
