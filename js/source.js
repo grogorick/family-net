@@ -74,6 +74,13 @@ class Source
     return annotation;
   }
 
+  removeAnnotation(annotation)
+  {
+    let annotations = this._annotations[annotation.get_personOrConnection().t];
+    annotations.splice(annotations.indexOf(annotation), 1);
+    annotation.reset();
+  }
+
   reset()
   {
     if (this._prepared) {
@@ -286,7 +293,28 @@ function addAnnotationSpan(annotation)
 
   span.addEventListener('click', e =>
   {
-    showMessage(annotation._description);
+    let m = showMessage(annotation._description, {
+      'Schließen': DISMISS_MESSAGE,
+      'Entfernen': e =>
+      {
+        for (b in m.buttons) {
+          m.buttons[b].remove();
+        }
+        toServerDataGraph('deleteAnnotation', {
+            t: annotation.t,
+            source_id: annotation._source._id,
+            linked_id: annotation.get_personOrConnection().t,
+          }, {
+            toServer: true,
+            toData: d =>
+            {
+              span.remove();
+              annotation._source.removeAnnotation(annotation);
+              m.dismiss()
+            }
+          });
+      }
+    });
   });
 }
 

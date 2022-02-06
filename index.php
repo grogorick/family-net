@@ -94,6 +94,7 @@ const PERMISSION_LINK_SOURCE = [ADMIN_, NORMAL_];
 const PERMISSION_UNLINK_SOURCE = [ADMIN_, NORMAL_];
 
 const PERMISSION_CREATE_ANNOTATION = [ADMIN_, NORMAL_];
+const PERMISSION_DELETE_ANNOTATION = [ADMIN_, NORMAL_];
 
 define('PERMISSION_EDIT', array_intersect(
   PERMISSION_CREATE_PERSONS,
@@ -786,6 +787,20 @@ if (isset($_GET[ACTION])) {
             if (array_key_exists($d['linked_id'], $sources_meta[$d['source_id']]['a'])) {
               $sources_meta[$d['source_id']]['a'][$d['linked_id']][] = $d['a'];
               $retSources = 'a ' . $t;
+            }
+          }
+        }
+      }
+      break;
+
+      case 'deleteAnnotation':
+      {
+        if (current_user_can(PERMISSION_DELETE_ANNOTATION)) {
+          $sources_meta = load_sources_meta(false);
+          if (array_key_exists($d['source_id'], $sources_meta)) {
+            if (array_key_exists($d['linked_id'], $sources_meta[$d['source_id']]['a'])) {
+              delete_from_array($sources_meta[$d['source_id']]['a'][$d['linked_id']], $d['t']);
+              $retSources = 'A ' . $d['t'];
             }
           }
         }
