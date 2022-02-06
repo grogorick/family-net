@@ -1,4 +1,8 @@
 storage/
+
 .*
 *.yml
 *.txt
+
+dev/
+sammlung/
