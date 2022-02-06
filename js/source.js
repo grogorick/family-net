@@ -53,6 +53,11 @@ class Source
     }
   }
 
+  isLinkedTo(personOrConnectionID)
+  {
+    return personOrConnectionID in this._annotations;
+  }
+
   unlinkFrom(personOrConnection)
   {
     if (typeof personOrConnection !== 'object') {
@@ -445,14 +450,17 @@ if (personMenuLinkSource) {
   {
     e.preventDefault();
 
+    let person = activeState.nodes()[0]._my.p._;
+
     let m;
     let list = document.createElement('div');
     for (const [id, source] of Object.entries(data.sources)) {
+      if (source.isLinkedTo(person.t)) {
+        continue;
+      }
       let item = creatSourceDiv(source, e =>
       {
         m.dismiss();
-
-        let person = activeState.nodes()[0]._my.p._;
 
         toServerDataGraph('linkSource', {
             source_id: source._id,
