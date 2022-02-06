@@ -461,21 +461,19 @@ if (personMenuLinkSource) {
       let item = creatSourceDiv(source, e =>
       {
         m.dismiss();
-
         toServerDataGraph('linkSource', {
             source_id: source._id,
             person_or_connection_id: person.t
           }, {
             jsonServerResponse: true,
-            toServer: (response, d) =>
+            toServer: true,
+            toData: d =>
             {
-              if (response.linked_source === source._id && parseInt(response.linked_to) === person.t) {
-                if (person._sources.length === 0) {
-                  personMenuSourcesListDiv.innerHTML = '';
-                }
-                source.linkTo(person);
-                addLinkedSourceItem(personMenuSourcesListDiv, source, person);
+              if (person._sources.length === 0) {
+                personMenuSourcesListDiv.innerHTML = '';
               }
+              source.linkTo(person);
+              addLinkedSourceItem(personMenuSourcesListDiv, source, person);
             }
           });
       });
@@ -485,7 +483,6 @@ if (personMenuLinkSource) {
   });
 }
 
-if (BETA) {
 callbacks.showPersonInfo.add(person =>
 {
   console.log(['person source info', person]);
@@ -499,7 +496,6 @@ callbacks.showPersonInfo.add(person =>
     personMenuSourcesListDiv.innerHTML = '&mdash;';
   }
 });
-}
 
 function addLinkedSourceItem(listDiv, source, personOrConnection)
 {

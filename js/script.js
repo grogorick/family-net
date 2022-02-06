@@ -1879,7 +1879,7 @@ function creatSourceDiv(source, img_click_callback = null, buttons = {})
 
   let img = sourceDiv.querySelector('.source-preview-img');
   img.src = sourcesPath + source._id + (('thumb' in source) ? '.thumb.jpg' : (source._ext));
-  if (img_click_callback && BETA) {
+  if (img_click_callback) {
     img.addEventListener('click', img_click_callback);
   }
 

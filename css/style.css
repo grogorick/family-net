@@ -66,6 +66,13 @@ button {
   backdrop-filter: blur(1pt);
 }
 
+.box-shadow {
+  box-shadow: 2px 1px 5px #0006;
+}
+.box.no-shadow {
+  box-shadow: none;
+}
+
 .box {
   display: block;
   position: fixed;
@@ -87,7 +94,7 @@ button {
   z-index: 1;
 }
 
-.box.box-padding:not(.box-minimized) {
+.box-padding:not(.box-minimized) {
   padding: 20pt;
 }
 

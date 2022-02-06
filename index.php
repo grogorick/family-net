@@ -1115,55 +1115,58 @@ if (current_user_can(PERMISSION_ADMIN)) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 ?>
 
-  <div id="person-form" class="box box-padding hidden">
-    <div id="person-form-doppelganger" class="box-row opt opt-new">
-      <h2>Doppelgänger</h2>
-      <button id="person-form-doppelganger-add" class="button-border-full">Einen Doppelgänger von <span></span> erstellen</button>
+  <div id="person-form" class="box no-shadow hidden">
+    <div class="box-padding box-shadow">
+      <div id="person-form-doppelganger" class="box-row opt opt-new">
+        <h2>Doppelgänger</h2>
+        <button id="person-form-doppelganger-add" class="button-border-full">Einen Doppelgänger von <span></span> erstellen</button>
+      </div>
+      <h2>
+        <span class="opt opt-new">Neue Person</span>
+        <span class="opt opt-edit"><?=($_SESSION[EDITING] && current_user_can(PERMISSION_EDIT_PERSONS)) ? 'Person bearbeiten' : 'Personendetails'?></span>
+      </h2>
+      <span id="person-form-person-url" class="box-row"></span>
+      <form>
+        <div class="box-row">
+          <label for="person-form-first-name">Vorname/n: </label>
+          <input id="person-form-first-name" type="text" autocomplete="off" placeholder="(Spitzname) Vorname/n" />
+        </div><div class="box-row">
+          <label for="person-form-last-name">Familienname/n: </label>
+          <input id="person-form-last-name" type="text" autocomplete="off" placeholder="Nachname/n" />
+          <input id="person-form-birth-name" type="text" autocomplete="off" placeholder="Geburtsname/n" />
+        </div><div class="box-row">
+          <label for="person-form-birth-day">Geburtstag: </label>
+          <input id="person-form-birth-day" type="text" autocomplete="off" placeholder="tt" />
+          <input id="person-form-birth-month" type="text" autocomplete="off" placeholder="mm" />
+          <input id="person-form-birth-year" type="text" autocomplete="off" placeholder="yyyy" />
+        </div><div class="box-row">
+          <label for="person-form-death-day">Todestag: </label>
+          <input id="person-form-death-day" type="text" autocomplete="off" placeholder="tt" />
+          <input id="person-form-death-month" type="text" autocomplete="off" placeholder="mm" />
+          <input id="person-form-death-year" type="text" autocomplete="off" placeholder="yyyy" />
+        </div><div class="box-row">
+          <label for="person-form-note">Notiz: </label>
+          <textarea id="person-form-note" rows="3"></textarea>
+        </div>
+      </form>
+      <button id="person-form-add" class="button-border opt opt-new">Hinzufügen</button>
+      <button id="person-form-edit" class="button-border opt opt-edit">Speichern</button>
+      <button id="person-form-delete" class="button-border opt opt-edit">Entfernen</button>
+      <button id="person-form-cancel" class="button-border"><?=$_SESSION[EDITING] ? 'Abbrechen' : 'Schließen'?></button>
     </div>
-    <h2>
-      <span class="opt opt-new">Neue Person</span>
-      <span class="opt opt-edit"><?=($_SESSION[EDITING] && current_user_can(PERMISSION_EDIT_PERSONS)) ? 'Person bearbeiten' : 'Personendetails'?></span>
-    </h2>
-    <span id="person-form-person-url" class="box-row"></span>
-    <form>
-      <div class="box-row">
-        <label for="person-form-first-name">Vorname/n: </label>
-        <input id="person-form-first-name" type="text" autocomplete="off" placeholder="(Spitzname) Vorname/n" />
-      </div><div class="box-row">
-        <label for="person-form-last-name">Familienname/n: </label>
-        <input id="person-form-last-name" type="text" autocomplete="off" placeholder="Nachname/n" />
-        <input id="person-form-birth-name" type="text" autocomplete="off" placeholder="Geburtsname/n" />
-      </div><div class="box-row">
-        <label for="person-form-birth-day">Geburtstag: </label>
-        <input id="person-form-birth-day" type="text" autocomplete="off" placeholder="tt" />
-        <input id="person-form-birth-month" type="text" autocomplete="off" placeholder="mm" />
-        <input id="person-form-birth-year" type="text" autocomplete="off" placeholder="yyyy" />
-      </div><div class="box-row">
-        <label for="person-form-death-day">Todestag: </label>
-        <input id="person-form-death-day" type="text" autocomplete="off" placeholder="tt" />
-        <input id="person-form-death-month" type="text" autocomplete="off" placeholder="mm" />
-        <input id="person-form-death-year" type="text" autocomplete="off" placeholder="yyyy" />
-      </div><div class="box-row">
-        <label for="person-form-note">Notiz: </label>
-        <textarea id="person-form-note" rows="3"></textarea>
-      </div><div class="box-row BETA">
-        <label style="vertical-align: top">Quellen: </label>
-        <div id="person-form-sources-div">
-          <div id="person-form-sources-list"></div>
+    <div class="box-padding box-shadow" style="margin-top: 10pt">
+      <label style="vertical-align: top">Quellen: </label>
+      <div id="person-form-sources-div">
+        <div id="person-form-sources-list"></div>
 <?php
 if ($_SESSION[EDITING] && current_user_can(PERMISSION_LINK_SOURCE)) {
 ?>
-          <button id="person-form-link-source" class="button-border-full">Neue Quelle verknüpfen</button>
+        <button id="person-form-link-source" class="button-border-full">Neue Quelle verknüpfen</button>
 <?php
 }
 ?>
-        </div>
       </div>
-    </form>
-    <button id="person-form-add" class="button-border opt opt-new">Hinzufügen</button>
-    <button id="person-form-edit" class="button-border opt opt-edit">Speichern</button>
-    <button id="person-form-delete" class="button-border opt opt-edit">Entfernen</button>
-    <button id="person-form-cancel" class="button-border"><?=$_SESSION[EDITING] ? 'Abbrechen' : 'Schließen'?></button>
+    </div>
   </div><!-- person-form -->
 
 <?php
