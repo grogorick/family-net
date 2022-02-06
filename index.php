@@ -1116,7 +1116,7 @@ if (current_user_can(PERMISSION_ADMIN)) {
 ?>
 
   <div id="person-form" class="box box-padding hidden">
-    <div id="person-form-doppelganger" class="box-row opt opt-new BETA">
+    <div id="person-form-doppelganger" class="box-row opt opt-new">
       <h2>Doppelgänger</h2>
       <button id="person-form-doppelganger-add" class="button-border-full">Einen Doppelgänger von <span></span> erstellen</button>
     </div>
