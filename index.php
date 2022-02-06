@@ -257,11 +257,12 @@ if (!$accounts) {
   html_min_start();
 ?>
   <form method="POST">
+    <h1>Setup</h1>
     <input type="hidden" name="<?=ADMIN_ACTION?>" value="new" />
     <input type="text" name="<?=USER?>" placeholder="Name" autocomplete="off" autofocus />
     <input type="text" name="<?=PASSWORD?>" placeholder="Passwort" autocomplete="off" />
     <input type="hidden" name="<?=TYPE?>" value="<?=ADMIN_?>" />
-    <input type="submit" class="button button-border-full" value="Account hinzufügen" />
+    <input type="submit" class="button button-border-full" value="Admin-Account anlegen" />
   </form>
 <?php
   html_min_end();
