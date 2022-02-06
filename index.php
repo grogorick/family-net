@@ -664,7 +664,7 @@ if (isset($_GET[ACTION])) {
       }
       break;
 
-      case 'upload-source-files':
+      case 'uploadSourceFiles':
       {
         if (current_user_can(PERMISSION_UPLOAD_SOURCES)) {
           $errors = [];
@@ -1286,6 +1286,7 @@ if ($_SESSION[EDITING] && current_user_can(PERMISSION_LINK_SOURCE)) {
         <ul class="source-linked-persons"></ul>
       </div>
     </div>
+    <div id="sources-uploading-wait" class="box-row hidden">Hochladen ...</div>
   </div>
 
 <?php

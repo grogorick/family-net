@@ -427,6 +427,23 @@ button.selected, .button.selected, input[type="submit"].selected {
   background: #fafafa;
 }
 
+#sources.box #sources-uploading-wait {
+  overflow: hidden;
+  color: #999;
+}
+#sources.box #sources-uploading-wait::after {
+  content: '\2191';
+  display: inline-block;
+  margin-left: 10pt;
+  animation-name: sources-uploading;
+  animation-duration: 2s;
+  animation-iteration-count: infinite;
+}
+@keyframes sources-uploading {
+  from { transform: translateY(100%); }
+  to { transform: translateY(-100%); }
+}
+
 
 #source-annotator .box {
   width: 80vw;

@@ -1812,6 +1812,7 @@ function addExtension(p, id, offset_xy, label)
 let sourcesBox = document.getElementById('sources');
 let sourcesList = sourcesBox.querySelector('#sources-list');
 let sourceTemplateDiv = sourcesList.querySelector('#source-div-template');
+let sourecsUploadingWaitDiv = sourcesBox.querySelector('#sources-uploading-wait');
 
 callbacks.initialLoadComplete.add(() =>
 {
@@ -2015,10 +2016,11 @@ if (currentUserIsEditing) {
       formData.append('files[]', selectedFiles[fi]);
       formData.append('descriptions[]', descriptionInputs[i].value);
     }
-    xhRequestPost({ action: 'upload-source-files' }, formData, responseText =>
+    clearPreview(true);
+    sourecsUploadingWaitDiv.classList.remove('hidden');
+    xhRequestPost({ action: 'uploadSourceFiles' }, formData, responseText =>
     {
-      clearPreview(true);
-
+      sourecsUploadingWaitDiv.classList.add('hidden');
       if (responseText.length) {
         let response = splitServerResponse(responseText);
         response[1] = JSON.parse(response[1]);
