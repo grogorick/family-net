@@ -311,6 +311,31 @@ function getPersonPreviewDisplayString(p)
     return p.get_shortDisplayString();
   }
   let ret = [];
+  s.split(' ').forEach(part =>
+  {
+    switch (part) {
+      case 'NICKNAME': ret.push(p.get_nickName());
+        break;
+      case 'RUFNAME': ret.push(p.get_rufName());
+        break;
+      case 'FIRSTNAMES': ret.push(p.get_firstNames());
+        break;
+      case 'LASTNAMES': ret.push(p.get_lastNames());
+        break;
+      case 'BIRTHNAMES': ret.push(p.get_birthNames());
+        break;
+      case 'BIRTHDATE': ret.push(p.get_birthDate());
+        break;
+      case 'BIRTHYEAR': ret.push(p.get_birthYear());
+        break;
+      case 'DEATHDATE': ret.push(p.get_deathDate());
+        break;
+      case 'DEATHMONTH': ret.push(p.get_deathYear());
+        break;
+      default:
+        ret.push(part);
+    }
+  });
   return ret.joinNotEmpty(' ');
 }
 

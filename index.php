@@ -1081,6 +1081,27 @@ if (current_user_can(PERMISSION_ADMIN)) {
       <div id="settings-change-password-info"></div>
       <button id="settings-change-password" class="button-border-full">Speichern</button>
     </div>
+    <div class="box-row BETA">
+<?php
+      $ppds = $settings[PERSON_PREVIEW_DISPLAY_STRING];
+      if ($ppds === 'default') {
+        $ppds = '';
+      }
+?>
+      Personen im Netz anzeigen mit:<br />
+      <form>
+        <input type="text" id="settings-person-preview-display-string" value="<?=$ppds?>" placeholder="Spitzname / Rufname / 1. Vorname / Nachnamen / Geburtsnamen" /><br />
+        <code>NICKNAME</code> Spitzname<br />
+        <code>RUFNAME</code> Rufname<br />
+        <code>FIRSTNAMES</code> Vornamen<br />
+        <code>LASTNAMES</code> Nachnamen<br />
+        <code>BIRTHNAMES</code> Geburtsnamen<br />
+        <code>BIRTHDATE</code> Geburtsdatum<br />
+        <code>BIRTHYEAR</code> Geburtsjahr<br />
+        <code>DEATHDATE</code> Todesdatum<br />
+        <code>DEATHMONTH</code> Todesjahr
+      </form>
+    </div>
   </div><!-- settings -->
 
 <?php

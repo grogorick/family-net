@@ -495,6 +495,12 @@ button.selected, .button.selected, input[type="submit"].selected {
   top: 50%;
   transform: translate(-50%, -50%);
 }
+.desktop-client #settings-person-preview-display-string {
+  width: 300pt;
+}
+.mobile-client #settings-person-preview-display-string {
+  width: 100%;
+}
 
 .desktop-client #help.box {
   top: 10pt;
