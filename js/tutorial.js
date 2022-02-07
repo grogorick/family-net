@@ -30,17 +30,17 @@ let tutorialSteps = [
         P4:   getGraphPositionFromScreenPosition(+ 150 + 60,                      -rh - 15),
         H4:   {                            x: rw + 150 + 60 + 'px',            y:  rh - 15 + 'px' } };
       s.graph.clear(); s.refresh();
-      tutorialWindow.button_Abbrechen.setAttribute('data-innerHTML', tutorialWindow.button_Abbrechen.innerHTML);
-      tutorialWindow.button_Abbrechen.innerHTML = 'Später ansehen';
-      tutorialWindow.button_Weiter.setAttribute('data-innerHTML', tutorialWindow.button_Weiter.innerHTML);
-      tutorialWindow.button_Weiter.innerHTML = 'Los geht\'s'; },
+      tutorialWindow.buttons.Abbrechen.setAttribute('data-innerHTML', tutorialWindow.buttons.Abbrechen.innerHTML);
+      tutorialWindow.buttons.Abbrechen.innerHTML = 'Später ansehen';
+      tutorialWindow.buttons.Weiter.setAttribute('data-innerHTML', tutorialWindow.buttons.Weiter.innerHTML);
+      tutorialWindow.buttons.Weiter.innerHTML = 'Los geht\'s'; },
     after: () => {
       addPerson({ t: 'p0', x: tutorialSet.P0.x, y: tutorialSet.P0.y, l: 'Person C', o: '' }, false, false, true, false);
       addPerson({ t: 'p1', x: tutorialSet.P1.x, y: tutorialSet.P1.y, l: 'Person A', o: '' }, false, false, true, false);
       addPerson({ t: 'p2', x: tutorialSet.P2.x, y: tutorialSet.P2.y, l: 'Person B', o: '' }, false, false, true, false);
       addConnection({ t: 'c12', p1: 'p1', p2: 'p2', r: '', d: '' }, false, false, true, true);
-      tutorialWindow.button_Abbrechen.innerHTML = tutorialWindow.button_Abbrechen.getAttribute('data-innerHTML');
-      tutorialWindow.button_Weiter.innerHTML = tutorialWindow.button_Weiter.getAttribute('data-innerHTML');
+      tutorialWindow.buttons.Abbrechen.innerHTML = tutorialWindow.buttons.Abbrechen.getAttribute('data-innerHTML');
+      tutorialWindow.buttons.Weiter.innerHTML = tutorialWindow.buttons.Weiter.getAttribute('data-innerHTML');
       tutorialWindow.modalBlocker.classList.remove('backdrop-blur'); },
     delayNextStep: true } ];
 
@@ -101,23 +101,23 @@ tutorialSteps = tutorialSteps.concat([
       personMenuEdit.classList.add('hidden');
       clearPersonMenu();
       showForm(personMenuForm, 'opt-edit', false);
-      tutorialHighlight('#person-form', 420); },
+      personMenuForm.style.zIndex = '';
+      tutorialHighlight('#person-form > div:first-child', 420); },
     after: () => hideForm(personMenuForm),
     delayNextStep: true } ]);
 
 if (!currentUserIsViewer) { tutorialSteps = tutorialSteps.concat([
-  { m: '<p>Halte die ' + modKeys + '-Taste gedrückt und klicke auf eine Person, um sie auszuwählen.</p><p class="invisible">Wähle danach eine zweite Person aus, um die beiden zu verbinden.</p>',
+  { m: '<p>Für eine neue Verbindung, halte die ' + modKeys + '-Taste gedrückt und klicke auf die erste Person, um sie auszuwählen.</p><p class="invisible">Wähle danach die zweite Person aus, um die Personen zu verbinden.</p>',
     before: () => {
       activeState.addNodes('p2'); s.refresh();
-      tutorialHighlight(tutorialSet.H2, 50); },
-    keepHighlights: true },
+      tutorialHighlight(tutorialSet.H2, 50); } },
 
-  { m: '<p class="old">Halte die ' + modKeys + '-Taste gedrückt und klicke auf eine Person, um sie auszuwählen.</p><p>Wähle danach eine zweite Person aus<span class="invisible">, um die beiden zu verbinden.</span></p>',
+  { m: '<p class="old">Für eine neue Verbindung, halte die ' + modKeys + '-Taste gedrückt und klicke auf die erste Person, um sie auszuwählen.</p><p>Wähle danach die zweite Person aus<span class="invisible">, um die Personen zu verbinden.</span></p>',
     before: () => {
       activeState.addNodes('p3'); s.refresh();
       tutorialHighlight(tutorialSet.H4, 50); } },
 
-  { m: '<p class="old">Halte die ' + modKeys + '-Taste gedrückt und klicke auf eine Person, um sie auszuwählen.</p><p><span class="old">Wähle danach eine zweite Person aus,</span> um die beiden zu verbinden.</p>',
+  { m: '<p class="old">Für eine neue Verbindung, halte die ' + modKeys + '-Taste gedrückt und klicke auf die erste Person, um sie auszuwählen.</p><p><span class="old">Wähle danach die zweite Person aus,</span> um die Personen zu verbinden.</p>',
     before: () => {
       addConnection({ t: 'c23', p1: 'p2', p2: 'p3', r: '', d: '' }, false, false, true, true);
       tutorialHighlight(tutorialSet.H24, 50); },
@@ -137,6 +137,7 @@ tutorialSteps = tutorialSteps.concat([
       connectionMenuEdit.classList.add('hidden');
       clearConnectionMenu();
       showForm(connectionMenuForm, 'opt-edit', false);
+      connectionMenuForm.style.zIndex = '';
       tutorialHighlight('#connection-form', 400); },
     after: () => {
       activeState.dropEdges(); s.refresh();
@@ -148,7 +149,7 @@ if (!currentUserIsViewer) { tutorialSteps = tutorialSteps.concat([
     before: () => tutorialHighlight('#start-edit, #stop-edit', 80),
     delayNextStep: true },
 
-  { m: '<p>Vergiss nicht den Bearbeitungsmodus zu beenden, wenn du fertig bist,<br />sonst blockierst du die Bearbeitung für alle anderen.</p>',
+  { m: '<p>Vergiss nicht den Bearbeitungsmodus zu beenden, wenn du fertig bist,<br />sonst blockierst du die Bearbeitung für andere.</p>',
     before: () => {
       let btn = document.querySelector('#start-edit');
       if (btn) {
@@ -163,31 +164,35 @@ if (!currentUserIsViewer) { tutorialSteps = tutorialSteps.concat([
     delayNextStep: true } ]); }
 
 tutorialSteps = tutorialSteps.concat([
-  { m: '<p>Oben links findest du den kannst du zwischen verschiedenen Ansichten wechseln.</p>',
-    before: () => tutorialHighlight('#layouts', 70),
+  { m: '<p>Oben links kannst du hochgeladene Dokumente anzeigen' + (currentUserIsViewer ? '.' : ' bzw. bearbeiten') + '</p>',
+    before: () => tutorialHighlight('#sources', 60),
     delayNextStep: true },
 
-  { m: '<p>Oben rechts findest du den Verlauf aller Änderungen am Netz.</p>' + (currentUserIsViewer ? '' : '<p class="invisible">Deine eigenen Änderungen kannst du hier rückgängig machen,<br />solange nach dir kein anderer das Netz geändert hat.</p>'),
-    before: () => tutorialHighlight('#log', 70),
+  { m: '<p>Oben links kannst du außerdem zwischen folgenden Ansichten wechseln: <i>Netz, Baum, Jahresbaum</i>.</p>' + (currentUserIsViewer ? '' : '<p>Der Bearbeitungsmodus ist nur in der Netz-Ansicht verfügbar.</p>'),
+    before: () => tutorialHighlight('#layouts', 60),
+    delayNextStep: true },
+
+  { m: '<p>Oben rechts findest du den Verlauf aller Änderungen.</p>' + (currentUserIsViewer ? '' : '<p class="invisible">Deine eigenen Änderungen kannst du hier rückgängig machen,<br />solange nach dir kein anderer das Netz geändert hat.</p>'),
+    before: () => tutorialHighlight('#log', 60),
     keepHighlights: !currentUserIsViewer,
     delayNextStep: currentUserIsViewer } ]);
 
 if (!currentUserIsViewer) { tutorialSteps = tutorialSteps.concat([
-  { m: '<p class="old">Oben rechts findest du den Verlauf aller Änderungen am Netz.</p>' + (currentUserIsViewer ? '' : '<p>Deine eigenen Änderungen kannst du hier rückgängig machen,<br />solange nach dir kein anderer das Netz geändert hat.</p>'),
+  { m: '<p class="old">Oben rechts findest du den Verlauf aller Änderungen.</p>' + (currentUserIsViewer ? '' : '<p>Deine eigenen Änderungen kannst du hier rückgängig machen,<br />solange nach dir kein anderer das Netz geändert hat.</p>'),
     delayNextStep: true } ]); }
 
 tutorialSteps = tutorialSteps.concat([
-  { m: '<p>Gleich daneben findest du jederzeit eine Hilfe mit Anleitungen<br />zu allen wichtigen Funktionen.</p><p class="invisible">Dort kannst du auch diese Einführung jederzeit noch einmal starten.</p>',
-    before: () => tutorialHighlight('#help', 70),
+  { m: '<p>Gleich daneben findest du jederzeit die Hilfe mit Anleitungen<br />zu allen wichtigen Funktionen.</p><p class="invisible">Dort kannst du auch diese Einführung jederzeit noch einmal starten.</p>',
+    before: () => tutorialHighlight('#help', 60),
     keepHighlights: true },
 
-  { m: '<p class="old">Gleich daneben findest du jederzeit eine Hilfe mit Anleitungen<br />zu allen wichtigen Funktionen.</p><p>Dort kannst du auch diese Einführung jederzeit noch einmal starten.</p>',
+  { m: '<p class="old">Gleich daneben findest du jederzeit die Hilfe mit Anleitungen<br />zu allen wichtigen Funktionen.</p><p>Dort kannst du auch diese Einführung jederzeit noch einmal starten.</p>',
     delayNextStep: true },
 
   { m: '<p>Das war\'s auch schon. Viel Spaß.</p>',
     before: () => {
-      tutorialWindow.button_Abbrechen.classList.add('hidden');
-      tutorialWindow.button_Weiter.innerHTML = 'OK';
+      tutorialWindow.buttons.Abbrechen.classList.add('hidden');
+      tutorialWindow.buttons.Weiter.innerHTML = 'OK';
       xhRequest('?action=tutorial-completed'); },
     after: () => {
       loadData();
@@ -252,8 +257,8 @@ function showTutorial()
   if ('before' in tutorialStep) {
     tutorialStep.before(tutorialStep);
   }
-  tutorialWindow.button_Weiter.disabled = true;
-  setTimeout(() => { if (tutorialWindow) { tutorialWindow.button_Weiter.disabled = false; } }, 'buttonTimeout' in tutorialStep ? tutorialStep.buttonTimeout : 2000);
+  tutorialWindow.buttons.Weiter.disabled = true;
+  setTimeout(() => { if (tutorialWindow) { tutorialWindow.buttons.Weiter.disabled = false; } }, 'buttonTimeout' in tutorialStep ? tutorialStep.buttonTimeout : 2000);
 }
 
 function tutorialHighlight(el, sizePt, opacity = 'FF')

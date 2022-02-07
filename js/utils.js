@@ -162,7 +162,7 @@ function setBoxOpt(box, opt)
   }
 }
 
-function moveToFront(f, zIndex = 2)
+function moveToFront(f, zIndex = 10)
 {
   f.data_zIndex = f.style.zIndex;
   f.style.zIndex = zIndex;

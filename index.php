@@ -1238,7 +1238,7 @@ if ($_SESSION[EDITING] && current_user_can(PERMISSION_LINK_SOURCE)) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 ?>
 
-<div id="sources" class="box box-padding box-minimized BETA">
+  <div id="sources" class="box box-padding box-minimized">
     <div class="box-minimize-buttons negative-padding">
       <button class="box-restore desktop-only" title="Quellen">Q</button>
       <button class="box-minimize"><?=$box_close_minimize_symbol?></button>
