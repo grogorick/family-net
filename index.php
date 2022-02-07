@@ -50,7 +50,7 @@ const STORAGE_FILE = 'storage.yml';
 const PERSONS = 'persons';
 const CONNECTIONS = 'connections';
 
-const SOURCES_UPLOAD_DIR = STORAGE_DIR . '/sources';
+const SOURCES_UPLOAD_DIR = 'sources';
 const SOURCES_META_FILE = 'sources.yml';
 const SOURCES_MAX_FILE_SIZE = 10 /* MB */ * 1024 /* KB */ * 1024;
 const SOURCES_THUMB_SIZE = 100 /* px */;
@@ -133,8 +133,8 @@ if (!file_exists(RUNTIME_DIR)) {
 if (!file_exists(STORAGE_DIR)) {
   mkdir(STORAGE_DIR);
 }
-if (!file_exists(SOURCES_UPLOAD_DIR)) {
-  mkdir(SOURCES_UPLOAD_DIR);
+if (!file_exists(STORAGE_DIR . '/' . SOURCES_UPLOAD_DIR)) {
+  mkdir(STORAGE_DIR . '/' . SOURCES_UPLOAD_DIR);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -366,7 +366,7 @@ function load_sources_meta($check_thumbs)
 
   if ($check_thumbs) {
     foreach ($sources as $id => &$source) {
-      $sources[$id]['thumb'] = is_file(SOURCES_UPLOAD_DIR . '/' . $id . '.thumb.jpg');
+      $sources[$id]['thumb'] = is_file(STORAGE_DIR . '/' . SOURCES_UPLOAD_DIR . '/' . $id . '.thumb.jpg');
     }
   }
   return $sources;
@@ -410,7 +410,7 @@ function save_sources_meta($git_commit)
   file_put_contents(STORAGE_DIR . '/' . SOURCES_META_FILE, $file_content, LOCK_EX);
   exec('sh/update.sh ' .
     '"' . STORAGE_DIR . '" ' .
-    '"' . SOURCES_META_FILE . '" ' .
+    '"' . SOURCES_UPLOAD_DIR . ' ' . SOURCES_META_FILE . '" ' .
     '"' . $_SESSION[USER] . '" ' .
     '"' . $git_commit . '" ' .
     COMMIT_MERGE_TIME_THRESH . ' ' .
@@ -706,7 +706,7 @@ if (isset($_GET[ACTION])) {
               $file_id = $time . '.' . $j++;
             } while(array_key_exists($file_id, $sources_meta));
 
-            $storage_path = SOURCES_UPLOAD_DIR . '/' . $file_id;
+            $storage_path = STORAGE_DIR . '/' . SOURCES_UPLOAD_DIR . '/' . $file_id;
             $storage_file_path = $storage_path . $file_ext;
             $storage_thumb_file_path = $storage_path . '.thumb.jpg';
             $upload_successful = move_uploaded_file($file_tmp, $storage_file_path);
@@ -762,7 +762,7 @@ if (isset($_GET[ACTION])) {
           if (array_key_exists($d, $sources_meta)) {
             unset($sources_meta[$d]);
 
-            $image_files = glob(SOURCES_UPLOAD_DIR . '/' . $d . '*');
+            $image_files = glob(STORAGE_DIR . '/' . SOURCES_UPLOAD_DIR . '/' . $d . '*');
             foreach ($image_files as &$file) {
               unlink($file);
             }
@@ -1249,7 +1249,7 @@ if ($_SESSION[EDITING] && current_user_can(PERMISSION_LINK_SOURCE)) {
     <form>
       <div class="box-row">
 <?php
-    if (is_dir(SOURCES_UPLOAD_DIR) && is_writable(SOURCES_UPLOAD_DIR)) {
+    if (is_dir(STORAGE_DIR . '/' . SOURCES_UPLOAD_DIR) && is_writable(STORAGE_DIR . '/' . SOURCES_UPLOAD_DIR)) {
 ?>
         <input id="upload-new-source" type="file" multiple /><label for="upload-new-source" class="button drag-drop-visual-area">Hier klicken oder eine Datei hierhin schieben</label>
 <?php
@@ -1576,7 +1576,7 @@ if (!BETA) {
     const isMobile = <?=$is_mobile ? 'true' : 'false'?>;
     const currentLayoutId = '<?=$_GET['layout'] ?? ''?>';
     const maxSourceFileSize = <?=SOURCES_MAX_FILE_SIZE?>;
-    const sourcesPath = '<?=$server_url . SOURCES_UPLOAD_DIR?>/';
+    const sourcesPath = '<?=$server_url . STORAGE_DIR . '/' . SOURCES_UPLOAD_DIR?>/';
 
     let permissions = {
       <?php
