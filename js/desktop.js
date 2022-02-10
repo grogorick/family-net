@@ -6,12 +6,14 @@ s.bind('hovers', e =>
   let showHideDoppelgangerEdges = (n, hidden) =>
   {
     if (isDoppelgangerNode(n) && !isNodeSelected(n.id)) {
-      n._my.p._graphEdge.hidden = hidden;
+      // n._my.p._graphEdge.hidden = hidden;
+      n._my.p._graphEdge.color = hidden ? settings.edgeColorDoppelganger : settings.edgeColorDoppelgangerHover;
     }
     else if (isPersonNode(n) && !isNodeSelected(n.id)) {
       n._my.p._doppelgangers.forEach(d =>
       {
-        d._graphEdge.hidden = hidden;
+        // d._graphEdge.hidden = hidden;
+        d._graphEdge.color = hidden ? settings.edgeColorDoppelganger : settings.edgeColorDoppelgangerHover;
       });
     }
   }

@@ -12,7 +12,8 @@ const settings = {
   edgeColorWarning: '#E6AD92',
   edgeColorHighlight: '#000',
   edgeColorPreview: '#DDD',
-  edgeColorDoppelganger: '#EEE',
+  edgeColorDoppelganger: '#F7F7F7',
+  edgeColorDoppelgangerHover: '#DDD',
 
   gridStep: 20,
   mobileGraphClickDelay: 500,
@@ -1292,8 +1293,7 @@ function addPerson(p_raw, toData, toServer, toGraph, refreshGraph, doneCallback 
             label: 'Doppelganger',
             size: settings.edgeSize,
             type: getConnectionRelationSettings('Doppelganger').lineType,
-            color: settings.edgeColorDoppelganger,
-            hidden: true });
+            color: settings.edgeColorDoppelganger });
           p._graphEdge = s.graph.edges(d_id);
         }
       },
@@ -2092,7 +2092,7 @@ activeState.bind('activeNodes', e =>
     {
       delete d._graphNode.outer_border_size;
       if ('_graphEdge' in d) {
-        d._graphEdge.hidden = true;
+        d._graphEdge.color = settings.edgeColorDoppelganger;
       }
     });
   });
@@ -2102,7 +2102,7 @@ activeState.bind('activeNodes', e =>
     {
       d._graphNode.outer_border_size = settings.nodeBorderSizeDoppelganger;
       if ('_graphEdge' in d) {
-        d._graphEdge.hidden = false;
+        d._graphEdge.color = settings.edgeColorDoppelgangerHover;
       }
     });
   });
