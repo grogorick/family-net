@@ -140,6 +140,15 @@ class PersonFunctions
     return n + ((b || d) ? ' \n ' + b + ' — ' + d : '');
   }
 
+  get_longDetailedDisplayString()
+  {
+    let n = this.get_fullName();
+    let b = this.get_birthDate();
+    let d = this.get_deathDate();
+    let o = this.get_notes();
+    return n + ((b || d) ? ' \n ' + b + ' — ' + d : '') + (o.length ? ' \n\n ' + o : '');
+  }
+
   get_allTextData()
   {
     return [this._.f, this._.l, this._.m, this._.o];

@@ -25,7 +25,7 @@ s.bind('hovers', e =>
       hoverTimeouts[n._my.p.t] = setTimeout(() => {
         console.log('long hovered to show details');
         delete hoverTimeouts[n._my.p.t];
-        n.label = n._my.p.get_fullName() + ' \n ' + n._my.p.get_birthDate() + ' — ' + n._my.p.get_deathDate() + (n._my.p.get_notes().length ? ' \n\n ' + n._my.p.get_notes() : '');
+        n.label = n._my.p.get_longDetailedDisplayString();
         s.refresh();
       }, settings.extendedLabelHoverDelay);
     }

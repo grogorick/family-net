@@ -425,17 +425,20 @@ function splitDate(str)
 function dateString(d)
 {
   let s = splitDate(d);
+  for (i in s) {
+    s[i] = s[i] ? ('0' + s[i]).slice(i > 0 ? -2 : -4) : '';
+  }
   if (s[2] && s[1] && s[0]) {
-    return s.reverse().join('.');
+    return s.reverse().join('. ');
   }
   if (s[2] && s[1]) {
-    return s[2] + '.' + s[1];
+    return s[2] + '. ' + s[1];
   }
   if (s[1] && s[0]) {
-    return s[1] + '.' + s[0];
+    return s[1] + '. ' + s[0];
   }
   if (s[2] && s[0]) {
-    return s[2] + '.__.' + s[1];
+    return s[2] + '. _. ' + s[0];
   }
   return s.join('');
 }

@@ -174,7 +174,7 @@
           context,
           settings('approximateLabelWidth'),
           fontSize,
-          lines[0]
+          lines.reduce((maxLine, line) => (maxLine.length > line.length) ? maxLine : line)
         );
 
       var x = Math.round(node[prefix + 'x']),
