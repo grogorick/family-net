@@ -1104,15 +1104,26 @@ function showPersonInfo(n)
       return;
     }
     let p = n_p._;
-    let pb = splitDate(p.b);
     let url = document.createElement('a');
     url.innerHTML = '&#x1F517;';
     url.href = serverURL + (serverURL.endsWith('/') ? '?' : '&') + 'show=' + n_p.t;
     personMenuPersonURL.innerHTML = '';
     personMenuPersonURL.appendChild(url);
+    if (navigator.canShare) {
+      url.addEventListener('click', e => {
+        e.preventDefault();
+        let shareText = [p.get_rufName(), p.get_lastNames()].filter(Boolean).join(' ') + ' - ' + document.title;
+        navigator.share({
+          title: shareText,
+          text: shareText,
+          url: url.href
+        });
+      });
+    }
     personMenuFirstName.value = p.f;
     personMenuLastName.value = p.l;
     personMenuBirthName.value = p.m;
+    let pb = splitDate(p.b);
     personMenuBirthDay.value = pb[2];
     personMenuBirthMonth.value = pb[1];
     personMenuBirthYear.value = pb[0];
