@@ -94,6 +94,10 @@ button {
   z-index: 1;
 }
 
+.mobile-client .mobile-scrollable {
+  overflow-y: auto;
+}
+
 .box-padding:not(.box-minimized) {
   padding: 20pt;
 }
@@ -394,12 +398,14 @@ button.selected, .button.selected, input[type="submit"].selected {
   font-weight: bold;
 }
 
+#sources.box {
+  overflow-y: auto;
+}
 .desktop-client #sources.box {
   top: 69pt;
   left: 10pt;
   font-size: 85%;
   max-height: calc(100vh - 69pt - 2 * 20pt);
-  overflow-y: auto;
 }
 #sources.box > .box-minimize-buttons {
   text-align: left;
@@ -418,6 +424,10 @@ button.selected, .button.selected, input[type="submit"].selected {
   margin: 20pt 0;
 }
 
+
+#sources.box #sources-list {
+  /* max-height: calc(100% - 20pt); */
+}
 
 #sources.box .source-preview-img {
   max-width: 100px;
@@ -445,9 +455,12 @@ button.selected, .button.selected, input[type="submit"].selected {
 }
 
 
-#source-annotator .box {
+.desktop-client #source-annotator .box {
   width: 80vw;
   height: 80vh;
+}
+.mobile-client #source-annotator .box {
+  top: 0;
 }
 .annotator, .annotator-zoom-container, .annotator-content, .annotator-img, .annotator-controls {
   border: 0;

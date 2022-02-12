@@ -25,6 +25,12 @@ document.getElementById('mobile-help').addEventListener('click', () =>
   document.querySelector('#help .box-restore').click();
 });
 
+document.getElementById('mobile-sources').addEventListener('click', () =>
+{
+  mainMenu.classList.toggle('hidden');
+  document.querySelector('#sources .box-restore').click();
+});
+
 document.getElementById('mobile-log').addEventListener('click', () =>
 {
   mainMenu.classList.toggle('hidden');

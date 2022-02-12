@@ -2,7 +2,7 @@
 //phpinfo();
 
 // browser cache fix for scripts and styles
-const V = 25.5;
+const V = 25.6;
 const V_ = '?v=' . V;
 
 const MAINTENANCE = false;
@@ -908,14 +908,9 @@ html_start();
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 ?>
 
-  <div id="account" class="box mobile-inverse-hidden">
+  <div id="account" class="box mobile-inverse-hidden mobile-scrollable">
     <div id="mobile-menu-close" class="button mobile-only hidden-toggle" data-hidden-toggle-target="#account">X</div><!--
     --><span id="account-name"><?=$_SESSION[USER]?></span><!--
-    --><hr class="mobile-only" /><!--
-    --><div class="button mobile-menu-label mobile-only">Ansicht</div><!--
-    --><div id="mobile-switch-layout-net" class="button mobile-only">Netz</div><!--
-    --><div id="mobile-switch-layout-tree" class="button mobile-only">Baum</div><!--
-    --><div id="mobile-switch-layout-treeYearBased" class="button mobile-only">Jahresbaum</div><!--
     --><hr class="mobile-only" /><!--
     <?php
       if (current_user_can(PERMISSION_EDIT) && !$useLayout) {
@@ -926,6 +921,13 @@ html_start();
     --><a href="<?=$server_url?>?stop-edit" class="button" id="stop-edit" title="Bearbeitungsmodus beenden">Fertig<span id="stop-edit-timer"></span></a><!--
     <?php } } ?>
     --><div id="other-editor" class="button hidden"></div><!--
+    --><hr class="mobile-only" /><!--
+    --><div class="button mobile-menu-label mobile-only">Ansicht</div><!--
+    --><div id="mobile-switch-layout-net" class="button mobile-only">Netz</div><!--
+    --><div id="mobile-switch-layout-tree" class="button mobile-only">Baum</div><!--
+    --><div id="mobile-switch-layout-treeYearBased" class="button mobile-only">Jahresbaum</div><!--
+    --><hr class="mobile-only" /><!--
+    --><div id="mobile-sources" class="button mobile-only">Quellen</div><!--
     --><div id="mobile-log" class="button mobile-only">Änderungsverlauf</div><!--
     --><div id="mobile-help" class="button mobile-only">Hilfe</div><!--
     --><hr class="mobile-only" /><!--
@@ -1144,7 +1146,7 @@ if (current_user_can(PERMISSION_ADMIN)) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 ?>
 
-  <div id="person-form" class="box no-shadow hidden">
+  <div id="person-form" class="box no-shadow hidden mobile-scrollable">
     <div class="box-padding box-shadow">
       <div id="person-form-doppelganger" class="box-row opt opt-new">
         <h2>Doppelgänger</h2>
