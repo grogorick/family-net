@@ -48,3 +48,6 @@ Infinite edit history
 - PHP >= 7.4
   (Extensions: gd, Imagick, openssl)
 - Git
+
+## Screenshots
+![Screenshots](../docs/screenshot.jpg)
