@@ -1210,7 +1210,7 @@ personMenuEdit.addEventListener('click', e =>
     console.log('click person-form-edit');
     hideForm(personMenuForm);
     editPerson({
-        t: activeState.nodes()[0].id,
+        t: activeState.nodes()[0]._my.p._.t,
         f: personMenuFirstName.value.trim(),
         l: personMenuLastName.value.trim(),
         m: personMenuBirthName.value.trim(),
