@@ -1,4 +1,4 @@
-# Family Tree
+# FamilyNet
 
 Minimal open source genealogy management &mdash; trace lineages in your family history or visualize your family tree or whole family network.
 
