@@ -59,6 +59,7 @@ const CD_STORAGE_DIR = 'cd ' . STORAGE_DIR . '; ';
 
 const DESKTOP_ = 'd';
 const MOBILE_ = 'm';
+const BOTH_ = DESKTOP_ . MOBILE_;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -155,10 +156,18 @@ if ($accounts) {
       $_SESSION[TYPE] = $a[TYPE_];
       $_SESSION[EDITING] = false;
       if (array_key_exists(FIRST_LOGIN_, $a)) {
-        $first_login = true;
+        switch ($a[FIRST_LOGIN_]) {
+          case BOTH_: $first_login = true; break;
+          case DESKTOP_: $first_login = !$is_mobile; break;
+          case MOBILE_: $first_login = $is_mobile; break;
+        }
       }
       else if (array_key_exists(ACCOUNT_UPGRADED_, $a)) {
-        $account_upgraded = true;
+        switch ($a[ACCOUNT_UPGRADED_]) {
+          case BOTH_: $account_upgraded = true; break;
+          case DESKTOP_: $account_upgraded = !$is_mobile; break;
+          case MOBILE_: $account_upgraded = $is_mobile; break;
+        }
       }
     }
   }
@@ -217,7 +226,7 @@ if ((!$accounts || current_user_can(PERMISSION_ADMIN)) && isset($_POST[ADMIN_ACT
         USER_ => trim($_POST[USER]),
         PASSWORD_ => password_hash($_POST[PASSWORD], PASSWORD_BCRYPT),
         TYPE_ => $_POST[TYPE],
-        FIRST_LOGIN_ => true];
+        FIRST_LOGIN_ => BOTH_];
       save_accounts();
       if ($ist_first_account) {
         init($accounts[0][USER_]);
@@ -230,7 +239,7 @@ if ((!$accounts || current_user_can(PERMISSION_ADMIN)) && isset($_POST[ADMIN_ACT
     case 'edit-type': {
       $i = $_POST[USER];
       if (TYPES[$accounts[$i][TYPE_]]['level'] < TYPES[$_POST[TYPE]]['level']) {
-        $accounts[$i][ACCOUNT_UPGRADED_] = true;
+        $accounts[$i][ACCOUNT_UPGRADED_] = BOTH_;
       }
       $accounts[$i][TYPE_] = $_POST[TYPE];
       save_accounts();
@@ -511,8 +520,20 @@ if (isset($_GET[ACTION])) {
     {
       $a = &get_account($_SESSION[USER]);
       if ($a) {
-        if (array_key_exists(FIRST_LOGIN_, $a)) { unset($a[FIRST_LOGIN_]); }
-        if (array_key_exists(ACCOUNT_UPGRADED_, $a)) { unset($a[ACCOUNT_UPGRADED_]); }
+        if (array_key_exists(FIRST_LOGIN_, $a)) {
+          switch ($a[FIRST_LOGIN_]) {
+            case BOTH_: $a[FIRST_LOGIN_] = ($is_mobile ? DESKTOP_ : MOBILE_); break;
+            case DESKTOP_: if (!$is_mobile) unset($a[FIRST_LOGIN_]); break;
+            case MOBILE_: if ($is_mobile) unset($a[FIRST_LOGIN_]); break;
+          }
+        }
+        if (array_key_exists(ACCOUNT_UPGRADED_, $a)) {
+          switch ($a[ACCOUNT_UPGRADED_]) {
+            case BOTH_: $a[ACCOUNT_UPGRADED_] = ($is_mobile ? DESKTOP_ : MOBILE_); break;
+            case DESKTOP_: if (!$is_mobile) unset($a[ACCOUNT_UPGRADED_]); break;
+            case MOBILE_: if ($is_mobile) unset($a[ACCOUNT_UPGRADED_]); break;
+          }
+        }
         save_accounts();
       }
       exit;
@@ -991,7 +1012,7 @@ if (current_user_can(PERMISSION_ADMIN)) {
         <tr>
           <td>
             <?=$a[USER_]?>
-            <?=$a[FIRST_LOGIN_] ? '*' : ($a[ACCOUNT_UPGRADED_] ? '+' : '')?>
+            <?=$a[FIRST_LOGIN_] ? 'new (' . $a[FIRST_LOGIN_] . ')' : ($a[ACCOUNT_UPGRADED_] ? 'up (' . $a[ACCOUNT_UPGRADED_] . ')' : '')?>
           </td>
           <td>
 <?php
