@@ -30,7 +30,7 @@ const TYPES = [
 const FIRST_LOGIN_ = 'f';
 const ACCOUNT_UPGRADED_ = 'a';
 
-const EXTENDED_LOG = 'e';
+const EXTENDED_LOG_ = 'e';
 
 const ACTION = 'action';
 const ADMIN_ACTION = 'admin-action';
@@ -41,8 +41,6 @@ const CURRENT_EDITOR_TIMEOUT = 10 * 60;
 
 const SETTINGS_FILE = RUNTIME_DIR . '/settings.yml';
 const CAMERA = 'camera';
-const CAMERA_DESKTOP = 'd';
-const CAMERA_MOBILE = 'm';
 const PERSON_PREVIEW_DISPLAY_STRING = 'personPreviewDisplayString';
 
 const STORAGE_DIR = 'storage';
@@ -58,6 +56,9 @@ const SOURCES_THUMB_QUALITY = 40;
 
 const COMMIT_MERGE_TIME_THRESH = 3600;
 const CD_STORAGE_DIR = 'cd ' . STORAGE_DIR . '; ';
+
+const DESKTOP_ = 'd';
+const MOBILE_ = 'm';
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -118,7 +119,7 @@ $accounts = []; $first_login = false; $account_upgraded = false; $account_not_fo
 $settings = [ CAMERA => ['default' => [ 'x' => 0, 'y' => 0, 'z' => 1] ], PERSON_PREVIEW_DISPLAY_STRING => 'default' ];
 $data = [ PERSONS => [], CONNECTIONS => [] ];
 
-$server_url = substr($_SERVER["PHP_SELF"], 0, 1 + strrpos($_SERVER["PHP_SELF"], '/'));
+$server_url = substr($_SERVER['PHP_SELF'], 0, 1 + strrpos($_SERVER['PHP_SELF'], '/'));
 
 $useLayout = isset($_GET['layout']);
 
@@ -340,7 +341,7 @@ function prepare_user_settings($settings)
 {
   global $is_mobile;
   $user_settings = $settings;
-  $cam_client = $is_mobile ? CAMERA_MOBILE : CAMERA_DESKTOP;
+  $cam_client = $is_mobile ? MOBILE_ : DESKTOP_;
   if (array_key_exists($_SESSION[USER], $user_settings[CAMERA]) && array_key_exists($cam_client, $user_settings[CAMERA][$_SESSION[USER]])) {
     $user_settings[CAMERA] = $user_settings[CAMERA][$_SESSION[USER]][$cam_client];
   }
@@ -540,12 +541,12 @@ if (isset($_GET[ACTION])) {
     case 'toggle-extended-log':
     {
       if (current_user_can(PERMISSION_ADMIN)) {
-        if (array_key_exists(EXTENDED_LOG, $_SESSION)) {
-          unset($_SESSION[EXTENDED_LOG]);
+        if (array_key_exists(EXTENDED_LOG_, $_SESSION)) {
+          unset($_SESSION[EXTENDED_LOG_]);
           echo json_encode(false);
         }
         else {
-          $_SESSION[EXTENDED_LOG] = true;
+          $_SESSION[EXTENDED_LOG_] = true;
           echo json_encode(true);
         }
       }
@@ -555,7 +556,7 @@ if (isset($_GET[ACTION])) {
     // settings
     case 'moveCamera':
     {
-      $settings[CAMERA][$_SESSION[USER]][$is_mobile ? CAMERA_MOBILE : CAMERA_DESKTOP] = $d;
+      $settings[CAMERA][$_SESSION[USER]][$is_mobile ? MOBILE_ : DESKTOP_] = $d;
       save_settings();
       exit;
     }
@@ -672,7 +673,7 @@ if (isset($_GET[ACTION])) {
           $sources_meta = load_sources_meta(false);
           $new_sources_meta = [];
 
-          if (extension_loaded('imagick') && class_exists("Imagick")) {
+          if (extension_loaded('imagick') && class_exists('Imagick')) {
             $do_thumbs = true;
           }
           else {
@@ -1132,7 +1133,7 @@ if (current_user_can(PERMISSION_ADMIN)) {
       </div>
       <div>
         <form>
-          <input type="checkbox" id="log-extended" <?=array_key_exists(EXTENDED_LOG, $_SESSION) ? 'checked' : ''?> />
+          <input type="checkbox" id="log-extended" <?=array_key_exists(EXTENDED_LOG_, $_SESSION) ? 'checked' : ''?> />
           <label for="log-extended">Erweitert</label>
         </form>
       </div>
@@ -1826,7 +1827,7 @@ function stopEditing()
 
 function get_log($commit_count = 0)
 {
-  exec(CD_STORAGE_DIR . 'git log --author-date-order --format=format:\'%h|||%ai|||%an|||%s\'' . ((current_user_can(PERMISSION_ADMIN) && array_key_exists(EXTENDED_LOG, $_SESSION)) ? ' --all' : '') . ($commit_count > 0 ? ' -' . $commit_count : ''), $out);
+  exec(CD_STORAGE_DIR . 'git log --author-date-order --format=format:\'%h|||%ai|||%an|||%s\'' . ((current_user_can(PERMISSION_ADMIN) && array_key_exists(EXTENDED_LOG_, $_SESSION)) ? ' --all' : '') . ($commit_count > 0 ? ' -' . $commit_count : ''), $out);
   $out = array_map(function($line) {
     $line = explode('|||', $line);
     $line[1] = preg_replace('/ [+-]\d{4}/', '', $line[1]);
