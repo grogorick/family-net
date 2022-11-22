@@ -385,6 +385,32 @@ function getGraphPositionFromScreenPosition(x, y)
   };
 }
 
+function getNodeAtGraphPosition(x, y, searchCircleRadius = 0)
+{
+  let nodes = s.renderers[0].nodesOnScreen;
+  for (i = 0; i < nodes.length; i++) {
+    let n = nodes[i],
+        dx = x - n.x,
+        dy = y - n.y;
+
+    if (!n.hidden && Math.sqrt(dx * dx + dy * dy) < (n.size + searchCircleRadius))
+      return n;
+  }
+  return null;
+}
+
+function getNodeAtScreenPosition(x, y, searchCircleRadius = 0)
+{
+  let pos = getGraphPositionFromScreenPosition(x, y);
+  if (searchCircleRadius > 0) {
+    let pos2 = getGraphPositionFromScreenPosition(x + searchCircleRadius, y),
+        dx = pos2.x - pos.x,
+        dy = pos2.y - pos.y;
+    searchCircleRadius = Math.sqrt(dx * dx + dy * dy);
+  }
+  return getNodeAtGraphPosition(pos.x, pos.y, searchCircleRadius);
+}
+
 function getGraphPositionFromEvent(e)
 {
   return getGraphPositionFromScreenPosition(e.data.captor.clientX, e.data.captor.clientY);
@@ -2148,7 +2174,32 @@ function bindDefaultViewerEvents()
     }
   });
   s.bind('clickNode', cdcNode.click.bind(cdcNode));
-  s.bind('doubleClickNode', cdcNode.doubleClick.bind(cdcNode));
+
+  if (!isMobile) {
+    s.bind('doubleClickNode', cdcNode.doubleClick.bind(cdcNode));
+  }
+  else {
+    graphElement.addEventListener('contextmenu', e =>
+    {
+      e.preventDefault();
+      let n = getNodeAtScreenPosition(e.clientX, e.clientY, 10);
+      console.log(['longTap', n, e]);
+      if (n !== null) {
+        e.data = { node: n };
+        if (!isPersonNode(n) && !isDoppelgangerNode(n)) {
+          return;
+        }
+        if (!currentLayoutId) {
+          selectDirectRelatives(e);
+        }
+        else {
+          deselectAll();
+          layouts[currentLayoutId].apply(n.id);
+        }
+      }
+      return false;
+    }, false);
+  }
 
   s.bind('clickEdge', e =>
   {
