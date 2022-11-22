@@ -387,7 +387,7 @@ function getGraphPositionFromScreenPosition(x, y)
 
 function getGraphPositionFromEvent(e)
 {
-  return getGraphPositionFromScreenPosition(e.data.captor.x, e.data.captor.y);
+  return getGraphPositionFromScreenPosition(e.data.captor.clientX, e.data.captor.clientY);
 }
 
 function getConnectionRelationSettings(r)
