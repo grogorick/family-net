@@ -380,8 +380,8 @@ function getGraphPositionFromScreenPosition(x, y)
   let c = s.camera;
   let factor = Math.max((bounds.maxX - bounds.minX) / r.width, (bounds.maxY - bounds.minY) / r.height);
   return {
-    x: c.x * factor + x * factor * c.ratio,
-    y: c.y * factor + y * factor * c.ratio
+    x: (x - r.width / 2) * factor * c.ratio + c.x * factor,
+    y: (y - r.height/ 2) * factor * c.ratio + c.y * factor
   };
 }
 

@@ -913,15 +913,15 @@ html_start();
 
   <div id="mobile-actions" class="box mobile-only">
     <div id="mobile-menu-toggle" class="button hidden-toggle" data-hidden-toggle-target="#account" style="">&#9776;</div><!--
-    <?php if ($_SESSION[EDITING]) {
+    <?php if ($_SESSION[EDITING] || $first_login || $account_upgraded) {
       if (current_user_can(PERMISSION_CREATE_PERSONS)) { ?>
-    --><div id="mobile-action-new-person" class="button mobile-action-new-person" style=""></div><!--
+    --><div id="mobile-action-new-person<?=$_SESSION[EDITING] ? '' : '-tutorial'?>" class="button mobile-action-new-person<?=($first_login || $account_upgraded) ? ' hidden' : ''?>" style=""></div><!--
       <?php }
-            if (current_user_can(PERMISSION_CREATE_CONNECTIONS)) { ?>
-    --><div id="mobile-action-new-connection" class="button mobile-action-new-connection" style=""><span></span></div><!--
+      if (current_user_can(PERMISSION_CREATE_CONNECTIONS)) { ?>
+    --><div id="mobile-action-new-connection<?=$_SESSION[EDITING] ? '' : '-tutorial'?>" class="button mobile-action-new-connection<?=($first_login || $account_upgraded) ? ' hidden' : ''?>" style=""><span></span></div><!--
       <?php }
       if (current_user_can(PERMISSION_EDIT_PERSONS)) { ?>
-    --><div id="mobile-action-move-person" class="button mobile-action-move-person" style=""></div><!--
+    --><div id="mobile-action-move-person<?=$_SESSION[EDITING] ? '' : '-tutorial'?>" class="button mobile-action-move-person<?=($first_login || $account_upgraded) ? ' hidden' : ''?>" style=""></div><!--
       <?php }
     } ?>-->
   </div><!-- mobile-actions -->
@@ -938,24 +938,24 @@ html_start();
       if (current_user_can(PERMISSION_EDIT) && !$useLayout) {
         if (!$_SESSION[EDITING]) {
     ?>
-    --><a href="<?=$server_url?>?start-edit" class="button" id="start-edit" title="Bearbeitungsmodus starten">Bearbeiten</a><!--
+    --><a href="<?=$server_url?>?start-edit" class="button" id="start-edit" title="Bearbeitungsmodus starten"><span>Bearbeiten</span></a><!--
     <?php } else { ?>
-    --><a href="<?=$server_url?>?stop-edit" class="button" id="stop-edit" title="Bearbeitungsmodus beenden">Fertig<span id="stop-edit-timer"></span></a><!--
+    --><a href="<?=$server_url?>?stop-edit" class="button" id="stop-edit" title="Bearbeitungsmodus beenden"><span>Fertig</span><span id="stop-edit-timer"></span></a><!--
     <?php } } ?>
     --><div id="other-editor" class="button hidden"></div><!--
     --><hr class="mobile-only" /><!--
-    --><div class="button mobile-menu-label mobile-only">Ansicht</div><!--
-    --><div id="mobile-switch-layout-net" class="button mobile-only">Netz</div><!--
-    --><div id="mobile-switch-layout-tree" class="button mobile-only">Baum</div><!--
-    --><div id="mobile-switch-layout-treeYearBased" class="button mobile-only">Jahresbaum</div><!--
+    --><div class="button mobile-menu-label mobile-only"><span>Ansicht</span></div><!--
+    --><div id="mobile-switch-layout-net" class="button mobile-only"><span>Netz</span></div><!--
+    --><div id="mobile-switch-layout-tree" class="button mobile-only"><span>Baum</span></div><!--
+    --><div id="mobile-switch-layout-treeYearBased" class="button mobile-only"><span>Jahresbaum</span></div><!--
     --><hr class="mobile-only" /><!--
-    --><div id="mobile-sources" class="button mobile-only">Quellen</div><!--
-    --><div id="mobile-log" class="button mobile-only">Änderungsverlauf</div><!--
-    --><div id="mobile-help" class="button mobile-only">Hilfe</div><!--
+    --><div id="mobile-sources" class="button mobile-only"><span>Quellen</span></div><!--
+    --><div id="mobile-log" class="button mobile-only"><span>Änderungsverlauf</span></div><!--
+    --><div id="mobile-help" class="button mobile-only"><span>Hilfe</span></div><!--
     --><hr class="mobile-only" /><!--
-    --><div id="mobile-admin" class="button mobile-only">Admin</div><!--
-    --><div id="mobile-settings" class="button mobile-only">Einstellungen</div><!--
-    --><a id="logout" href="<?=$server_url?>?logout" class="button">Abmelden</a><!--
+    --><div id="mobile-admin" class="button mobile-only"><span>Admin</span></div><!--
+    --><div id="mobile-settings" class="button mobile-only"><span>Einstellungen</span></div><!--
+    --><a id="logout" href="<?=$server_url?>?logout" class="button"><span>Abmelden</span></a><!--
 
     --><div id="search-desktop" class="desktop-only">
         <span id="search-toggle-show" class="button search-button hidden-toggle focus-toggle" data-hidden-toggle-target="#search-toggle-show,#search-box" data-focus-toggle-target="#search-input" title="Suchen"></span>
