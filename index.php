@@ -1012,7 +1012,7 @@ if (current_user_can(PERMISSION_ADMIN)) {
         <tr>
           <td>
             <?=$a[USER_]?>
-            <?=$a[FIRST_LOGIN_] ? 'new (' . $a[FIRST_LOGIN_] . ')' : ($a[ACCOUNT_UPGRADED_] ? 'up (' . $a[ACCOUNT_UPGRADED_] . ')' : '')?>
+            <?=$a[FIRST_LOGIN_] ? '(new: ' . $a[FIRST_LOGIN_] . ')' : ($a[ACCOUNT_UPGRADED_] ? '(up: ' . $a[ACCOUNT_UPGRADED_] . ')' : '')?>
           </td>
           <td>
 <?php
