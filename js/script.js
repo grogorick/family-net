@@ -2246,18 +2246,13 @@ function bindDefaultViewerEvents()
 let searchInput = document.querySelector('#search-input');
 searchInput.addEventListener('input', e =>
 {
-  let search = searchInput.value;
+  let search = searchInput.value.trim().toLowerCase();
   activeState.dropNodes();
   activeState.dropEdges();
-  if (search.trim().length > 0) {
-    let s = search
-      .replaceAll(/[.+?|()]/g, '\\$0')
-      .replaceAll('*', '.+')
-      .split(' ')
-      .map(v => '(?=.*' + v + ')')
-      .join('');
-    let searchRE = new RegExp('^' + s + '.*$', 'i');
-    activeState.addNodes(data.graph.persons.filter(p => p.get_allTextData().join('').match(searchRE)).map(p => p.t));
+  if (search.length > 0) {
+    let list = data.graph.persons;
+    search.split(' ').forEach(s => list = list.filter(p => p.get_allTextData().join('').toLowerCase().match(s)));
+    activeState.addNodes(list.map(p => p.t));
   }
 });
 
