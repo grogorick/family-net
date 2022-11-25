@@ -1254,6 +1254,7 @@ personMenuDelete.addEventListener('click', e =>
     let t = activeState.nodes()[0].id;
     let connections = getDataPersonConnections(t);
     if (connections.length) {
+      showMessage('Nur Personen ohne Verbindungen können entfernt werden');
       console.log(['cancelled - person to delete must not have connections', connections]);
       return;
     }
