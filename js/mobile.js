@@ -234,5 +234,19 @@ s.bind('coordinatesUpdated', e =>
 }
 else { // only viewing when an auto layout is used
 
-  bindDefaultViewerEvents();
+  s.bind('clickNode', event_selectPersonAndShowInfo);
+  graphElement.addEventListener('contextmenu', e =>
+  {
+    e.preventDefault();
+    let n = getNodeAtScreenPosition(e.clientX, e.clientY, 10);
+    console.log(['longTap', n, e]);
+    if (n !== null) {
+      e.data = { node: n };
+      event_selectPersonAndDirectRelatives(e);
+    }
+    return false;
+  }, false);
+
+  bindCommonViewerEvents();
+
 }

@@ -2147,61 +2147,8 @@ activeState.bind('activeNodes', e =>
   s.refresh();
 });
 
-function bindDefaultViewerEvents()
+function bindCommonViewerEvents()
 {
-  let cdcNode = clickDoubleClick(
-  e =>
-  {
-    let n = e.data.node;
-    deselectAll(null, false, [n.id]);
-    if (isPersonNode(n) || isDoppelgangerNode(n)) {
-      activeState.addNodes(n.id);
-      s.refresh();
-      showPersonInfo(n);
-    }
-  },
-  e =>
-  {
-    let n = e.data.node;
-    if (!isPersonNode(n) && !isDoppelgangerNode(n)) {
-      return;
-    }
-    if (!currentLayoutId) {
-      selectDirectRelatives(e);
-    }
-    else {
-      deselectAll();
-      layouts[currentLayoutId].apply(n.id);
-    }
-  });
-  s.bind('clickNode', cdcNode.click.bind(cdcNode));
-
-  if (!isMobile) {
-    s.bind('doubleClickNode', cdcNode.doubleClick.bind(cdcNode));
-  }
-  else {
-    graphElement.addEventListener('contextmenu', e =>
-    {
-      e.preventDefault();
-      let n = getNodeAtScreenPosition(e.clientX, e.clientY, 10);
-      console.log(['longTap', n, e]);
-      if (n !== null) {
-        e.data = { node: n };
-        if (!isPersonNode(n) && !isDoppelgangerNode(n)) {
-          return;
-        }
-        if (!currentLayoutId) {
-          selectDirectRelatives(e);
-        }
-        else {
-          deselectAll();
-          layouts[currentLayoutId].apply(n.id);
-        }
-      }
-      return false;
-    }, false);
-  }
-
   s.bind('clickEdge', e =>
   {
     let ed = e.data.edge;
@@ -2241,6 +2188,32 @@ function bindDefaultViewerEvents()
   });
 
   let startedWith_coordinatesUpdated = false;
+}
+
+function event_selectPersonAndShowInfo(e)
+{
+    let n = e.data.node;
+    deselectAll(null, false, [n.id]);
+    if (isPersonNode(n) || isDoppelgangerNode(n)) {
+      activeState.addNodes(n.id);
+      s.refresh();
+      showPersonInfo(n);
+    }
+}
+
+function event_selectPersonAndDirectRelatives(e)
+{
+    let n = e.data.node;
+    if (!isPersonNode(n) && !isDoppelgangerNode(n)) {
+      return;
+    }
+    if (!currentLayoutId) {
+      selectDirectRelatives(e);
+    }
+    else {
+      deselectAll();
+      layouts[currentLayoutId].apply(n.id);
+    }
 }
 
 

@@ -98,21 +98,7 @@ let cdcNode = clickDoubleClick(
       }
     }
   },
-  e =>
-  {
-    console.log(['doubleClickNode', e]);
-    let n = e.data.node;
-    if (!isPersonNode(n) && !isDoppelgangerNode(n)) {
-      return;
-    }
-    if (!currentLayoutId) {
-      selectDirectRelatives(e);
-    }
-    else {
-      deselectAll();
-      layouts[currentLayoutId].apply(n.id);
-    }
-  });
+  event_selectPersonAndDirectRelatives);
 
 s.bind('clickNode', cdcNode.click.bind(cdcNode));
 s.bind('doubleClickNode', cdcNode.doubleClick.bind(cdcNode));
@@ -299,6 +285,10 @@ lasso.bind('selectedNodes', (e) =>
 }
 else { // only viewing when an auto layout is used
 
-bindDefaultViewerEvents();
+  let cdcNode = clickDoubleClick(event_selectPersonAndShowInfo, event_selectPersonAndDirectRelatives);
+  s.bind('clickNode', cdcNode.click.bind(cdcNode));
+  s.bind('doubleClickNode', cdcNode.doubleClick.bind(cdcNode));
+
+  bindCommonViewerEvents();
 
 }
