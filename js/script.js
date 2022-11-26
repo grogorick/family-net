@@ -525,6 +525,73 @@ function moveChildConnectionNodes(nodes)
   });
 }
 
+function getRelationships(p1, p2)
+{
+  let ancestors2 = cacheAncestors(p2._my.p._, p1._my.p._);
+  if (p1.id in ancestors2) {
+    let a = ancestors2[p1.id];
+    return [relationshipMatrix[0]['' + a.degree]];
+  }
+
+  let ancestors1 = cacheAncestors(p1._my.p._, p2._my.p._);
+  if (p2.id in ancestors1) {
+    let a = ancestors1[p2.id];
+    return [false, relationshipMatrix[0]['' + a.degree]];
+  }
+
+  return false;
+}
+
+function cacheAncestors(p, pCancel)
+{
+  let dict = {},
+      found = false,
+      up = (p, degree) => {
+        p._parents.forEach(pp_ => {
+          let pp = pp_.p._;
+          if (!found) {
+            console.log(degree, pp);
+            dict[pp.t] = { p: pp, degree: degree };
+            if (pp.t === pCancel.t)
+              found = true;
+            else
+              up(pp, degree + 1);
+          }
+        });
+      };
+  up(p, 1);
+  return dict;
+}
+
+let relationshipMatrix = [];
+(() => {
+  let mv = 'mutter/-vater',
+      ts = 'tochter/-sohn',
+      gens = ['Alt', 'Ober', 'Stamm', 'Ahnen', 'Urahnen', 'Erz', 'Erzahnen'],
+      subgens = ['', 'groß', 'urgroß'],
+      urs = ur => ur > 2 ? '(x' + (ur + 1) + ')' : 'ur'.repeat(ur);
+    relationshipMatrix = [{
+      '3': [ 'Urgroß' + mv ],
+      '2': [ 'Groß' + mv ],
+      '1': [ 'Mutter/Vater' ],
+      '-1': [ 'Tochter/Sohn' ],
+      '-2': [ 'Enkel' + ts ],
+      '-3': [ 'Urenkel' + ts ],
+    }];
+  for (let gen in gens) {
+    gen = parseInt(gen);
+    for (let subgen in subgens) {
+      subgen = parseInt(subgen);
+      let ur = 1 + 3 * gen + subgen;
+      relationshipMatrix[0]['' + (3 + ur)] = [ 'Ur' + urs(ur) + 'groß' + mv, gens[gen] + subgens[subgen] + mv ];
+    }
+  }
+  for (let ur = 0; ur < 3 * gens.length + 1; ++ur) {
+    relationshipMatrix[0]['-' + (3 + ur)] = [ 'Ur' + urs(ur) + 'enkel' + ts ];
+  }
+})();
+console.log(relationshipMatrix[0]);
+
 
 // load from file
 // ------------------------------------

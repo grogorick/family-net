@@ -98,7 +98,29 @@ let cdcNode = clickDoubleClick(
       }
     }
   },
-  event_selectPersonAndDirectRelatives);
+  e => {
+    if (!multipleKeyPressed(e))
+      event_selectPersonAndDirectRelatives(e);
+    else  {
+      if (activeState.nodes().length == 1) {
+        let node1 = activeState.nodes()[0];
+        let node2 = e.data.node;
+        let r = getRelationships(node1, node2),
+            p1 = node1._my.p._.get_shortDisplayString(),
+            p2 = node2._my.p._.get_shortDisplayString(),
+            msg = [];
+        if (r) {
+          if (r[0])
+            msg.push(p1 + ' ist ' + '<b>' + r[0] + '</b> von ' + p2);
+          if (r[1])
+            msg.push(p2 + ' ist ' + '<b>' + r[1] + '</b> von ' + p1);
+        }
+        else
+          msg.push(p1 + ' ist nicht in gerader Linie verwandt mit ' + p2);
+        showMessage(msg.join('<br>'));
+      }
+    }
+  });
 
 s.bind('clickNode', cdcNode.click.bind(cdcNode));
 s.bind('doubleClickNode', cdcNode.doubleClick.bind(cdcNode));
