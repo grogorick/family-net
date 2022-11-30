@@ -296,9 +296,9 @@ function addAnnotationSpan(annotation)
 
   span.addEventListener('click', e =>
   {
-    let m = showMessage(annotation._description, {
-      'OK': DISMISS_MESSAGE,
-      'Entfernen': e =>
+    let btns = { 'OK': DISMISS_MESSAGE };
+    if (currentUserIsEditing)
+      btns['Entfernen'] = e =>
       {
         if (confirm('Markierung wirklich entfernen?')) {
           for (b in m.buttons) {
@@ -318,8 +318,8 @@ function addAnnotationSpan(annotation)
               }
             });
         }
-      }
-    });
+      };
+    let m = showMessage(annotation._description, );
   });
 }
 
