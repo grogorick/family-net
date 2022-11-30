@@ -1,7 +1,10 @@
 
 class Callbacks
 {
-  cbs = [];
+  constructor()
+  {
+    this.cbs = [];
+  }
   add(cb, priority = 10)
   {
     for (let idx = 0; idx < this.cbs.length; ++idx) {

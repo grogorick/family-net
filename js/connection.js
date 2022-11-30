@@ -11,17 +11,20 @@ function resetConnection(c)
 
 class Connection
 {
-  t = null;
-  p1 = null;
-  p2 = null;
-  r = '';
-  d = '';
+  constructor()
+  {
+    this.t = null;
+    this.p1 = null;
+    this.p2 = null;
+    this.r = '';
+    this.d = '';
 
-  _persons = [];
-  _children = [];
-  _sources = [];
+    this._persons = [];
+    this._children = [];
+    this._sources = [];
 
-  _prepared = false;
+    this._prepared = false;
+  }
 
   get_edgeColor()
   {

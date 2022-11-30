@@ -16,7 +16,10 @@ function resetPerson(p)
 
 class PersonFunctions
 {
-  _ = this;
+  constructor()
+  {
+    this._ = this;
+  }
 
   // ... (xxx) ...
   get_nickName()
@@ -177,25 +180,25 @@ class PersonFunctions
 
 class Person extends PersonFunctions
 {
-  t = null; // ID (creation timestamp)
-  f = '';   // nick and first name(s)
-  l = '';   // last name(s)
-  m = '';   // birth name(s)
-  b = '';   // birth date (YYYY-MM-DD)
-  d = '';   // death date (YYYY-MM-DD)
-  o = '';   // notes
-
-  _parents = [];
-  _children = [];
-  _partners = [];
-  _other = [];
-  _doppelgangers = [];
-  _all_connections = [];
-  _sources = [];
-
   constructor(p)
   {
     super();
+
+    this.t = null; // ID (creation timestamp)
+    this.f = '';   // nick and first name(s)
+    this.l = '';   // last name(s)
+    this.m = '';   // birth name(s)
+    this.b = '';   // birth date (YYYY-MM-DD)
+    this.d = '';   // death date (YYYY-MM-DD)
+    this.o = '';   // notes
+
+    this._parents = [];
+    this._children = [];
+    this._partners = [];
+    this._other = [];
+    this._doppelgangers = [];
+    this._all_connections = [];
+    this._sources = [];
 
     if ('n' in p) {// backward compatibility for old log items with only one name attribute
       // console.log('upgrade old data format ' + p.n);
@@ -225,14 +228,14 @@ class Person extends PersonFunctions
 
 class Doppelganger extends PersonFunctions
 {
-  t = null;
-  p = null;
-
-  _prepared = false;
-
   constructor(p)
   {
     super();
+
+    this.t = null;
+    this.p = null;
+
+    this._prepared = false;
 
     Object.assign(this, p);
   }

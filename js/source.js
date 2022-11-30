@@ -10,18 +10,21 @@ function resetSource(s)
 
 class Source
 {
-  e = null; // file extension
-  f = null; // file name
-  d = null; // description
-  a = {};   // annotations list
+  constructor()
+  {
+    this.e = null; // file extension
+    this.f = null; // file name
+    this.d = null; // description
+    this.a = {};   // annotations list
 
-  _id = null;
-  _ext = null;
-  _filename = null;
-  _description = null;
-  _annotations = {};
+    this._id = null;
+    this._ext = null;
+    this._filename = null;
+    this._description = null;
+    this._annotations = {};
 
-  _prepared = false;
+    this._prepared = false;
+  }
 
   prepare(id)
   {
@@ -112,19 +115,22 @@ function resetAnnotation(a)
 
 class Annotation
 {
-  t = null; // creation timestamp
-  x = null; // x position of top left corner
-  y = null; // y position of top left corner
-  w = null; // width
-  h = null; // height
-  d = null; // description
+  constructor()
+  {
+    this.t = null; // creation timestamp
+    this.x = null; // x position of top left corner
+    this.y = null; // y position of top left corner
+    this.w = null; // width
+    this.h = null; // height
+    this.d = null; // description
 
-  _description = null;
-  _source = null;
-  _person = null;
-  _connection = null;
+    this._description = null;
+    this._source = null;
+    this._person = null;
+    this._connection = null;
 
-  _prepared = false;
+    this._prepared = false;
+  }
 
   prepare(source, personOrConnectionID)
   {
@@ -202,11 +208,10 @@ class Annotation
 
 class AnnotationBuilder
 {
-  firstPos = null;
-  annotation = new Annotation();
-
-  constructor(pos) {
+  constructor(pos)
+  {
     this.firstPos = pos;
+    this.annotation = new Annotation();
   }
   setSecondPos(pos)
   {
@@ -219,9 +224,6 @@ class AnnotationBuilder
 
 class AnnotationSpanBuilder
 {
-  annotationBuilder = null;
-  span = null;
-
   constructor(newAnnotation)
   {
     this.annotationBuilder = newAnnotation;
