@@ -527,16 +527,34 @@ function moveChildConnectionNodes(nodes)
 
 function getRelationships(p1, p2)
 {
-  let ancestors2 = cacheAncestors(p2._my.p._, p1._my.p._);
-  if (p1.id in ancestors2) {
-    let a = ancestors2[p1.id];
-    return [relationshipMatrix[0]['' + a.degree]];
+  p1 = p1._my.p._;
+  p2 = p2._my.p._;
+
+  // partner relationship
+  for (pa of p2._partners) {
+    if (pa.p.t === p1.t)
+      return ['<b>' + pa.c.r + '</b> mit/von'];
   }
 
+  // lineal consanguinity
+  let ancestors2 = cacheAncestors(p2._my.p._, p1._my.p._);
+  if (p1.t in ancestors2) {
+    let a = ancestors2[p1.t];
+    return ['<b>' + relationshipMatrix[0]['' + a.degree] + '</b> von', '<b>' + relationshipMatrix[0]['' + (-a.degree)] + '</b> von'];
+  }
   let ancestors1 = cacheAncestors(p1._my.p._, p2._my.p._);
-  if (p2.id in ancestors1) {
-    let a = ancestors1[p2.id];
-    return [false, relationshipMatrix[0]['' + a.degree]];
+  if (p2.t in ancestors1) {
+    let a = ancestors1[p2.t];
+    return ['<b>' + relationshipMatrix[0]['' + (-a.degree)] + '</b> von', '<b>' + relationshipMatrix[0]['' + a.degree] + '</b> von'];
+  }
+
+  // non-lineal consanguinity
+  let commonAncestors = intersect(Object.keys(ancestors1), Object.keys(ancestors2));
+  if (commonAncestors.length) {
+    let ca = commonAncestors[0],
+        ca1 = ancestors1[ca],
+        ca2 = ancestors2[ca];
+    return ['ein Verwandter'];
   }
 
   return false;
@@ -550,7 +568,6 @@ function cacheAncestors(p, pCancel)
         p._parents.forEach(pp_ => {
           let pp = pp_.p._;
           if (!found) {
-            console.log(degree, pp);
             dict[pp.t] = { p: pp, degree: degree };
             if (pp.t === pCancel.t)
               found = true;

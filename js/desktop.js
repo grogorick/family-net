@@ -111,13 +111,13 @@ let cdcNode = clickDoubleClick(
             msg = [];
         if (r) {
           if (r[0])
-            msg.push(p1 + ' ist ' + '<b>' + r[0] + '</b> von ' + p2);
+            msg.push(p1 + ' ist ' + r[0] + ' ' + p2);
           if (r[1])
-            msg.push(p2 + ' ist ' + '<b>' + r[1] + '</b> von ' + p1);
+            msg.push(p2 + ' ist ' + r[1] + ' ' + p1);
         }
         else
           msg.push(p1 + ' ist nicht in gerader Linie verwandt mit ' + p2);
-        showMessage(msg.join('<br>'));
+        showMessage(msg.join('<hr>'));
       }
     }
   });
