@@ -1013,9 +1013,9 @@ function selectDirectRelatives(e)
     });
   };
   deselectAll();
-  recurseUp(e.data.node._my.p);
+  recurseUp(e.data.node._my.p._);
   // console.log('---');
-  recurseDown(e.data.node._my.p);
+  recurseDown(e.data.node._my.p._);
   s.refresh();
 }
 
