@@ -989,6 +989,7 @@ function selectDirectRelatives(e)
     // console.log('p ' + p.t);
     activeState.addNodes(p.t);
     activeState.addNodes(p._doppelgangers.map(pd => pd.t));
+    activeState.addEdges(p._doppelgangers.map(pd => pd._graphEdge.id));
     p._parents.forEach(pp =>
     {
       activeState.addEdges(pp.c.t);
@@ -1003,6 +1004,7 @@ function selectDirectRelatives(e)
     // console.log('p ' + p.t);
     activeState.addNodes(p.t);
     activeState.addNodes(p._doppelgangers.map(pd => pd.t));
+    activeState.addEdges(p._doppelgangers.map(pd => pd._graphEdge.id));
     p._children.forEach(pc =>
     {
       activeState.addEdges(pc.c.t);
@@ -2140,7 +2142,7 @@ activeState.bind('activeNodes', e =>
     {
       d._graphNode.outer_border_size = settings.nodeBorderSizeDoppelganger;
       if ('_graphEdge' in d) {
-        d._graphEdge.color = settings.edgeColorDoppelgangerHover;
+        d._graphEdge.color = settings.edgeColorHighlight;
       }
     });
   });
