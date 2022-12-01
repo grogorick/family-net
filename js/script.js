@@ -2155,6 +2155,9 @@ function bindCommonViewerEvents()
   {
     let ed = e.data.edge;
     if (isDoppelgangerConnectionEdge(ed)) {
+      deselectAll(null, false, [ed.source, ed.target]);
+      activeState.addNodes([ed.source, ed.target]);
+      s.refresh();
       return;
     }
     deselectAll(null, false, [ed.id]);

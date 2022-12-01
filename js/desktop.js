@@ -105,12 +105,14 @@ s.bind('doubleClickNode', cdcNode.doubleClick.bind(cdcNode));
 
 s.bind('clickEdge', e =>
 {
-  let ed = e.data.edge;
+  let ed = e.data.edge,
+      e_id = ed.id;
   if (isDoppelgangerConnectionEdge(ed)) {
-    return;
+    deselectAll(null, false, [ed.source, ed.target]);
+    activeState.addNodes([ed.source, ed.target]);
+    s.refresh();
   }
-  let e_id = ed.id;
-  if (!multipleKeyPressed(e)) {
+  else if (!multipleKeyPressed(e)) {
     deselectAll(null, false, [e_id]);
     activeState.addEdges(e_id);
     s.refresh();
