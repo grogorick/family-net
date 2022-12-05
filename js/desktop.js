@@ -99,29 +99,10 @@ let cdcNode = clickDoubleClick(
     }
   },
   e => {
-    if (!multipleKeyPressed(e))
+    if (multipleKeyPressed(e))
+      event_findRelationship(e);
+    else
       event_selectPersonAndDirectRelatives(e);
-    else  {
-      if (activeState.nodes().length == 1) {
-        let node1 = activeState.nodes()[0];
-        let node2 = e.data.node;
-        let r = getRelationships(node1, node2),
-            p1 = node1._my.p._.get_shortDisplayString(),
-            p2 = node2._my.p._.get_shortDisplayString(),
-            msg = [];
-        if (r === null)
-          return;
-        if (r) {
-          if (r[0])
-            msg.push(p1 + ' ist ' + r[0] + ' ' + p2);
-          if (r[1])
-            msg.push(p2 + ' ist ' + r[1] + ' ' + p1);
-        }
-        else
-          msg.push(p1 + ' ist nicht in gerader Linie verwandt mit ' + p2);
-        showMessage(msg.join('<hr>'));
-      }
-    }
   });
 
 s.bind('clickNode', cdcNode.click.bind(cdcNode));
@@ -298,7 +279,7 @@ window.addEventListener('keyup', e =>
     lasso.deactivate();
   }
 });
-lasso.bind('selectedNodes', (e) =>
+lasso.bind('selectedNodes', e =>
 {
   let nodes = e.data;
   activeState.dropEdges();
@@ -309,7 +290,15 @@ lasso.bind('selectedNodes', (e) =>
 }
 else { // only viewing when an auto layout is used
 
-  let cdcNode = clickDoubleClick(event_selectPersonAndShowInfo, event_selectPersonAndDirectRelatives);
+  let cdcNode = clickDoubleClick(
+    event_selectPersonAndShowInfo,
+    e => {
+      if (multipleKeyPressed(e))
+        event_findRelationship(e);
+      else
+        event_selectPersonAndDirectRelatives(e);
+    }
+  );
   s.bind('clickNode', cdcNode.click.bind(cdcNode));
   s.bind('doubleClickNode', cdcNode.doubleClick.bind(cdcNode));
 

@@ -610,7 +610,6 @@ let relationshipMatrix = [];
     relationshipMatrix[0]['-' + (3 + ur)] = [ 'Ur' + urs(ur) + 'enkel' + ts ];
   }
 })();
-console.log(relationshipMatrix[0]);
 
 
 // load from file
@@ -2279,13 +2278,15 @@ function bindCommonViewerEvents()
 
 function event_selectPersonAndShowInfo(e)
 {
-    let n = e.data.node;
-    deselectAll(null, false, [n.id]);
-    if (isPersonNode(n) || isDoppelgangerNode(n)) {
-      activeState.addNodes(n.id);
-      s.refresh();
+  let n = e.data.node;
+  if (isPersonNode(n) || isDoppelgangerNode(n)) {
+    if (!multipleKeyPressed(e)) {
+      deselectAll(null, false, [n.id]);
       showPersonInfo(n);
     }
+    activeState.addNodes(n.id);
+    s.refresh();
+  }
 }
 
 function event_selectPersonAndDirectRelatives(e)
@@ -2301,6 +2302,29 @@ function event_selectPersonAndDirectRelatives(e)
       deselectAll();
       layouts[currentLayoutId].apply(n.id);
     }
+}
+
+function event_findRelationship(e)
+{
+  if (activeState.nodes().length == 1) {
+    let node1 = activeState.nodes()[0],
+        node2 = e.data.node,
+        r = getRelationships(node1, node2);
+    if (r === null)
+      return;
+    let p1 = node1._my.p._.get_shortDisplayString(),
+        p2 = node2._my.p._.get_shortDisplayString(),
+        msg = [];
+    if (r) {
+      if (r[0])
+        msg.push(p1 + ' ist ' + r[0] + ' ' + p2);
+      if (r[1])
+        msg.push(p2 + ' ist ' + r[1] + ' ' + p1);
+    }
+    else
+      msg.push(p1 + ' ist nicht in gerader Linie verwandt mit ' + p2);
+    showMessage(msg.join('<hr>'));
+  }
 }
 
 
