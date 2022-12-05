@@ -109,6 +109,8 @@ let cdcNode = clickDoubleClick(
             p1 = node1._my.p._.get_shortDisplayString(),
             p2 = node2._my.p._.get_shortDisplayString(),
             msg = [];
+        if (r === null)
+          return;
         if (r) {
           if (r[0])
             msg.push(p1 + ' ist ' + r[0] + ' ' + p2);

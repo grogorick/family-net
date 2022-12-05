@@ -530,6 +530,9 @@ function getRelationships(p1, p2)
   p1 = p1._my.p._;
   p2 = p2._my.p._;
 
+  if (p1.t === p2.t)
+    return null;
+
   // partner relationship
   for (pa of p2._partners) {
     if (pa.p.t === p1.t)
@@ -537,12 +540,12 @@ function getRelationships(p1, p2)
   }
 
   // lineal consanguinity
-  let ancestors2 = cacheAncestors(p2._my.p._, p1._my.p._);
+  let ancestors2 = cacheAncestors(p2, p1);
   if (p1.t in ancestors2) {
     let a = ancestors2[p1.t];
     return ['<b>' + relationshipMatrix[0]['' + a.degree] + '</b> von', '<b>' + relationshipMatrix[0]['' + (-a.degree)] + '</b> von'];
   }
-  let ancestors1 = cacheAncestors(p1._my.p._, p2._my.p._);
+  let ancestors1 = cacheAncestors(p1, p2);
   if (p2.t in ancestors1) {
     let a = ancestors1[p2.t];
     return ['<b>' + relationshipMatrix[0]['' + (-a.degree)] + '</b> von', '<b>' + relationshipMatrix[0]['' + a.degree] + '</b> von'];
