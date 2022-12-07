@@ -551,16 +551,34 @@ function getRelationships(p1, p2)
     return ['<b>' + relationshipMatrix[0]['' + (-a.degree)] + '</b> von', '<b>' + relationshipMatrix[0]['' + a.degree] + '</b> von'];
   }
 
-  // non-lineal consanguinity
+  // consanguinity (common ancestor)
   let commonAncestors = intersect(Object.keys(ancestors1), Object.keys(ancestors2));
   if (commonAncestors.length) {
     let ca = commonAncestors[0],
         ca1 = ancestors1[ca],
         ca2 = ancestors2[ca];
-    return ['ein Verwandter'];
+    return ['<b>' + getRelationship(ca2.degree, ca1.degree) + '</b> von', '<b>' + getRelationship(ca1.degree, ca2.degree) + '</b> von'];
   }
 
   return false;
+}
+
+function getRelationship(up, down)
+{
+  if (up === down) {
+    if (up === 1)
+      return 'Schwester/Bruder';
+    let deg = up - 1;
+    return 'Cousine/Cousin' + degree(deg);
+  }
+  let generation = Math.abs(up - down);
+  let deg = Math.min(up, down);
+  let names = (up > down) ? [ 'Tante/Onkel', 'tante/-onkel' ] : [ 'Nichte/Neffe', 'nichte/-neffe' ];
+  switch (generation) {
+    case 1: return names[0] + degree(deg);
+    case 2: return 'Groß' + names[1] + degree(deg);
+    default: return urs(generation - 2) + 'groß' + names[1] + degree(deg);
+  }
 }
 
 function cacheAncestors(p, pCancel)
@@ -583,13 +601,29 @@ function cacheAncestors(p, pCancel)
   return dict;
 }
 
+function urs(ur)
+{
+  if (ur < 1)
+    return '';
+  if (ur < 3)
+    return 'Ur' + 'ur'.repeat(ur - 1);
+  else
+    return 'Ur(x' + ur + ')';
+}
+
+function degree(deg)
+{
+  if (deg > 1)
+    return ' ' + deg + '. Grades';
+  return '';
+}
+
 let relationshipMatrix = [];
 (() => {
   let mv = 'mutter/-vater',
       ts = 'tochter/-sohn',
       gens = ['Alt', 'Ober', 'Stamm', 'Ahnen', 'Urahnen', 'Erz', 'Erzahnen'],
-      subgens = ['', 'groß', 'urgroß'],
-      urs = ur => ur > 2 ? '(x' + (ur + 1) + ')' : 'ur'.repeat(ur);
+      subgens = ['', 'groß', 'urgroß'];
     relationshipMatrix = [{
       '3': [ 'Urgroß' + mv ],
       '2': [ 'Groß' + mv ],
@@ -602,12 +636,12 @@ let relationshipMatrix = [];
     gen = parseInt(gen);
     for (let subgen in subgens) {
       subgen = parseInt(subgen);
-      let ur = 1 + 3 * gen + subgen;
-      relationshipMatrix[0]['' + (3 + ur)] = [ 'Ur' + urs(ur) + 'groß' + mv, gens[gen] + subgens[subgen] + mv ];
+      let ur = 2 + 3 * gen + subgen;
+      relationshipMatrix[0]['' + (2 + ur)] = [ urs(ur) + 'groß' + mv, gens[gen] + subgens[subgen] + mv ];
     }
   }
-  for (let ur = 0; ur < 3 * gens.length + 1; ++ur) {
-    relationshipMatrix[0]['-' + (3 + ur)] = [ 'Ur' + urs(ur) + 'enkel' + ts ];
+  for (let ur = 2; ur < 3 * gens.length + 1; ++ur) {
+    relationshipMatrix[0]['-' + (2 + ur)] = [ urs(ur) + 'enkel' + ts ];
   }
 })();
 
@@ -2322,7 +2356,7 @@ function event_findRelationship(e)
         msg.push(p2 + ' ist ' + r[1] + ' ' + p1);
     }
     else
-      msg.push(p1 + ' ist nicht in gerader Linie verwandt mit ' + p2);
+      msg.push(p1 + ' ist nicht Blutsverwandt mit ' + p2);
     showMessage(msg.join('<hr>'));
   }
 }
