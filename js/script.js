@@ -543,12 +543,12 @@ function getRelationships(p1, p2)
   let ancestors2 = cacheAncestors(p2, p1);
   if (p1.t in ancestors2) {
     let a = ancestors2[p1.t];
-    return ['<b>' + relationshipMatrix[0]['' + a.degree] + '</b> von', '<b>' + relationshipMatrix[0]['' + (-a.degree)] + '</b> von'];
+    return ['<b>' + linealConsanguinityNames['' + a.degree] + '</b> von', '<b>' + linealConsanguinityNames['' + (-a.degree)] + '</b> von'];
   }
   let ancestors1 = cacheAncestors(p1, p2);
   if (p2.t in ancestors1) {
     let a = ancestors1[p2.t];
-    return ['<b>' + relationshipMatrix[0]['' + (-a.degree)] + '</b> von', '<b>' + relationshipMatrix[0]['' + a.degree] + '</b> von'];
+    return ['<b>' + linealConsanguinityNames['' + (-a.degree)] + '</b> von', '<b>' + linealConsanguinityNames['' + a.degree] + '</b> von'];
   }
 
   // consanguinity (common ancestor)
@@ -618,30 +618,30 @@ function degree(deg)
   return '';
 }
 
-let relationshipMatrix = [];
+let linealConsanguinityNames;
 (() => {
   let mv = 'mutter/-vater',
       ts = 'tochter/-sohn',
       gens = ['Alt', 'Ober', 'Stamm', 'Ahnen', 'Urahnen', 'Erz', 'Erzahnen'],
       subgens = ['', 'groß', 'urgroß'];
-    relationshipMatrix = [{
-      '3': [ 'Urgroß' + mv ],
-      '2': [ 'Groß' + mv ],
-      '1': [ 'Mutter/Vater' ],
-      '-1': [ 'Tochter/Sohn' ],
-      '-2': [ 'Enkel' + ts ],
-      '-3': [ 'Urenkel' + ts ],
-    }];
+  linealConsanguinityNames = {
+    '3': [ 'Urgroß' + mv ],
+    '2': [ 'Groß' + mv ],
+    '1': [ 'Mutter/Vater' ],
+    '-1': [ 'Tochter/Sohn' ],
+    '-2': [ 'Enkel' + ts ],
+    '-3': [ 'Urenkel' + ts ],
+  };
   for (let gen in gens) {
     gen = parseInt(gen);
     for (let subgen in subgens) {
       subgen = parseInt(subgen);
       let ur = 2 + 3 * gen + subgen;
-      relationshipMatrix[0]['' + (2 + ur)] = [ urs(ur) + 'groß' + mv, gens[gen] + subgens[subgen] + mv ];
+      linealConsanguinityNames['' + (2 + ur)] = [ urs(ur) + 'groß' + mv, gens[gen] + subgens[subgen] + mv ];
     }
   }
   for (let ur = 2; ur < 3 * gens.length + 1; ++ur) {
-    relationshipMatrix[0]['-' + (2 + ur)] = [ urs(ur) + 'enkel' + ts ];
+    linealConsanguinityNames['-' + (2 + ur)] = [ urs(ur) + 'enkel' + ts ];
   }
 })();
 
