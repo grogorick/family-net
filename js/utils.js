@@ -487,3 +487,25 @@ function filesizeStr(numBytes)
   return numBytes + ' GB';
 }
 
+class Queue {
+  constructor(list = [])
+  {
+    this.buf = {};
+    this.start = 0;
+    this.end = 0;
+    for (let item of list)
+      this.enqueue(item);
+  }
+  enqueue(el) { this.buf[this.end ++] = el; }
+  peak() { return this.buf[this.start]; }
+  dequeue()
+  {
+    if (this.empty())
+      return null;
+    let tmp = this.buf[this.start];
+    delete this.buf[this.start++];
+    return tmp;
+  }
+  empty() { return this.start == this.end; }
+  length() { return this.end - this.start; }
+}

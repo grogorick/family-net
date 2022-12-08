@@ -533,38 +533,139 @@ function getRelationships(p1, p2)
   if (p1.t === p2.t)
     return null;
 
+  let ret = false;
+
+  let simpleFormat = (up, down, pA = p1, pB = p2) => formatRelation(pA, ' ist ', getRelationship(up, down), ' von ', pB);
+
   // partner relationship
   for (pa of p2._partners) {
-    if (pa.p.t === p1.t)
-      return ['<b>' + pa.c.r + '</b> mit/von'];
+    if (pa.p.t === p1.t) {
+      ret = [formatRelation(p1, ' ist ', pa.c.r, ' mit/von ', p2)];
+      break;
+    }
   }
 
   // lineal consanguinity
-  let ancestors2 = cacheAncestors(p2, p1);
-  if (p1.t in ancestors2) {
-    let a = ancestors2[p1.t];
-    return ['<b>' + linealConsanguinityNames['' + a.degree] + '</b> von', '<b>' + linealConsanguinityNames['' + (-a.degree)] + '</b> von'];
+  let ancestors2;
+  if (!ret) {
+    ancestors2 = cacheAncestors(p2, p1);
+    if (p1.t in ancestors2) {
+      let a = ancestors2[p1.t];
+      ret = [simpleFormat(a.degree, 0), simpleFormat(0, a.degree, p2, p1)];
+    }
   }
-  let ancestors1 = cacheAncestors(p1, p2);
-  if (p2.t in ancestors1) {
-    let a = ancestors1[p2.t];
-    return ['<b>' + linealConsanguinityNames['' + (-a.degree)] + '</b> von', '<b>' + linealConsanguinityNames['' + a.degree] + '</b> von'];
+  let ancestors1;
+  if (!ret) {
+    ancestors1 = cacheAncestors(p1, p2);
+    if (p2.t in ancestors1) {
+      let a = ancestors1[p2.t];
+      ret = [simpleFormat(0, a.degree), simpleFormat(a.degree, 0, p2, p1)];
+    }
   }
 
   // consanguinity (common ancestor)
-  let commonAncestors = intersect(Object.keys(ancestors1), Object.keys(ancestors2));
-  if (commonAncestors.length) {
-    let ca = commonAncestors[0],
-        ca1 = ancestors1[ca],
-        ca2 = ancestors2[ca];
-    return ['<b>' + getRelationship(ca2.degree, ca1.degree) + '</b> von', '<b>' + getRelationship(ca1.degree, ca2.degree) + '</b> von'];
+  if (!ret) {
+    let commonAncestors = intersect(Object.keys(ancestors1), Object.keys(ancestors2));
+    if (commonAncestors.length) {
+      let ca = commonAncestors[0],
+          ca1 = ancestors1[ca],
+          ca2 = ancestors2[ca];
+      ret = [simpleFormat(ca2.degree, ca1.degree), simpleFormat(ca1.degree, ca2.degree, p2, p1)];
+    }
   }
 
-  return false;
+  // relation chains including partners
+  if (!ret) {
+    let path = findConnectingPath(p1, p2);
+    console.log('Path:', path);
+    if (path !== null) {
+      ret = [];
+      let chain = getRelationChainFromPath(path);
+      let i = 0;
+      if (chain[0].p1.t !== chain[0].p2.t)
+        ret.push(p1.get_shortDisplayString() + ' ist ');
+      else {
+        ret.push(p1.get_shortDisplayString() + '\'s <b>Partner/in</b> ' + chain[1].p1.get_shortDisplayString() + ' ist ');
+        i = 1;
+      }
+      for (; i < chain.length; ++i) {
+        let step = chain[i];
+        if (step.p1.t === step.p2.t)
+          continue;
+        let nextStep = chain[i + 1];
+        ret.push('<b>' + getRelationship(step.down, step.up) + '</b> von ' + step.p2.get_shortDisplayString() + '.');
+        if (nextStep !== undefined) {
+          ret.push(' ' + step.p2.get_shortDisplayString() + '\'s <b>Partner/in</b> ');
+          if (nextStep.p1.t !== nextStep.p2.t)
+            ret.push(nextStep.p1.get_shortDisplayString() + ' ist ');
+          else
+            ret.push('ist ' + nextStep.p1.get_shortDisplayString() + '.');
+        }
+      }
+      console.log('Chain:', chain);
+      ret = [ret.join('')];
+    }
+  }
+
+  return ret.join('<hr>');
+}
+
+function formatRelation(p1, pre, rel, post, p2)
+{
+  return p1.get_shortDisplayString() + pre + '<b>' + rel + '</b>' + post + p2.get_shortDisplayString();
+}
+
+function getRelationChainFromPath(path)
+{
+  let chain = [],
+      currentStep = { up: 0, down: 0, p1: path[0].p },
+      dir = 'up';
+  for (let c of path) {
+    if (c.dir === dir)
+      ++currentStep[dir];
+    else if (c.dir === 'down') {
+      dir = c.dir;
+      ++currentStep[dir];
+    }
+    else if (c.dir === 'partner') {
+      chain.push(currentStep);
+      currentStep = { up: 0, down: 0, p1: c.p };
+      dir = 'up';
+    }
+    currentStep.p2 = c.p;
+  }
+  chain.push(currentStep);
+  return chain;
+}
+
+function findConnectingPath(p1, p2)
+{
+  let queue = new Queue([[{ p: p1 }]]),
+      done = [p1.t];
+  while (!queue.empty()) {
+    let path = queue.dequeue();
+    let pl = path[path.length - 1];
+    if (pl.p.t === p2.t) {
+      return path;
+    }
+    for ([dir, list] of [['up', pl.p._parents], ['down', pl.p._children], ['partner', pl.p._partners]]) {
+      list.forEach(c => {
+        if (!done.includes(c.p.t)) {
+          done.push(c.p.t);
+          queue.enqueue(path.concat([{ p: c.p, dir: dir }]));
+        }
+      });
+    }
+  }
+  return null;
 }
 
 function getRelationship(up, down)
 {
+  if (down === 0)
+    return linealConsanguinityNames['' + up];
+  if (up === 0)
+    return linealConsanguinityNames['' + (-down)];
   if (up === down) {
     if (up === 1)
       return 'Schwester/Bruder';
@@ -2343,21 +2444,9 @@ function event_findRelationship(e)
   if (activeState.nodes().length == 1) {
     let node1 = activeState.nodes()[0],
         node2 = e.data.node,
-        r = getRelationships(node1, node2);
-    if (r === null)
-      return;
-    let p1 = node1._my.p._.get_shortDisplayString(),
-        p2 = node2._my.p._.get_shortDisplayString(),
-        msg = [];
-    if (r) {
-      if (r[0])
-        msg.push(p1 + ' ist ' + r[0] + ' ' + p2);
-      if (r[1])
-        msg.push(p2 + ' ist ' + r[1] + ' ' + p1);
-    }
-    else
-      msg.push(p1 + ' ist nicht Blutsverwandt mit ' + p2);
-    showMessage(msg.join('<hr>'));
+        msg = getRelationships(node1, node2);
+    if (msg)
+      showMessage(msg);
   }
 }
 
