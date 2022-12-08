@@ -27,7 +27,7 @@ Minimal open source genealogy management &mdash; trace lineages in your family h
 - Viewer (can view)
 - Guest (can view limited information)
 
-Infinite edit history
+### Infinite edit history
 - Review changes
 - Preview and restore previous states
 
@@ -40,6 +40,7 @@ Infinite edit history
     - Auto-generated layout
 
 ### More
+- Computation of the relationship (chain) between two people
 - Simple person search
 - Help texts for most features
 - Introduction tutorial (on first login)
