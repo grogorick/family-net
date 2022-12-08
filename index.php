@@ -1401,12 +1401,34 @@ if ($_SESSION[EDITING] && current_user_can(PERMISSION_LINK_SOURCE)) {
             <li>Das Detailfenster wird angezeigt</li>
           </ul>
         </li>
-        <li>Darstellungen:
+        <li>Stammbaum einer Person auswählen/hervorheben:
+          <ul>
+          <?php if (!$is_mobile) { ?>
+            <li><i>Doppelklick</i> auf die gewünschte Person</li>
+          <?php } else { ?>
+            <li>Auf die gewünschte Person <i>tippen und gedrückt halten</i></li>
+          <?php } ?>
+            <li>In direkter Linie verwandte Personen werden angezeigt/markiert</li>
+          </ul>
+        </li>
+        <li>Verwandtschaftsgrad zwischen zwei Person bestimmen:
+          <ul>
+          <?php if (!$is_mobile) { ?>
+            <li><?=$modKeys?> gedrückt halten</li>
+            <li>Die erste Person anklicken</li>
+            <li><i>Doppelklick</i> auf die zweite Person</li>
+            <li>Der Verwandtschaftsgrad wird angezeigt</li>
+          <?php } else { ?>
+            <i>(Aktuell nur am PC verfügbar.)</i>
+          <?php } ?>
+          </ul>
+        </li>
+        <li>Ansichten:
           <ul>
             <li>Netz
               <ul>
                 <li>Zeigt alle eingetragenen Personen und die Verbindungen zwischen ihnen.</li>
-                <li>Nur in dieser Darstellung kann das Netz bearbeitet werden.</li>
+                <li>Nur in dieser Ansicht kann das Netz bearbeitet werden.</li>
               </ul>
             </li>
             <li>Baum
@@ -1417,25 +1439,19 @@ if ($_SESSION[EDITING] && current_user_can(PERMISSION_LINK_SOURCE)) {
             </li>
             <li>Jahresbaum
               <ul>
-                <li>Wie die <i>Baum</i>-Darstellung, aber die vertikale Position wird durch das Geburtsjahr bestimmt.</li>
+                <li>Wie die <i>Baum</i>-Ansicht, aber die vertikale Position wird durch das Geburtsjahr bestimmt.</li>
               </ul>
             </li>
           </ul>
         </li>
         <li>Ansicht wechseln:
           <ul>
-        <?php if (!$is_mobile) { ?>
+          <?php if (!$is_mobile) { ?>
             <li>Oben auf <span class="help-button">A</span> klicken, um die Auswahl zu öffnen</li>
             <li>Die gewünschte Ansicht auswählen</li>
           <?php } else { ?>
             <li>Oben aus dem Menü die gewünschte Ansicht auswählen</li>
           <?php } ?>
-          </ul>
-        </li>
-        <li>Stammbaum einer Person auswählen/hervorheben:
-          <ul>
-            <li><i>Doppel<?=$klickenTippen?></i> auf die gewünschte Person</li>
-            <li>In direkter Linie verwandte Personen werden angezeigt/markiert</li>
           </ul>
         </li>
       </ul>
