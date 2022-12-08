@@ -98,7 +98,12 @@ let cdcNode = clickDoubleClick(
       }
     }
   },
-  event_selectPersonAndDirectRelatives);
+  e => {
+    if (multipleKeyPressed(e))
+      event_findRelationship(e);
+    else
+      event_selectPersonAndDirectRelatives(e);
+  });
 
 s.bind('clickNode', cdcNode.click.bind(cdcNode));
 s.bind('doubleClickNode', cdcNode.doubleClick.bind(cdcNode));
@@ -276,7 +281,7 @@ window.addEventListener('keyup', e =>
     lasso.deactivate();
   }
 });
-lasso.bind('selectedNodes', (e) =>
+lasso.bind('selectedNodes', e =>
 {
   let nodes = e.data;
   activeState.dropEdges();
@@ -287,7 +292,15 @@ lasso.bind('selectedNodes', (e) =>
 }
 else { // only viewing when an auto layout is used
 
-  let cdcNode = clickDoubleClick(event_selectPersonAndShowInfo, event_selectPersonAndDirectRelatives);
+  let cdcNode = clickDoubleClick(
+    event_selectPersonAndShowInfo,
+    e => {
+      if (multipleKeyPressed(e))
+        event_findRelationship(e);
+      else
+        event_selectPersonAndDirectRelatives(e);
+    }
+  );
   s.bind('clickNode', cdcNode.click.bind(cdcNode));
   s.bind('doubleClickNode', cdcNode.doubleClick.bind(cdcNode));
 

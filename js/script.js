@@ -525,6 +525,227 @@ function moveChildConnectionNodes(nodes)
   });
 }
 
+function getRelationships(p1, p2)
+{
+  p1 = p1._my.p._;
+  p2 = p2._my.p._;
+
+  if (p1.t === p2.t)
+    return null;
+
+  let ret = false;
+
+  let simpleFormat = (up, down, pA = p1, pB = p2) => formatRelation(pA, ' ist ', getRelationship(up, down), ' von ', pB);
+
+  // partner relationship
+  for (pa of p2._partners) {
+    if (pa.p.t === p1.t) {
+      ret = [formatRelation(p1, ' ist ', pa.c.r, ' mit/von ', p2)];
+      break;
+    }
+  }
+
+  // lineal consanguinity
+  let ancestors2;
+  if (!ret) {
+    ancestors2 = cacheAncestors(p2, p1);
+    if (p1.t in ancestors2) {
+      let a = ancestors2[p1.t];
+      ret = [simpleFormat(a.degree, 0), simpleFormat(0, a.degree, p2, p1)];
+    }
+  }
+  let ancestors1;
+  if (!ret) {
+    ancestors1 = cacheAncestors(p1, p2);
+    if (p2.t in ancestors1) {
+      let a = ancestors1[p2.t];
+      ret = [simpleFormat(0, a.degree), simpleFormat(a.degree, 0, p2, p1)];
+    }
+  }
+
+  // consanguinity (common ancestor)
+  if (!ret) {
+    let commonAncestors = intersect(Object.keys(ancestors1), Object.keys(ancestors2));
+    if (commonAncestors.length) {
+      let ca = commonAncestors[0],
+          ca1 = ancestors1[ca],
+          ca2 = ancestors2[ca];
+      ret = [simpleFormat(ca2.degree, ca1.degree), simpleFormat(ca1.degree, ca2.degree, p2, p1)];
+    }
+  }
+
+  // relation chains including partners
+  if (!ret) {
+    let path = findConnectingPath(p1, p2);
+    console.log('Path:', path);
+    if (path !== null) {
+      ret = [];
+      let chain = getRelationChainFromPath(path);
+      let i = 0;
+      if (chain[0].p1.t !== chain[0].p2.t)
+        ret.push(p1.get_shortDisplayString() + ' ist ');
+      else {
+        ret.push(p1.get_shortDisplayString() + '\'s <b>Partner/in</b> ' + chain[1].p1.get_shortDisplayString() + ' ist ');
+        i = 1;
+      }
+      for (; i < chain.length; ++i) {
+        let step = chain[i];
+        if (step.p1.t === step.p2.t)
+          continue;
+        let nextStep = chain[i + 1];
+        ret.push('<b>' + getRelationship(step.down, step.up) + '</b> von ' + step.p2.get_shortDisplayString() + '.');
+        if (nextStep !== undefined) {
+          ret.push(' ' + step.p2.get_shortDisplayString() + '\'s <b>Partner/in</b> ');
+          if (nextStep.p1.t !== nextStep.p2.t)
+            ret.push(nextStep.p1.get_shortDisplayString() + ' ist ');
+          else
+            ret.push('ist ' + nextStep.p1.get_shortDisplayString() + '.');
+        }
+      }
+      console.log('Chain:', chain);
+      ret = [ret.join('')];
+    }
+  }
+
+  return ret.join('<hr>');
+}
+
+function formatRelation(p1, pre, rel, post, p2)
+{
+  return p1.get_shortDisplayString() + pre + '<b>' + rel + '</b>' + post + p2.get_shortDisplayString();
+}
+
+function getRelationChainFromPath(path)
+{
+  let chain = [],
+      currentStep = { up: 0, down: 0, p1: path[0].p },
+      dir = 'up';
+  for (let c of path) {
+    if (c.dir === dir)
+      ++currentStep[dir];
+    else if (c.dir === 'down') {
+      dir = c.dir;
+      ++currentStep[dir];
+    }
+    else if (c.dir === 'partner') {
+      chain.push(currentStep);
+      currentStep = { up: 0, down: 0, p1: c.p };
+      dir = 'up';
+    }
+    currentStep.p2 = c.p;
+  }
+  chain.push(currentStep);
+  return chain;
+}
+
+function findConnectingPath(p1, p2)
+{
+  let queue = new Queue([[{ p: p1 }]]),
+      done = [p1.t];
+  while (!queue.empty()) {
+    let path = queue.dequeue();
+    let pl = path[path.length - 1];
+    if (pl.p.t === p2.t) {
+      return path;
+    }
+    for ([dir, list] of [['up', pl.p._parents], ['down', pl.p._children], ['partner', pl.p._partners]]) {
+      list.forEach(c => {
+        if (!done.includes(c.p.t)) {
+          done.push(c.p.t);
+          queue.enqueue(path.concat([{ p: c.p, dir: dir }]));
+        }
+      });
+    }
+  }
+  return null;
+}
+
+function getRelationship(up, down)
+{
+  if (down === 0)
+    return linealConsanguinityNames['' + up];
+  if (up === 0)
+    return linealConsanguinityNames['' + (-down)];
+  if (up === down) {
+    if (up === 1)
+      return 'Schwester/Bruder';
+    let deg = up - 1;
+    return 'Cousine/Cousin' + degree(deg);
+  }
+  let generation = Math.abs(up - down);
+  let deg = Math.min(up, down);
+  let names = (up > down) ? [ 'Tante/Onkel', 'tante/-onkel' ] : [ 'Nichte/Neffe', 'nichte/-neffe' ];
+  switch (generation) {
+    case 1: return names[0] + degree(deg);
+    case 2: return 'Groß' + names[1] + degree(deg);
+    default: return urs(generation - 2) + 'groß' + names[1] + degree(deg);
+  }
+}
+
+function cacheAncestors(p, pCancel)
+{
+  let dict = {},
+      found = false,
+      up = (p, degree) => {
+        p._parents.forEach(pp_ => {
+          let pp = pp_.p._;
+          if (!found) {
+            dict[pp.t] = { p: pp, degree: degree };
+            if (pp.t === pCancel.t)
+              found = true;
+            else
+              up(pp, degree + 1);
+          }
+        });
+      };
+  up(p, 1);
+  return dict;
+}
+
+function urs(ur)
+{
+  if (ur < 1)
+    return '';
+  if (ur < 3)
+    return 'Ur' + 'ur'.repeat(ur - 1);
+  else
+    return 'Ur(x' + ur + ')';
+}
+
+function degree(deg)
+{
+  if (deg > 1)
+    return ' ' + deg + '. Grades';
+  return '';
+}
+
+let linealConsanguinityNames;
+(() => {
+  let mv = 'mutter/-vater',
+      ts = 'tochter/-sohn',
+      gens = ['Alt', 'Ober', 'Stamm', 'Ahnen', 'Urahnen', 'Erz', 'Erzahnen'],
+      subgens = ['', 'groß', 'urgroß'];
+  linealConsanguinityNames = {
+    '3': [ 'Urgroß' + mv ],
+    '2': [ 'Groß' + mv ],
+    '1': [ 'Mutter/Vater' ],
+    '-1': [ 'Tochter/Sohn' ],
+    '-2': [ 'Enkel' + ts ],
+    '-3': [ 'Urenkel' + ts ],
+  };
+  for (let gen in gens) {
+    gen = parseInt(gen);
+    for (let subgen in subgens) {
+      subgen = parseInt(subgen);
+      let ur = 2 + 3 * gen + subgen;
+      linealConsanguinityNames['' + (2 + ur)] = [ urs(ur) + 'groß' + mv, gens[gen] + subgens[subgen] + mv ];
+    }
+  }
+  for (let ur = 2; ur < 3 * gens.length + 1; ++ur) {
+    linealConsanguinityNames['-' + (2 + ur)] = [ urs(ur) + 'enkel' + ts ];
+  }
+})();
+
 
 // load from file
 // ------------------------------------
@@ -2197,13 +2418,15 @@ function bindCommonViewerEvents()
 
 function event_selectPersonAndShowInfo(e)
 {
-    let n = e.data.node;
-    deselectAll(null, false, [n.id]);
-    if (isPersonNode(n) || isDoppelgangerNode(n)) {
-      activeState.addNodes(n.id);
-      s.refresh();
+  let n = e.data.node;
+  if (isPersonNode(n) || isDoppelgangerNode(n)) {
+    if (!multipleKeyPressed(e)) {
+      deselectAll(null, false, [n.id]);
       showPersonInfo(n);
     }
+    activeState.addNodes(n.id);
+    s.refresh();
+  }
 }
 
 function event_selectPersonAndDirectRelatives(e)
@@ -2219,6 +2442,17 @@ function event_selectPersonAndDirectRelatives(e)
       deselectAll();
       layouts[currentLayoutId].apply(n.id);
     }
+}
+
+function event_findRelationship(e)
+{
+  if (activeState.nodes().length == 1) {
+    let node1 = activeState.nodes()[0],
+        node2 = e.data.node,
+        msg = getRelationships(node1, node2);
+    if (msg)
+      showMessage(msg);
+  }
 }
 
 
