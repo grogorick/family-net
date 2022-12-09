@@ -726,23 +726,23 @@ let linealConsanguinityNames;
       gens = ['Alt', 'Ober', 'Stamm', 'Ahnen', 'Urahnen', 'Erz', 'Erzahnen'],
       subgens = ['', 'groß', 'urgroß'];
   linealConsanguinityNames = {
-    '3': [ 'Urgroß' + mv ],
-    '2': [ 'Groß' + mv ],
-    '1': [ 'Mutter/Vater' ],
-    '-1': [ 'Tochter/Sohn' ],
-    '-2': [ 'Enkel' + ts ],
-    '-3': [ 'Urenkel' + ts ],
+    '3': 'Urgroß' + mv,
+    '2': 'Groß' + mv,
+    '1': 'Mutter/Vater',
+    '-1': 'Tochter/Sohn',
+    '-2': 'Enkel' + ts,
+    '-3': 'Urenkel' + ts,
   };
   for (let gen in gens) {
     gen = parseInt(gen);
     for (let subgen in subgens) {
       subgen = parseInt(subgen);
       let ur = 2 + 3 * gen + subgen;
-      linealConsanguinityNames['' + (2 + ur)] = [ urs(ur) + 'groß' + mv, gens[gen] + subgens[subgen] + mv ];
+      linealConsanguinityNames['' + (2 + ur)] = urs(ur) + 'groß' + mv + ' (' + gens[gen] + subgens[subgen] + mv + ')';
     }
   }
   for (let ur = 2; ur < 3 * gens.length + 1; ++ur) {
-    linealConsanguinityNames['-' + (2 + ur)] = [ urs(ur) + 'enkel' + ts ];
+    linealConsanguinityNames['-' + (2 + ur)] = urs(ur) + 'enkel' + ts;
   }
 })();
 
