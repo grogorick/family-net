@@ -525,6 +525,41 @@ function moveChildConnectionNodes(nodes)
   });
 }
 
+function findAndShowRelatives(p1, p2)
+{
+  let msg = getRelationships(p1, p2);
+  if (msg) {
+    let url = serverURL + (serverURL.endsWith('/') ? '?' : '&') + 'show=' + p1.id + '_' + p2.id;
+    let btn = document.createElement('a');
+    btn.href = url;
+    btn.classList.add('button', 'share');
+    btn.title = 'Teilen';
+    showMessage(msg, {
+      '_link': {
+        label: btn,
+        action: e => {
+          if (navigator.canShare) {
+            e.preventDefault();
+            let shareText = [];
+            for (p of [p1, p2])
+              shareText.push([p1._my.p.get_rufName(), p1._my.p.get_lastNames()].filter(Boolean).join(' '));
+            shareText = shareText.join(' <--> ') + ' - ' + document.title;
+            navigator.share({
+              title: shareText,
+              text: shareText,
+              url: url
+            });
+          }
+          else {
+            location.href = url;
+          }
+        }
+      },
+      'OK': DISMISS_MESSAGE
+    });
+  }
+}
+
 function getRelationships(p1, p2)
 {
   p1 = p1._my.p._;
@@ -2449,10 +2484,8 @@ function event_findRelationship(e)
 {
   if (activeState.nodes().length == 1) {
     let node1 = activeState.nodes()[0],
-        node2 = e.data.node,
-        msg = getRelationships(node1, node2);
-    if (msg)
-      showMessage(msg);
+        node2 = e.data.node;
+    findAndShowRelatives(node1, node2);
   }
 }
 
@@ -2547,6 +2580,16 @@ if (fromURL) {
         s.refresh();
         if (showFromURL === fromURL) {
           showConnectionInfo(c._graphEdge);
+        }
+      }
+      else {
+        if (showFromURL.includes('_')) {
+          let ps = showFromURL.split('_');
+          if (ps.length == 2) {
+            activeState.addNodes(ps);
+            let [ p1, p2 ] = s.graph.nodes(ps);
+            findAndShowRelatives(p1, p2);
+          }
         }
       }
     }

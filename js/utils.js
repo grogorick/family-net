@@ -229,8 +229,16 @@ function showMessage(msg, buttons = { 'OK': DISMISS_MESSAGE })
   m.box.removeChild(buttonTemplate);
   m.buttons = {};
   for (b in buttons) {
-    let button = buttonTemplate.cloneNode(true);
-    button.innerHTML = b;
+    let button;
+    if (b[0] === '_') {
+      button = buttons[b].label;
+      button.classList.add(...(buttonTemplate.classList.toString().split(' ')));
+      buttons[b] = buttons[b].action;
+    }
+    else {
+      button = buttonTemplate.cloneNode(true);
+      button.innerHTML = b;
+    }
     if (buttons[b] === DISMISS_MESSAGE) {
       button.addEventListener('click', m.dismiss);
     }
