@@ -158,6 +158,13 @@ html body .drag-drop-visual-area.drag-drop-visual-area-active {
   color: #aaa;
 }
 
+.share::before {
+  content: '\27A6';
+  transform: rotate(-25deg);
+  display: inline-block;
+  color: black;
+}
+
 #person-form.box #person-form-clone-add {
   width: 100%
 }
@@ -251,6 +258,7 @@ button, .button, input[type="submit"] {
   cursor: default;
   border: none;
   color: black;
+  font-size: .9rem;
   text-decoration: none;
   background: transparent;
   user-select: none;

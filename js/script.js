@@ -1354,7 +1354,8 @@ function showPersonInfo(n)
     }
     let p = n_p._;
     let url = document.createElement('a');
-    url.innerHTML = '&#x1F517;';
+    url.classList.add('share');
+    url.title = 'Teilen';
     url.href = serverURL + (serverURL.endsWith('/') ? '?' : '&') + 'show=' + n_p.t;
     personMenuPersonURL.innerHTML = '';
     personMenuPersonURL.appendChild(url);
