@@ -544,6 +544,17 @@ if (isset($_GET[ACTION])) {
       exit;
     }
 
+    case 'password':
+    {
+      if (current_user_can(PERMISSION_ADMIN)) {
+        if (isset($_GET['h']))
+          echo password_verify($_GET['p'], $_GET['h']) ? 'OK' : 'NO MATCH';
+        else
+          echo password_hash($_GET['p'], PASSWORD_BCRYPT);
+      }
+      exit;
+    }
+
     case 'change-password':
     {
       $a = &get_account($_SESSION[USER]);
