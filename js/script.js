@@ -2467,10 +2467,13 @@ function event_selectPersonAndShowInfo(e)
 
 function event_selectPersonAndDirectRelatives(e)
 {
-    let n = e.data.node;
-    if (!isPersonNode(n) && !isDoppelgangerNode(n)) {
-      return;
-    }
+  let n = e.data.node;
+  if (!isPersonNode(n) && !isDoppelgangerNode(n)) {
+    return;
+  }
+  let nodes = activeState.nodes();
+  if (nodes.length === 0 ||
+     (nodes.length === 1 && nodes[0].id === n.id)) {
     if (!currentLayoutId) {
       selectDirectRelatives(e);
     }
@@ -2478,13 +2481,21 @@ function event_selectPersonAndDirectRelatives(e)
       deselectAll();
       layouts[currentLayoutId].apply(n.id);
     }
+  }
 }
 
 function event_findRelationship(e)
 {
-  if (activeState.nodes().length == 1) {
+  let n = e.data.node;
+  if (!isPersonNode(n) && !isDoppelgangerNode(n)) {
+    return;
+  }
+  let nodes = activeState.nodes();
+  if ((nodes.length === 1 && nodes[0].id !== n.id) ||
+      (nodes.length === 2 && [ nodes[0].id, nodes[1].id ].includes(n.id))) {
+    activeState.addNodes(n.id);
     let node1 = activeState.nodes()[0],
-        node2 = e.data.node;
+        node2 = activeState.nodes()[1];
     findAndShowRelatives(node1, node2);
   }
 }

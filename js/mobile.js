@@ -233,22 +233,32 @@ s.bind('coordinatesUpdated', e =>
   cameraMoved(e);
 });
 
+bindMobileLongPressEvents();
+
 }
 else { // only viewing when an auto layout is used
 
   s.bind('clickNode', event_selectPersonAndShowInfo);
+  bindMobileLongPressEvents();
+  bindCommonViewerEvents();
+
+}
+
+function bindMobileLongPressEvents()
+{
   graphElement.addEventListener('contextmenu', e =>
   {
     e.preventDefault();
+    let nodes = activeState.nodes();
+    if (nodes.length > 2)
+      return;
     let n = getNodeAtScreenPosition(e.clientX, e.clientY, 10);
     console.log(['longTap', n, e]);
     if (n !== null) {
       e.data = { node: n };
       event_selectPersonAndDirectRelatives(e);
+      event_findRelationship(e);
     }
     return false;
   }, false);
-
-  bindCommonViewerEvents();
-
 }
