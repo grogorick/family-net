@@ -614,31 +614,65 @@ function getRelationships(p1, p2)
     let path = findConnectingPath(p1, p2);
     console.log('Path:', path);
     if (path !== null) {
-      ret = [];
       let chain = getRelationChainFromPath(path);
-      let i = 0;
-      if (chain[0].p1.t !== chain[0].p2.t)
-        ret.push(p1.get_shortDisplayString() + ' ist ');
-      else {
-        ret.push(p1.get_shortDisplayString() + '\'s <b>Partner/in</b> ' + chain[1].p1.get_shortDisplayString() + ' ist ');
-        i = 1;
-      }
-      for (; i < chain.length; ++i) {
-        let step = chain[i];
-        if (step.p1.t === step.p2.t)
-          continue;
-        let nextStep = chain[i + 1];
-        ret.push('<b>' + getRelationship(step.down, step.up) + '</b> von ' + step.p2.get_shortDisplayString() + '.');
-        if (nextStep !== undefined) {
-          ret.push(' ' + step.p2.get_shortDisplayString() + '\'s <b>Partner/in</b> ');
-          if (nextStep.p1.t !== nextStep.p2.t)
-            ret.push(nextStep.p1.get_shortDisplayString() + ' ist ');
-          else
-            ret.push('ist ' + nextStep.p1.get_shortDisplayString() + '.');
+      if (chain.length === 2) {
+        let ch0 = chain[0],
+            ch1 = chain[1];
+        if ((ch0.up + ch0.down + ch1.up + ch1.down) === 1) {
+          ret = [];
+          for (let i = 0; i < 2; ++i) {
+            let pp1, c0, c1, pp2;
+            if (i === 0) {
+              pp1 = p1;
+              c0 = ch0;
+              c1 = ch1;
+              pp2 = p2;
+            }
+            else {
+              pp1 = p2;
+              c0 = { up: ch1.down, down: ch1.up };
+              c1 = { up: ch0.down, down: ch0.up };
+              pp2 = p1;
+            }
+            let r;
+            if (c0.down)
+              r = 'Schwieger' + mv;
+            else if (c0.up)
+              r = 'Stief' + ts;
+            else if (c1.down)
+              r = 'Stief' + mv;
+            else // if (c1.up)
+              r = 'Schwieger' + ts;
+            ret.push(pp1.get_shortDisplayString() + ' ist ' + r + ' von ' + pp2.get_shortDisplayString());
+          }
         }
       }
-      console.log('Chain:', chain);
-      ret = [ret.join('')];
+      if (!ret) {
+        ret = [];
+        let i = 0;
+        if (chain[0].p1.t !== chain[0].p2.t)
+          ret.push(p1.get_shortDisplayString() + ' ist ');
+        else {
+          ret.push(p1.get_shortDisplayString() + '\'s <b>Partner/in</b> ' + chain[1].p1.get_shortDisplayString() + ' ist ');
+          i = 1;
+        }
+        for (; i < chain.length; ++i) {
+          let step = chain[i];
+          if (step.p1.t === step.p2.t)
+            continue;
+          let nextStep = chain[i + 1];
+          ret.push('<b>' + getRelationship(step.down, step.up) + '</b> von ' + step.p2.get_shortDisplayString() + '.');
+          if (nextStep !== undefined) {
+            ret.push(' ' + step.p2.get_shortDisplayString() + '\'s <b>Partner/in</b> ');
+            if (nextStep.p1.t !== nextStep.p2.t)
+              ret.push(nextStep.p1.get_shortDisplayString() + ' ist ');
+            else
+              ret.push('ist ' + nextStep.p1.get_shortDisplayString() + '.');
+          }
+        }
+        console.log('Chain:', chain);
+        ret = [ret.join('')];
+      }
     }
   }
 
@@ -754,11 +788,11 @@ function degree(deg)
   return '';
 }
 
-let linealConsanguinityNames;
+let mv = 'mutter/-vater',
+    ts = 'tochter/-sohn',
+    linealConsanguinityNames;
 (() => {
-  let mv = 'mutter/-vater',
-      ts = 'tochter/-sohn',
-      gens = ['Alt', 'Ober', 'Stamm', 'Ahnen', 'Urahnen', 'Erz', 'Erzahnen'],
+  let gens = ['Alt', 'Ober', 'Stamm', 'Ahnen', 'Urahnen', 'Erz', 'Erzahnen'],
       subgens = ['', 'groß', 'urgroß'];
   linealConsanguinityNames = {
     '3': 'Urgroß' + mv,
