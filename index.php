@@ -189,11 +189,16 @@ function & get_account($user)
   global $accounts;
   global $account_not_found;
   foreach ($accounts as &$a) {
-    if ($a[USER_] === $user) {
+    if (strip_name($a[USER_]) === strip_name($user)) {
       return $a;
     }
   }
   return $account_not_found;
+}
+
+function strip_name($name)
+{
+  return strtolower(preg_replace('/\W/', '', $name));
 }
 
 function current_user_can($permission)
