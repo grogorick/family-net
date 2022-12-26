@@ -1431,12 +1431,15 @@ if ($_SESSION[EDITING] && current_user_can(PERMISSION_LINK_SOURCE)) {
           <ul>
           <?php if (!$is_mobile) { ?>
             <li><?=$modKeys?> gedrückt halten</li>
-            <li>Die erste Person anklicken</li>
-            <li><i>Doppelklick</i> auf die zweite Person</li>
-            <li>Der Verwandtschaftsgrad wird angezeigt</li>
-          <?php } else { ?>
-            <i>(Aktuell nur am PC verfügbar.)</i>
           <?php } ?>
+            <li>Die erste Person an<?=$klickenTippen?></li>
+          <?php if (!$is_mobile) { ?>
+            <li><i>Doppelklick</i> auf die zweite Person</li>
+          <?php } else { ?>
+            <li>(Detailfenster schließen)</li>
+            <li>Auf die zweite Person <i>tippen und gedrückt halten</i></li>
+          <?php } ?>
+            <li>Der Verwandtschaftsgrad wird angezeigt</li>
           </ul>
         </li>
         <li>Ansichten:
