@@ -527,14 +527,14 @@ function moveChildConnectionNodes(nodes)
 
 function findAndShowRelatives(p1, p2)
 {
-  let msg = getRelationships(p1, p2);
-  if (msg) {
+  let rel = getRelationships(p1, p2);
+  if (rel) {
     let url = serverURL + (serverURL.endsWith('/') ? '?' : '&') + 'show=' + p1.id + '_' + p2.id;
     let btn = document.createElement('a');
     btn.href = url;
     btn.classList.add('button', 'share');
     btn.title = 'Teilen';
-    showMessage(msg, {
+    showMessage('<i>' + rel.info + '</i><br><br>' + rel.text, {
       '_link': {
         label: btn,
         action: e => {
@@ -575,7 +575,10 @@ function getRelationships(p1, p2)
   // partner relationship
   for (pa of p2._partners) {
     if (pa.p.t === p1.t) {
-      ret = [formatRelation(p1, ' ist ', pa.c.r, ' mit/von ', p2)];
+      ret = {
+        info: 'Nicht blutsverwandt',
+        text: [formatRelation(p1, ' ist ', pa.c.r, ' mit/von ', p2)],
+        edges: []};
       break;
     }
   }
@@ -586,7 +589,11 @@ function getRelationships(p1, p2)
     ancestors2 = cacheAncestors(p2, p1);
     if (p1.t in ancestors2) {
       let a = ancestors2[p1.t];
-      ret = [simpleFormat(a.degree, 0), simpleFormat(0, a.degree, p2, p1)];
+      ret = {
+        info: 'Blutsverwandt in gerader Linie',
+        text: [simpleFormat(a.degree, 0),
+               simpleFormat(0, a.degree, p2, p1)],
+        edges: []};
     }
   }
   let ancestors1;
@@ -594,7 +601,11 @@ function getRelationships(p1, p2)
     ancestors1 = cacheAncestors(p1, p2);
     if (p2.t in ancestors1) {
       let a = ancestors1[p2.t];
-      ret = [simpleFormat(0, a.degree), simpleFormat(a.degree, 0, p2, p1)];
+      ret = {
+        info: 'Blutsverwandt in gerader Linie',
+        text: [simpleFormat(0, a.degree),
+               simpleFormat(a.degree, 0, p2, p1)],
+        edges: []};
     }
   }
 
@@ -605,7 +616,11 @@ function getRelationships(p1, p2)
       let ca = commonAncestors[0],
           ca1 = ancestors1[ca],
           ca2 = ancestors2[ca];
-      ret = [simpleFormat(ca2.degree, ca1.degree), simpleFormat(ca1.degree, ca2.degree, p2, p1)];
+      ret = {
+        info: 'Blutsverwandt',
+        text: [simpleFormat(ca2.degree, ca1.degree),
+               simpleFormat(ca1.degree, ca2.degree, p2, p1)],
+        edges: []};
     }
   }
 
@@ -619,7 +634,10 @@ function getRelationships(p1, p2)
         let ch0 = chain[0],
             ch1 = chain[1];
         if ((ch0.up + ch0.down + ch1.up + ch1.down) === 1) {
-          ret = [];
+          ret = {
+            info: 'Nicht blutsverwandt',
+            text: [],
+            edges: []};
           for (let i = 0; i < 2; ++i) {
             let pp1, c0, c1, pp2;
             if (i === 0) {
@@ -643,40 +661,44 @@ function getRelationships(p1, p2)
               r = 'Stief' + mv;
             else // if (c1.up)
               r = 'Schwieger' + ts;
-            ret.push(formatRelation(pp1, ' ist ', r, ' von ', pp2));
+            ret.text.push(formatRelation(pp1, ' ist ', r, ' von ', pp2));
           }
         }
       }
       if (!ret) {
-        ret = [];
+        let text = [];
         let i = 0;
         if (chain[0].p1.t !== chain[0].p2.t)
-          ret.push(p1.get_shortDisplayString() + ' ist ');
+          text.push(p1.get_shortDisplayString() + ' ist ');
         else {
-          ret.push(p1.get_shortDisplayString() + '\'s <b>Partner/in</b> ' + chain[1].p1.get_shortDisplayString() + ' ist ');
+          text.push(p1.get_shortDisplayString() + '\'s <b>Partner/in</b> ' + chain[1].p1.get_shortDisplayString() + ' ist ');
           i = 1;
         }
         for (; i < chain.length; ++i) {
           let step = chain[i];
           if (step.p1.t === step.p2.t)
             continue;
+          text.push('<b>' + getRelationship(step.down, step.up) + '</b> von ' + step.p2.get_shortDisplayString() + '.');
           let nextStep = chain[i + 1];
-          ret.push('<b>' + getRelationship(step.down, step.up) + '</b> von ' + step.p2.get_shortDisplayString() + '.');
           if (nextStep !== undefined) {
-            ret.push(' ' + step.p2.get_shortDisplayString() + '\'s <b>Partner/in</b> ');
+            text.push(' ' + step.p2.get_shortDisplayString() + '\'s <b>Partner/in</b> ');
             if (nextStep.p1.t !== nextStep.p2.t)
-              ret.push(nextStep.p1.get_shortDisplayString() + ' ist ');
+              text.push(nextStep.p1.get_shortDisplayString() + ' ist ');
             else
-              ret.push('ist ' + nextStep.p1.get_shortDisplayString() + '.');
+              text.push('ist ' + nextStep.p1.get_shortDisplayString() + '.');
           }
         }
         console.log('Chain:', chain);
-        ret = [ret.join('')];
+        ret = {
+          info: 'Nicht blutsverwandt',
+          text: [text.join('')],
+          edges: []};
       }
     }
   }
-
-  return ret.join('<hr>');
+  if (ret)
+    ret.text = ret.text.join('<hr>');
+  return ret;
 }
 
 function formatRelation(p1, pre, rel, post, p2)
