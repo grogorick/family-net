@@ -2,7 +2,7 @@
 //phpinfo();
 
 // browser cache fix for scripts and styles
-const V = 28;
+const V = 29;
 const V_ = '?v=' . V;
 
 const MAINTENANCE = false;

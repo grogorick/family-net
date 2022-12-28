@@ -534,7 +534,7 @@ function findAndShowRelatives(p1, p2)
     btn.href = url;
     btn.classList.add('button', 'share');
     btn.title = 'Teilen';
-    showMessage('<i>' + rel.info + '</i><br><br>' + rel.text, {
+    showMessage(rel.text + '<br><br><i>' + rel.info + '</i>', {
       '_link': {
         label: btn,
         action: e => {
@@ -572,13 +572,18 @@ function getRelationships(p1, p2)
 
   let simpleFormat = (up, down, pA = p1, pB = p2) => formatRelation(pA, ' ist ', getRelationship(up, down), ' von ', pB);
 
+  let infos = {
+    no: 'Keine Blutsverwandtschaft',
+    lineal: 'Blutsverwandtschaft<br>{}<br>in gerader Linie',
+    nonlineal: 'Blutsverwandtschaft<br>{}<br>in der Seitenlinie (gemeinsame Vorfahren)'
+  };
+
   // partner relationship
   for (pa of p2._partners) {
     if (pa.p.t === p1.t) {
       ret = {
-        info: 'Nicht blutsverwandt',
-        text: [formatRelation(p1, ' ist ', pa.c.r, ' mit/von ', p2)],
-        edges: []};
+        info: infos.no,
+        text: [formatRelation(p1, ' ist ', pa.c.r, ' mit/von ', p2)]};
       break;
     }
   }
@@ -590,10 +595,9 @@ function getRelationships(p1, p2)
     if (p1.t in ancestors2) {
       let a = ancestors2[p1.t];
       ret = {
-        info: 'Blutsverwandt in gerader Linie',
+        info: infos.lineal.replace('{}', degree(a.degree, false)),
         text: [simpleFormat(a.degree, 0),
-               simpleFormat(0, a.degree, p2, p1)],
-        edges: []};
+               simpleFormat(0, a.degree, p2, p1)]};
     }
   }
   let ancestors1;
@@ -602,10 +606,9 @@ function getRelationships(p1, p2)
     if (p2.t in ancestors1) {
       let a = ancestors1[p2.t];
       ret = {
-        info: 'Blutsverwandt in gerader Linie',
+        info: infos.lineal.replace('{}', degree(a.degree, false)),
         text: [simpleFormat(0, a.degree),
-               simpleFormat(a.degree, 0, p2, p1)],
-        edges: []};
+               simpleFormat(a.degree, 0, p2, p1)]};
     }
   }
 
@@ -617,10 +620,9 @@ function getRelationships(p1, p2)
           ca1 = ancestors1[ca],
           ca2 = ancestors2[ca];
       ret = {
-        info: 'Blutsverwandt',
+        info: infos.nonlineal.replace('{}', degree(ca1.degree + ca2.degree, false)),
         text: [simpleFormat(ca2.degree, ca1.degree),
-               simpleFormat(ca1.degree, ca2.degree, p2, p1)],
-        edges: []};
+               simpleFormat(ca1.degree, ca2.degree, p2, p1)]};
     }
   }
 
@@ -630,14 +632,14 @@ function getRelationships(p1, p2)
     console.log('Path:', path);
     if (path !== null) {
       let chain = getRelationChainFromPath(path);
+      console.log('Chain:', chain);
       if (chain.length === 2) {
         let ch0 = chain[0],
             ch1 = chain[1];
         if ((ch0.up + ch0.down + ch1.up + ch1.down) === 1) {
           ret = {
-            info: 'Nicht blutsverwandt',
-            text: [],
-            edges: []};
+            info: infos.no,
+            text: []};
           for (let i = 0; i < 2; ++i) {
             let pp1, c0, c1, pp2;
             if (i === 0) {
@@ -667,32 +669,36 @@ function getRelationships(p1, p2)
       }
       if (!ret) {
         let text = [];
-        let i = 0;
-        if (chain[0].p1.t !== chain[0].p2.t)
-          text.push(p1.get_shortDisplayString() + ' ist ');
-        else {
-          text.push(p1.get_shortDisplayString() + '\'s <b>Partner/in</b> ' + chain[1].p1.get_shortDisplayString() + ' ist ');
-          i = 1;
-        }
-        for (; i < chain.length; ++i) {
+
+        for (let i = 0; i < chain.length; ++i) {
           let step = chain[i];
-          if (step.p1.t === step.p2.t)
-            continue;
-          text.push('<b>' + getRelationship(step.down, step.up) + '</b> von ' + step.p2.get_shortDisplayString() + '.');
+          let lastStep = chain[i - 1];
           let nextStep = chain[i + 1];
-          if (nextStep !== undefined) {
-            text.push(' ' + step.p2.get_shortDisplayString() + '\'s <b>Partner/in</b> ');
-            if (nextStep.p1.t !== nextStep.p2.t)
-              text.push(nextStep.p1.get_shortDisplayString() + ' ist ');
-            else
-              text.push('ist ' + nextStep.p1.get_shortDisplayString() + '.');
+          if (step.p1.t !== step.p2.t) {
+            if (lastStep !== undefined) {
+              text.push(formatPerson(lastStep.p2, false) + '\'s <b>Partner/in</b> ');
+            }
+            text.push(formatPerson(step.p1, false));
+            text.push(' ist <b>' + getRelationship(step.down, step.up) + '</b> von ');
+            text.push(formatPerson(step.p2, false));
+            if ((nextStep !== undefined) && (nextStep.p1.t === nextStep.p2.t)) {
+              text.push(', der/m <b>Partner/in</b> von ');
+              text.push(formatPerson(nextStep.p1, false));
+            }
+            text.push('. ');
+          }
+          else if ((lastStep !== undefined) && (lastStep.p1.t === lastStep.p2.t)) {
+            text.push(formatPerson(lastStep.p1, false));
+            text.push(' ist <b>Partner/in</b> von ');
+            text.push(formatPerson(step.p2, false));
+            text.push('. ');
           }
         }
-        console.log('Chain:', chain);
+        text[0] = formatPerson(text[0]);
+        text[text.length - 2] = formatPerson(text[text.length - 2]);
         ret = {
-          info: 'Nicht blutsverwandt',
-          text: [text.join('')],
-          edges: []};
+          info: infos.no,
+          text: [text.join('')]};
       }
     }
   }
@@ -703,7 +709,13 @@ function getRelationships(p1, p2)
 
 function formatRelation(p1, pre, rel, post, p2)
 {
-  return p1.get_shortDisplayString() + pre + '<b>' + rel + '</b>' + post + p2.get_shortDisplayString();
+  return formatPerson(p1) + pre + '<b>' + rel + '</b>' + post + formatPerson(p2) + '.';
+}
+
+function formatPerson(p, primaryPerson = true)
+{
+  let name = (typeof p === 'object') ? p.get_shortDisplayString() : p;
+  return primaryPerson ? '<u>' + name + '</u>' : name;
 }
 
 function getRelationChainFromPath(path)
@@ -803,9 +815,9 @@ function urs(ur)
     return 'Ur(x' + ur + ')';
 }
 
-function degree(deg)
+function degree(deg, skipFirstDegree = true)
 {
-  if (deg > 1)
+  if (deg > 1 || !skipFirstDegree)
     return ' ' + deg + '. Grades';
   return '';
 }
