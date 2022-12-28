@@ -643,7 +643,7 @@ function getRelationships(p1, p2)
               r = 'Stief' + mv;
             else // if (c1.up)
               r = 'Schwieger' + ts;
-            ret.push(pp1.get_shortDisplayString() + ' ist ' + r + ' von ' + pp2.get_shortDisplayString());
+            ret.push(formatRelation(pp1, ' ist ', r, ' von ', pp2));
           }
         }
       }
