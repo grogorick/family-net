@@ -2520,6 +2520,8 @@ function event_selectPersonAndDirectRelatives(e)
 
 function event_findRelationship(e)
 {
+  if (activeState.edges().length > 0)
+    return;
   let n = e.data.node;
   if (!isPersonNode(n) && !isDoppelgangerNode(n)) {
     return;
