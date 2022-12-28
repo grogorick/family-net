@@ -542,8 +542,8 @@ function findAndShowRelatives(p1, p2)
             e.preventDefault();
             let shareText = [];
             for (p of [p1, p2])
-              shareText.push([p1._my.p.get_rufName(), p1._my.p.get_lastNames()].filter(Boolean).join(' '));
-            shareText = shareText.join(' <--> ') + ' - ' + document.title;
+              shareText.push([p._my.p.get_rufName(), p._my.p.get_lastNames()].filter(Boolean).join(' '));
+            shareText = shareText.join(' <-> ') + ' - ' + document.title;
             navigator.share({
               title: shareText,
               text: shareText,
