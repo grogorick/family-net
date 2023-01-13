@@ -185,35 +185,32 @@ s.bind('coordinatesUpdated', e =>
   cameraMoved(e);
 });
 
-let dragActiveNodes = [];
-let dragActiveNodeIds = [];
+let dragActiveNodes;
+let dragActiveNodeIds;
 function prepareMoveNodes(refNode)
 {
+  dragActiveNodes = [];
+  dragActiveNodeIds = [];
   let nodes = activeState.nodes();
-  if (nodes.length > 1 && nodes.some(n => n.id === refNode.id)) {
-    nodes.forEach(n => {
-      n._my.tmp_x = n.x;
-      n._my.tmp_y = n.y;
-      dragActiveNodes.push(n);
-      dragActiveNodeIds.push(n.id);
-    });
-    activeState.dropNodes(dragActiveNodeIds);
-    activeState.addNodes(refNode.id);
-  }
+  if (!nodes.includes(refNode))
+    nodes.push(refNode);
+  nodes.forEach(n => {
+    n._my.tmp_x = n.x;
+    n._my.tmp_y = n.y;
+    dragActiveNodes.push(n);
+    dragActiveNodeIds.push(n.id);
+  });
 }
-function restoreRelativeMoveNodePositions(finish)
+function restoreRelativeMoveNodePositions(refNode, finish)
 {
   if (dragActiveNodes.length) {
-    let refNode = activeState.nodes()[0];
     if (finish)
       alignToGrid(refNode);
     let dx = refNode.x - refNode._my.tmp_x,
         dy = refNode.y - refNode._my.tmp_y;
     dragActiveNodes.forEach(n => {
-      if (n.id !== refNode.id) {
-        n.x = n._my.tmp_x + dx;
-        n.y = n._my.tmp_y + dy;
-      }
+      n.x = n._my.tmp_x + dx;
+      n.y = n._my.tmp_y + dy;
       if (finish) {
         delete n._my.tmp_x;
         delete n._my.tmp_y;
@@ -251,12 +248,12 @@ dragListener.bind('drag', e =>
   // console.log(['drag', e]);
   clearTimeout(startedWith_drag);
   startedWith_drag = setTimeout(() => { startedWith_drag = false; }, 1000);
-  restoreRelativeMoveNodePositions(false);
+  restoreRelativeMoveNodePositions(e.data.node, false);
 });
 dragListener.bind('drop', e =>
 {
   console.log(['drop', e]);
-  restoreRelativeMoveNodePositions(true);
+  restoreRelativeMoveNodePositions(e.data.node, true);
   movePersons(e.data.node.id, true, true, false, true, false, true);
 });
 
