@@ -220,43 +220,33 @@ define('AUTOLOGIN_METHOD', 'aes-256-ctr');
 define('AUTOLOGIN_KEY', 'family-tree-autologin');
 
 function auto_login_encrypt_url($user, $pw) {
-  $x = json_encode([USER_ => $user, PASSWORD_ => $pw]); var_dump('json', $x); echo '<br>';
+  $x = json_encode([USER_ => $user, PASSWORD_ => $pw]);
   $iv = random_bytes(openssl_cipher_iv_length(AUTOLOGIN_METHOD));
-  $x = openssl_encrypt($x, AUTOLOGIN_METHOD, AUTOLOGIN_KEY, OPENSSL_RAW_DATA|OPENSSL_ZERO_PADDING, $iv); var_dump('ssl', $x); echo '<br>';
-  $iv = bin2hex($iv); var_dump('iv', $iv); echo '<br>';
-  $iv_len = sprintf('%03d', strlen($iv)); var_dump('iv len', $iv_len); echo '<br>';
-  $x = $iv_len . $iv . $x; var_dump($x); echo '<br>';
-  $x = urlencode($x); var_dump($x); echo '<br>';
+  $x = openssl_encrypt($x, AUTOLOGIN_METHOD, AUTOLOGIN_KEY, OPENSSL_RAW_DATA|OPENSSL_ZERO_PADDING, $iv);
+  $iv = bin2hex($iv);
+  $iv_len = sprintf('%03d', strlen($iv));
+  $x = $iv_len . $iv . $x;
+  $x = urlencode($x);
   return $x;
 }
 function auto_login_decrypt_url($url) {
-  $x = $url; var_dump($x); echo '<br>';
-  $iv_len = intval(substr($x, 0, 3)); var_dump('iv len', $iv_len); echo '<br>';
-  $iv = substr($x, 3, $iv_len); var_dump($iv); echo '<br>';
+  $x = $url;
+  $iv_len = intval(substr($x, 0, 3));
+  $iv = substr($x, 3, $iv_len);
   $iv = hex2bin($iv);
   $x = substr($x, 3 + $iv_len);
-  $x = openssl_decrypt($x, AUTOLOGIN_METHOD, AUTOLOGIN_KEY, OPENSSL_RAW_DATA|OPENSSL_ZERO_PADDING, $iv); var_dump($x); echo '<br>';
-  $x = json_decode($x, true); var_dump($x); echo '<br>';
+  $x = openssl_decrypt($x, AUTOLOGIN_METHOD, AUTOLOGIN_KEY, OPENSSL_RAW_DATA|OPENSSL_ZERO_PADDING, $iv);
+  $x = json_decode($x, true);
   return $x;
 }
 function auto_login_generate_link($user, $pw) {
   global $server_url;
   $url = auto_login_encrypt_url($user, $pw);
-  return '<br>(<a href="' . $server_url . '?autologin=' . $url . '">Autologin Link</a>)';
+  return ' &nbsp; (<a href="' . $server_url . '?autologin=' . $url . '">Autologin Link</a>)';
 }
 function auto_login() {
-  if (isset($_GET['autologin'])) {
-    $x = auto_login_encrypt_url($_GET['user'], $_GET['pw']);
-    while ($err = openssl_error_string())
-     var_dump($err); echo '<br>';
-
-    echo "<hr>";
-
-    $x = auto_login_decrypt_url($_GET['autologin'] ?: urldecode($x));
-    while ($err = openssl_error_string())
-     var_dump($err); echo '<br>';
-    return $x;
-  }
+  if (isset($_GET['autologin']))
+    return auto_login_decrypt_url($_GET['autologin']);
   return [];
 }
 
