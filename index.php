@@ -203,7 +203,7 @@ function strip_name($name)
 
 function current_user_can($permission)
 {
-  return in_array($_SESSION[TYPE], $permission);
+  return isset($_SESSION) && array_key_exists(TYPE, $_SESSION) && in_array($_SESSION[TYPE], $permission);
 }
 
 function get_permissions()
