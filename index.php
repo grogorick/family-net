@@ -216,6 +216,50 @@ function get_permissions()
     ARRAY_FILTER_USE_KEY);
 }
 
+define('AUTOLOGIN_METHOD', 'aes-256-ctr');
+define('AUTOLOGIN_KEY', 'family-tree-autologin');
+
+function auto_login_encrypt_url($user, $pw) {
+  $x = json_encode([USER_ => $user, PASSWORD_ => $pw]); var_dump('json', $x); echo '<br>';
+  $iv = random_bytes(openssl_cipher_iv_length(AUTOLOGIN_METHOD));
+  $x = openssl_encrypt($x, AUTOLOGIN_METHOD, AUTOLOGIN_KEY, OPENSSL_RAW_DATA|OPENSSL_ZERO_PADDING, $iv); var_dump('ssl', $x); echo '<br>';
+  $iv = bin2hex($iv); var_dump('iv', $iv); echo '<br>';
+  $iv_len = sprintf('%03d', strlen($iv)); var_dump('iv len', $iv_len); echo '<br>';
+  $x = $iv_len . $iv . $x; var_dump($x); echo '<br>';
+  $x = urlencode($x); var_dump($x); echo '<br>';
+  return $x;
+}
+function auto_login_decrypt_url($url) {
+  $x = $url; var_dump($x); echo '<br>';
+  $iv_len = intval(substr($x, 0, 3)); var_dump('iv len', $iv_len); echo '<br>';
+  $iv = substr($x, 3, $iv_len); var_dump($iv); echo '<br>';
+  $iv = hex2bin($iv);
+  $x = substr($x, 3 + $iv_len);
+  $x = openssl_decrypt($x, AUTOLOGIN_METHOD, AUTOLOGIN_KEY, OPENSSL_RAW_DATA|OPENSSL_ZERO_PADDING, $iv); var_dump($x); echo '<br>';
+  $x = json_decode($x, true); var_dump($x); echo '<br>';
+  return $x;
+}
+function auto_login_generate_link($user, $pw) {
+  global $server_url;
+  $url = auto_login_encrypt_url($user, $pw);
+  return '<br>(<a href="' . $server_url . '?autologin=' . $url . '">Autologin Link</a>)';
+}
+function auto_login() {
+  if (isset($_GET['autologin'])) {
+    $x = auto_login_encrypt_url($_GET['user'], $_GET['pw']);
+    while ($err = openssl_error_string())
+     var_dump($err); echo '<br>';
+
+    echo "<hr>";
+
+    $x = auto_login_decrypt_url($_GET['autologin'] ?: urldecode($x));
+    while ($err = openssl_error_string())
+     var_dump($err); echo '<br>';
+    return $x;
+  }
+  return [];
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 define('BETA', current_user_can(PERMISSION_ADMIN));
@@ -227,8 +271,9 @@ if ((!$accounts || current_user_can(PERMISSION_ADMIN)) && isset($_POST[ADMIN_ACT
     // admin
     case 'new': {
       $ist_first_account = !$accounts;
+      $username = trim($_POST[USER]);
       $accounts[] = [
-        USER_ => trim($_POST[USER]),
+        USER_ => $username,
         PASSWORD_ => password_hash($_POST[PASSWORD], PASSWORD_BCRYPT),
         TYPE_ => $_POST[TYPE],
         FIRST_LOGIN_ => BOTH_];
@@ -238,7 +283,7 @@ if ((!$accounts || current_user_can(PERMISSION_ADMIN)) && isset($_POST[ADMIN_ACT
         header('Location: ' . $server_url);
         exit;
       }
-      $admin_msg = 'Neuer Account erstellt.';
+      $admin_msg = 'Neuer Account erstellt.' . auto_login_generate_link($username, $_POST[PASSWORD]);
     }
     break;
     case 'edit-type': {
@@ -255,7 +300,7 @@ if ((!$accounts || current_user_can(PERMISSION_ADMIN)) && isset($_POST[ADMIN_ACT
       $i = $_POST[USER];
       $accounts[$i][PASSWORD_] = password_hash($_POST[PASSWORD], PASSWORD_BCRYPT);
       save_accounts();
-      $admin_msg = 'Passwort geändert.';
+      $admin_msg = 'Passwort geändert.' . auto_login_generate_link($accounts[$i][USER_], $_POST[PASSWORD]);
     }
     break;
     case 'delete': {
@@ -288,11 +333,12 @@ if (!$accounts) {
 
 if (!isset($_SESSION[USER])) {
   html_min_start();
+  $autologin = auto_login();
 ?>
     <form method="POST">
       <input type="hidden" name="<?=ACTION?>" value="login" />
-      <input name="<?=USER?>" type="text" placeholder="Name" autofocus />
-      <input name="<?=PASSWORD?>" type="password" placeholder="Passwort" />
+      <input name="<?=USER?>" type="text" placeholder="Name" value="<?=$autologin[USER_]??''?>" autofocus />
+      <input name="<?=PASSWORD?>" type="password" placeholder="Passwort" value="<?=$autologin[PASSWORD_]??''?>" />
       <input type="submit" value="Anmelden" />
     </form>
 <?php
@@ -1349,10 +1395,9 @@ if ($_SESSION[EDITING] && current_user_can(PERMISSION_LINK_SOURCE)) {
           <b class="annotator-zoom-out" data-value="-1">-</b>
         </div>
       </div>
-    </div>
-
-    <div id="source-annotation-details" class="hidden">
-      <input type="text" id="annotation-text" placeholder="Anmerkung" />
+      <div id="source-annotation-details" class="hidden">
+        <input type="text" id="annotation-text" placeholder="Anmerkung" />
+      </div>
     </div>
   </div>
 
