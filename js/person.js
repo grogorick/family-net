@@ -114,6 +114,57 @@ class PersonFunctions
     return this._.o;
   }
 
+  get_age()
+  {
+    let from = splitDate(this._.b);
+    if (!from[0])
+      return '';
+
+    let to = splitDate(this._.d);
+    if (!to[0] && (to[1] || to[2]))
+      return '';
+
+    const today = new Date();
+    const day = today.getDate();
+    const month = today.getMonth() + 1;
+    const year = today.getFullYear();
+
+    let approx = false;
+    if      (!from[1]) {             from[1] = month; from[2] = day; approx = true; }
+    else if (!from[2]) {                              from[2] = day; approx = true; }
+    if      (  !to[0]) { to[0] = year; to[1] = month;   to[2] = day; }
+    else if (  !to[1]) {               to[1] = month;   to[2] = day; }
+    else if (  !to[2]) {                                to[2] = day; }
+
+    from = (new Date(from[0], from[1] - 1, from[2]));
+    to   = new Date(  to[0],   to[1] - 1,   to[2]);
+
+    {
+      let ynew = to.getFullYear();
+      let mnew = to.getMonth();
+      let dnew = to.getDate();
+      let yold = from.getFullYear();
+      let mold = from.getMonth();
+      let dold = from.getDate();
+      var years = ynew - yold;
+      if (mold > mnew)
+        years--;
+      else {
+          if (mold == mnew) {
+              if (dold > dnew)
+                years--;
+          }
+      }
+    }
+
+    let ret = approx ? '> ' + (years - 1) : years;
+    if (!to[0]) {
+      if (years > 120) return '';
+      if (years > 100) ret += ' ?';
+    }
+    return ret;
+  }
+
   get_shortDisplayString()
   {
     let tmp = [
@@ -148,8 +199,9 @@ class PersonFunctions
     let n = this.get_fullName();
     let b = this.get_birthDate();
     let d = this.get_deathDate();
+    let a = this.get_age();
     let o = this.get_notes();
-    return n + ((b || d) ? ' \n ' + b + ' — ' + d : '') + (o.length ? ' \n\n ' + o : '');
+    return n + ((b || d) ? ' \n ' + b + ' — ' + d + (a ? ' \n (' + a + ')' : '') : '') + (o.length ? ' \n\n ' + o : '');
   }
 
   get_allTextData()
